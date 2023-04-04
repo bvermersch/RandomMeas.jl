@@ -50,6 +50,8 @@ for ichi in 1:length(chisigma)
 
 	Fid_theory[ichi] = real(inner(psi_sigma',rho_noisy,psi_sigma))
 	temp_sigma = 0
+
+	## compute the DFE wrt approximations sigma
 	for r in 1:nu   
 		sigma_shadow = get_shadow(sigma, sites,b[:,r])
 		Fid_uni[ichi] += real(get_expect_shadow(sigma,shadow[r],sites))/nu
