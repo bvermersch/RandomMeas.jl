@@ -217,7 +217,7 @@ function get_Born(rhoA::ITensor,sites::Vector{Index{Int64}})
 	return P
 end
 
-function get_State(state::SubString{String},N::Int64,pure::Bool,gamma=0.)
+function get_State(state::String,N::Int64,pure::Bool,gamma=0.)
 	if state=="GHZ"
 		sites = siteinds("S=1/2", N);
 		psi = MPS(sites,linkdims=2)
