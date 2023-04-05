@@ -35,7 +35,7 @@ b = rand(1:3, N, nu) ## generate  measurement settings (b=1,2,3 means Z,X,Y meas
 #Actual measurement
 shadow = Vector{Vector{MPO}}()
 for r in 1:nu   #length(chisigma)
-	data = get_RandomMeas_MPO(rho_noisy,b[:,r],NM)
+	data = get_RandomMeas_MPO(rho_noisy,b[:,r],NM,sites)
 	push!(shadow,get_shadow_factorized(data,sites,b[:,r]))
 end
 
