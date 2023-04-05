@@ -7,7 +7,7 @@ using StatsBase
 using PastaQ
 
 	
-N = 8 ## number of qubits
+N = 6 ## number of qubits
 nu = 10 ## number of random unitaries
 NM = 1000  ## number of measurements per random unitary
 d = "5"  ## depth of the random circuit generate the state 

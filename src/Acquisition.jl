@@ -80,6 +80,7 @@ function get_RandomMeas_MPO(rhoA::MPO,b::Vector{Int64},NM::Int64)
 	## A BIT SLOW FOR SMALL N
 	rhou = rotate_b(rhoA,b)
 	NA = size(b,1)
+	rhou[1] /= trace(rhou,sites)
 	data = zeros(Int64,(NM,NA))
 	for m in 1:NM
 		data[m,:] = ITensors.sample(rhou)
@@ -217,7 +218,7 @@ function get_Born(rhoA::ITensor,sites::Vector{Index{Int64}})
 	return P
 end
 
-function get_State(state::String,N::Int64,pure::Bool,gamma=0.)
+function get_State(state::String,N::Int64,pure::Bool,p=0.)
 	if state=="GHZ"
 		sites = siteinds("S=1/2", N);
 		psi = MPS(sites,linkdims=2)
@@ -251,7 +252,10 @@ function get_State(state::String,N::Int64,pure::Bool,gamma=0.)
 		psi = runcircuit(hilbert, circuit)
 		sites = siteinds(psi)
 		if pure==false
-			rho = runcircuit(circuit; noise=("amplitude_damping", (γ=gamma,)))
+			#rho = runcircuit(circuit; noise=("amplitude_damping", (γ=gamma,)))
+			noisemodel = (1 => ("depolarizing", (p = p,)),2 => ("depolarizing", (p = p,)))
+                        rho = runcircuit(circuit; noise=noisemodel)
+
 			sites_MPO = siteinds(rho)
 			for i in 1:N
 				s = noprime(sites_MPO[i][1])
