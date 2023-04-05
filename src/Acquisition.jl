@@ -76,7 +76,7 @@ function get_RandomMeas(state::Union{MPO,MPS},b::Vector{Int64},NM::Int64,f::Floa
 	return data
 end
 
-function get_RandomMeas_MPO(rhoA::MPO,b::Vector{Int64},NM::Int64)
+function get_RandomMeas_MPO(rhoA::MPO,b::Vector{Int64},NM::Int64, sites::Vector{Index{Int64}})
 	## A BIT SLOW FOR SMALL N
 	rhou = rotate_b(rhoA,b)
 	NA = size(b,1)
