@@ -1,4 +1,4 @@
-# RandomMeas.jl: Julia Interface to common random measurements
+# RandomMeas.jl: Julia Interface to (common) randomized measurements
 
 We provide scripts to estimate expectation values of single-copy and multi-copy observables with randomized measurements <img src="Pics/RandomMeasurements.png" alt="drawing" width="250"/>. 
 The library uses ITensors.jl to postprocess randomized measurements data.
