@@ -49,7 +49,7 @@ RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ
 2) Postprocessing routines for randomized measurements, eg to get the purity
 	
 	```julia
-	purity = get_purity_hamming(data[:,:,1:N÷2],ξ)
+	purity = get_purity_hamming(data,ξ)
 	``` 
 	
 2) Interface with matrix-product-states simulations with ITensors.jl & PastaQ.jl to simulate large-scale randomized measurements protocols.

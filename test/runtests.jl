@@ -1,6 +1,15 @@
 using RandomMeas
 using Test
 
+filenames = [
+  "test_purity.jl",
+]
+
 @testset "RandomMeas.jl" begin
-    # Write your tests here.
+    @testset "$filename" for filename in filenames
+        if startswith(filename, "test_") && endswith(filename, ".jl")
+            println("Running $filename")
+            @time include(filename)
+        end
+    end
 end
