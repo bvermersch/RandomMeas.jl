@@ -1,9 +1,10 @@
-using ITensors,ITensorMPS
+using ITensors
+using ITensorMPS
 using RandomMeas
 
 N  = 3
 χ = 2^(N÷2)
-nu=1000
+nu=1
 NM=100
 ξ = siteinds("Qubit", N)
 ψ = random_mps(ξ; linkdims=χ);
