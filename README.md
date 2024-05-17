@@ -16,10 +16,11 @@ push!(LOAD_PATH,"pathtopackagedirectory/src/")
 using RandomMeas
 ```
 
+RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ.jl
+
 ## Documentation
 [dev](https://bvermersch.github.io/RandomMeas.jl/dev/) -- documentation of the in-development version.
 
-RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ.jl
 
 ## Presentation
 
@@ -92,7 +93,7 @@ RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ
  	https://journals.aps.org/pra/abstract/10.1103/PhysRevA.107.042403)
  	[ Levy,et al Phys. Rev. Research 2024](https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.6.013029)
  	+ Related paper [Vermersch, al, PRXQ 2024](https://doi.org/10.1103/PRXQuantum.5.010352)
-	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas_dev.jl/blob/master/examples/ProcessShadowTomography.ipynb)
+	+ [Jupyter notebook](examples/ProcessShadowTomography.ipynb)
 
 9) Virtual distillation
 	+ Related paper [Seif et al, PRX Quantum 4, 010303 2023](https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.4.010303)
