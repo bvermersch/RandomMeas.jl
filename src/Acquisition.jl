@@ -115,7 +115,8 @@ function get_RandomMeas_MPO!(data::Array{Int8}, ρ::MPO, u::Vector{ITensor}, NM:
 end
 
 
-function get_RandomMeas_MPS!(data::Array{Int8}, ψ::MPS, u::Vector{ITensor}, NM::Int64)
+function get_RandomMeas_MPS!(data::Array{Int8}, ψ::MPS, u::Vector{ITensor})
+    NM = size(data,2)
     #ppsiu = rotate_b(psi, u)
     ψu = apply(reverse(u),ψ) #using reverse allows us to maintain orthocenter(ψ)=1 ;)
     for m in 1:NM
