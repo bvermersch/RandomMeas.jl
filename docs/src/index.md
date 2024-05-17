@@ -12,3 +12,11 @@ Documentation for [RandomMeas](https://github.com/bvermersch/RandomMeas.jl).
 ```@autodocs
 Modules = [RandomMeas]
 ```
+
+## Data Acquisition
+
+```@docs
+rotate_b
+get_RandomMeas!
+get_RandomMeas_MPO!
+```
