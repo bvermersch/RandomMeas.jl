@@ -95,4 +95,4 @@ RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ
 
 9) Virtual distillation
 	+ Related paper [Seif et al, PRX Quantum 4, 010303 2023](https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.4.010303)
-	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/examples/VirtualDistillation.ipynb)
+	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/VirtualDistillation.ipynb)

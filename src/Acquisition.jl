@@ -1,8 +1,8 @@
-function get_rotations(s::Vector{Index{Int64}}, cat::Int=1)
+function get_rotations(ξ::Vector{Index{Int64}}, cat::Int=1)
     u = Vector{ITensor}()
-    N = length(s)
+    N = length(ξ)
     for i in 1:N
-        push!(u, get_rotation(s[i], cat))
+        push!(u, get_rotation(ξ[i], cat))
     end
     return u
 end
@@ -59,47 +59,19 @@ function get_rotation(s::Index{Int64}, cat::Int=1)
     end
 end
 
-
-"""
-    rotate_b
-
-Rotate an MPO/MPS with single qubit unitaries u 
-"""
-function rotate_b(psi::MPS, u::Vector{ITensor})
-    sites = siteinds(psi)
-    psiu = deepcopy(psi)
-    NA = length(sites)
-    for i in 1:NA
-        psiu[i] = noprime(u[i] * psi[i])
-    end
-    set_ortho_lims!(psiu, 1:1)
-    return psiu
-end
-
-function rotate_b(rhoA::MPO, u::Vector{ITensor})
-    sites = siteinds(rhoA)
-    rhou = deepcopy(rhoA)
-    NA = length(u)
-    for i in 1:NA
-        s = noprime(sites[i][1])
-        ut = u[i]'
-        rhou[i] = mapprime(ut * rhoA[i], 2, 1)
-        udag = dag(u[i]) * delta(s', s'')
-        rhou[i] = mapprime(udag * rhou[i], 2, 0)
-    end
-    orthogonalize!(rhou, 1)
-    return rhou
-end
-
 """
     get_RandomMeas!
 
 Sample randomized measurements from a MPS/MPO representation ρ 
 """
-function get_RandomMeas!(data_s::Array{Int8}, ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
-    ρu = rotate_b(ρ, u)
-    NA = length(u)
-    get_Samples_Flat!(data_s, ρu, NA, NM)
+function get_RandomMeas!(data_s::Array{Int8}, ρ::Union{MPO,MPS}, u::Vector{ITensor})
+    #ρu = rotate_b(ρ, u)
+    if typeof(ρ)==MPS
+        ρu = apply(u,ρ)
+    else
+        ρu = apply(u,ρ;apply_dag=true)
+    end
+    get_Samples_Flat!(data_s, ρu)
 end
 
 """
@@ -107,14 +79,15 @@ end
 
 Sample randomized measurements from a MPS/MPO representation ρ 
 """
-function get_Samples_Flat!(data_s::Array{Int8}, state::Union{MPO,MPS}, NA::Int64, NM::Int64)
+function get_Samples_Flat!(data_s::Array{Int8}, state::Union{MPO,MPS})
+    NM,N = size(data_s)
     #This is borrowed from PastaQ
     Prob = get_Born(state)
     prob = real(array(Prob))
-    prob = reshape(prob, 2^NA)
+    prob = reshape(prob, 2^N)
     for m in 1:NM
-        data = StatsBase.sample(0:(1<<NA-1), StatsBase.Weights(prob), 1)
-        data_s[m, :] = 1 .+ digits(data[1], base=2, pad=NA)
+        data = StatsBase.sample(0:(1<<N-1), StatsBase.Weights(prob), 1)
+        data_s[m, :] = 1 .+ digits(data[1], base=2, pad=N)
     end
 end
 
@@ -124,8 +97,9 @@ end
 Sample randomized measurements from a MPS/MPO representation ρ. The sampling is based from the MPO directly, i.e is memory-efficient 
 """
 function get_RandomMeas_MPO!(data::Array{Int8}, ρ::MPO, u::Vector{ITensor}, NM::Int64)
-    ξ = [x[1] for x in siteinds(ρ;plev=0)]
-    ρu = rotate_b(ρ, u)
+    ξ = firstsiteinds(ρ;plev=0)
+    #ρu = rotate_b(ρ, u)
+    ρu = apply(u,ρ;apply_dag=true)
     NA = length(u)
     ρu[1] /= trace(ρu, ξ)
     if NA > 1
@@ -141,82 +115,68 @@ function get_RandomMeas_MPO!(data::Array{Int8}, ρ::MPO, u::Vector{ITensor}, NM:
 end
 
 
-function get_RandomMeas_MPS!(data::Array{Int8}, psi::MPS, u::Vector{ITensor}, NM::Int64)
-    psiu = rotate_b(psi, u)
+function get_RandomMeas_MPS!(data::Array{Int8}, ψ::MPS, u::Vector{ITensor}, NM::Int64)
+    #ppsiu = rotate_b(psi, u)
+    ψu = apply(reverse(u),ψ) #using reverse allows us to maintain orthocenter(ψ)=1 ;)
     for m in 1:NM
-        data[m, :] = ITensors.sample(psiu)#[1:NA]
+        data[m, :] = ITensors.sample(ψu)#[1:NA]
     end
+
 end
 
 
-function get_Born_MPS(rho::MPO, sites::Vector{Index{Int64}})
-    NA = size(sites, 1)
-    P = MPS(sites)
-    for i in 1:NA
-        Ct = delta(sites[i], prime(sites[i]), prime(sites[i], 2))
-        P[i] = rho[i] * Ct
-        P[i] *= delta(sites[i], prime(sites[i], 2))
-    end
-    return P
-end
-
-function get_Born_MPS(psi::MPS)
-    sites = siteinds(psi)
-    N = size(sites, 1)
-    P = MPS(sites)
+function get_Born_MPS(ρ::MPO)
+    ξ = firstsiteinds(ρ;plev=0)
+    N = size(ξ, 1)
+    P = MPS(ξ)
     for i in 1:N
-        Ct = delta(sites[i], prime(sites[i]), prime(sites[i], 2))
-        P[i] = psi[i] * prime(conj(psi[i])) * Ct
-        P[i] *= delta(sites[i], prime(sites[i], 2))
+        Ct = δ(ξ[i], ξ[i]', ξ[i]'')
+        P[i] = ρ[i] * Ct
+        P[i] *= δ(ξ[i], ξ[i]'')
+    end
+    return P
+end
+
+function get_Born_MPS(ψ::MPS)
+    ξ = siteinds(ψ)
+    N = size(ξ, 1)
+    P = MPS(ξ)
+    for i in 1:N
+        Ct = δ(ξ[i], ξ[i]', ξ[i]'')
+        P[i] = ψ[i] * conj(ψ[i]') * Ct
+        P[i] *= δ(ξ[i], ξ[i]'')
     end
     return P
 end
 
 
-function get_Born(rhoA::MPO)
-    sites = siteinds(rhoA)
-    NA = size(sites, 1)
-    s = noprime(sites[1][1])
-    a = Index(2, "a")
-    P = rhoA[1] * delta(s, prime(s), a)
-    P *= delta(a, s)
-    for i in 2:NA
-        s = noprime(sites[i][1])
-        C = rhoA[i] * delta(s, prime(s), a)
-        C *= delta(a, s)
+function get_Born(ρ::MPO)
+    ξ = firstsiteinds(ρ;plev=0)
+    N = size(ξ, 1)
+    P = ρ[1] * δ(ξ[1],ξ[1]',ξ[1]'')
+    P *= δ(ξ[1]'', ξ[1])
+    for i in 2:N
+        C = ρ[i] * delta(ξ[i], ξ[i]', ξ[i]'')
+        C *= delta(ξ[i]'', ξ[i])
         P *= C
     end
-    return noprime(P)
-end
-
-
-function get_Born(rhoA::ITensor, sites::Vector{Index{Int64}})
-    NA = size(sites, 1)
-    s = sites[1]
-    a = Index(2, "a")
-    P = deepcopy(rhoA)
-    for i in 1:NA
-        s = sites[i]
-        P = P * delta(s, prime(s), a)
-        P = P * delta(a, s)
-    end
     return P
 end
 
-function get_Born(psi::MPS)
-    sites = siteinds(psi)
-    N = size(sites, 1)
 
-    C = delta(sites[1], prime(sites[1]), prime(sites[1], 2))
-    R = C * psi[1] * prime(conj(psi[1]))
-    R *= delta(sites[1], prime(sites[1], 2))
+function get_Born(ψ::MPS)
+    ξ = siteinds(ψ )
+    N = size(ξ, 1)
+    C = δ(ξ[1], ξ[1]',ξ[1]'')
+    R = C * ψ[1] * conj(ψ[1]')
+    R *= δ(ξ[1], ξ[1]'')
     P = R
     for i in 2:N
-        Ct = delta(sites[i], prime(sites[i]), prime(sites[i], 2))
-        Rt = psi[i] * prime(conj(psi[i])) * Ct
-        Rt *= delta(sites[i], prime(sites[i], 2))
+        Ct = δ(ξ[i], ξ[i]', ξ[i]'')
+        Rt = ψ[i] * conj(ψ[i]') * Ct
+        Rt *= δ(ξ[i], ξ[i]'')
         P *= Rt
     end
-    return noprime(P)
+    return P
 end
 

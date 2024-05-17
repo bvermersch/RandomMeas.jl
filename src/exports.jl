@@ -3,13 +3,10 @@ export
 Apply_depo_channel!,
 
 partial_trace,
-get_trrho3,
-mergeindices,
 flatten,
 
 get_rotation,
 get_rotations,
-rotate_b,
 get_RandomMeas!,
 get_RandomMeas_MPS!,
 get_RandomMeas_MPO!,

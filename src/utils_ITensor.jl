@@ -1,9 +1,3 @@
-function mergeindices(A::ITensor,B::ITensor,s1::Index{Int64},s2::Index{Int64})
-	s3 = Index(dim(s1))
-	X = A*B*delta(s3,s1,s2)
-	return X*delta(s3,s1)
-end
-
 function flatten(O::Union{MPS,MPO,Vector{ITensor}})
 	N = length(O)
 	O_f = O[1]
@@ -13,28 +7,24 @@ function flatten(O::Union{MPS,MPO,Vector{ITensor}})
 	return O_f
 end
 
-function trace(rho::MPO,s::Vector{Index{Int64}})
+function trace(ρ::MPO,s::Vector{Index{Int64}})
 	NA = size(s,1)
-	X = rho[1]*delta(s[1],prime(s[1]))
+  X = ρ[1]*δ(s[1],s[1]')
 	for i in 2:NA
-		X *= rho[i]*delta(s[i],prime(s[i]))
+		X *= ρ[i]*δ(s[i],s[i]')
 	end
-	return scalar(X)
+  return X[]
 end
 
-function reduce_dm(rho::MPO,part::Vector{Int64})
-	N = length(rho)
+function reduce_dm(ρ::MPO,part::Vector{Int64})
+	N = length(ρ)
 	NA = size(part,1)
-	so = siteinds(rho)
-	s = siteinds(2,N)
-	for i in 1:N
-		s[i] = noprime(so[i][1])
-	end
+  s = firstsiteinds(ρ;plev=0)
 	sA = s[part]
-	rhoA = MPO(sA)
+	ρA = MPO(sA)
 	L = 1
 	for i in 1:part[1]-1
-		L *= rho[i]*delta(s[i],prime(s[i]))
+		L *= ρ[i]*δ(s[i],s[i]')
 	end
 	for j in 1:NA
 		if j<NA
@@ -44,101 +34,57 @@ function reduce_dm(rho::MPO,part::Vector{Int64})
 		end
 		R = 1
 		for i in part[j]+1:imax
-			R *= rho[i]*delta(s[i],prime(s[i]))
+        R *= ρ[i]*δ(s[i],s[i]')
 		end
-		rhoA[j] = L*rho[part[j]]*R
+		ρA[j] = L*ρ[part[j]]*R
 		L = 1
 	end
-	orthogonalize!(rhoA,1)
-	return rhoA,sA
+	orthogonalize!(ρA,1)
+	return ρA,sA
 end
 
-function reduce_dm(rho::MPO,i::Int64,j::Int64)
+function reduce_dm(ρ::MPO,i::Int64,j::Int64)
 	N = length(rho)
-	so = siteinds(rho)
-	s = siteinds(2,N)
-	for i in 1:N
-		s[i] = noprime(so[i][1])
-	end
+  s = firstsiteinds(ρ;plev=0)
 	sA = s[i:j]
-	rhoA = MPO(sA)
+	ρA = MPO(sA)
 
 	for k in i:j
-		rhoA[k-i+1] = rho[i]
+		ρA[k-i+1] = ρ[i]
 	end
 
 	L = 1
 	for k in 1:i-1
-		L *= rho[k]*delta(s[k],s[k]')
+		L *=ρ[k]*δ(s[k],s[k]')
 	end
 	rhoA[i] *= L
 	
 	R = 1
 	for k in j+1:N
-		R *= rho[k]*delta(s[k],s[k]')
+		R *= ρ[k]*δ(s[k],s[k]')
 	end
-	rhoA[j] *= R
-	orthogonalize!(rhoA,1)
-	return rhoA,sA
+	ρA[j] *= R
+	orthogonalize!(ρA,1)
+	return ρA,sA
 end
 
-function reduce_dm(psi::MPS,i::Int64,j::Int64)
-	N = length(psi)
-	s = siteinds(psi)
+function reduce_dm(ψ::MPS,i::Int64,j::Int64)
+	N = length(ψ)
+	s = siteinds(ψ)
 	sA = s[i:j]
-	rhoA = MPO(sA)
+	ρA = MPO(sA)
 	for l in i:j
-		rhoA[l-i+1] = psi'[l]*dag(psi[l])
+		ρA[l-i+1] = ψ'[l]*dag(ψ[l])
 	end
 	if i>1
-		l = commonindex(psi[i-1],psi[i])
-		rhoA[1] *= delta(l,l')
+		l = commonindex(ψ[i-1],ψ[i])
+		ρA[1] *= δ(l,l')
 	end
 	if j<N
-		l = commonindex(psi[j],psi[j+1])
-		rhoA[j-i+1] *= delta(l,l')
+		l = commonindex(ψ[j],ψ[j+1])
+		ρA[j-i+1] *= δ(l,l')
 	end
-	return rhoA,sA
-end
-
-
-function multiply(O1::MPO,O2::MPO)
-	sites = siteinds(O1)
-	NA = length(sites)
-	sitesnp = siteinds("S=1/2", NA)
-	for i in 1:NA
-		sitesnp[i] = noprime(sites[i][1])
-	end
-	O = MPO(sitesnp)
-	for i in 1:NA
-		O[i] = O1[i]*prime(O2[i])
-		s = noprime(sitesnp[i])	
-		O[i] *= delta(prime(s,2),prime(s))
-	end
-	orthogonalize!(O,1)
-	return O
-end
-
-function power(O1::Union{MPS,MPO},n::Int)
-	O = copy(O1)
-	for m in 1:n-1
-		O = multiply(O,O1)
-	end
-	orthogonalize!(O,1)
-	return O
-end
-
-
-function reduce_dm_onesite(state::Union{MPS,MPO},i::Int64)
-	N = length(state)
-	if typeof(state)==MPS
-		rho  = MPO([s])
-		s = siteinds(state)[i]
-		orthogonalize!(state,i)
-		rho[i] = state[i]*prime(dag(state[i]),s)
-	else	##TO BE DONE REDUCED STATES OF MIXED STATES NA<=N
-	end
-	return rho
+	return ρA,sA
 end
 
 

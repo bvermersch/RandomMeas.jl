@@ -1,4 +1,4 @@
-using ITensors
+using ITensors,ITensorMPS
 using RandomMeas
 
 N  = 3
@@ -12,7 +12,7 @@ datat = zeros(Int8,(NM,N))
 u = Vector{Vector{ITensor}}()
 for r in 1:nu
     push!(u,get_rotations(ξ,1)) #Haar rotations in A
-    get_RandomMeas_MPS!(datat,ψ,u[r],NM)
+    get_RandomMeas_MPS!(datat,ψ,u[r])
     data[r,:,:] = datat[:,:]
 end
 purity = get_purity_hamming(data,ξ)

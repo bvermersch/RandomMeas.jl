@@ -1,15 +1,15 @@
-function get_overlap(prob1::ITensor,prob2::ITensor,sites::Vector{Index{Int64}},NA::Int64)
+function get_overlap(prob1::ITensor,prob2::ITensor,ξ::Vector{Index{Int64}},N::Int64)
 	Hamming_tensor,a,b = get_h_tensor()
-	h = Hamming_tensor*delta(a,sites[1])*delta(b,prime(sites[1]))
+  h = Hamming_tensor*δ(a,ξ[1])*δ(b,ξ[1]')
 	global overlap_temp = prob1*h
-	for i in 2:NA
-		h = Hamming_tensor*delta(a,sites[i])*delta(b,prime(sites[i]))
+	for i in 2:N
+      h = Hamming_tensor*δ(a,ξ[i])*delta(b,ξ[i]')
 		global overlap_temp = overlap_temp*h
 	end
-	overlap_temp = overlap_temp*prime(prob2)
+	overlap_temp = overlap_temp*prob2'
 	#println("contraction done")
-	overlap_temp = real(scalar(overlap_temp))
-	X = overlap_temp*2^NA
+  overlap_temp = real(overlap_temp[])
+	X = overlap_temp*2^N
 	return X
 end
 
@@ -49,44 +49,31 @@ function get_purity_hamming(data::Array{Int8},ξ::Vector{Index{Int64}})
 end
 
 
-function get_X_data(data::Array{Int8},sites::Vector{Index{Int64}})
-	NM = size(data,1)
-  NA = size(data,2)
-	#println("get_Born 1")
-	prob = get_Born_data_binary(data,sites)
-	Hamming_matrix = zeros(Float64,(NA,2,2))	
-	for i in 1:NA
-			Hamming_matrix[i,1,1] = 1
-			Hamming_matrix[i,2,2] = 1
-			Hamming_matrix[i,2,1] = -0.5
-			Hamming_matrix[i,1,2] = -0.5
-	end
-	a = Index(2,"a")
-	b = Index(2,"b")
-	Hamming_tensor = itensor(Hamming_matrix[1,:,:],a,b)
-	h = Hamming_tensor*delta(a,sites[1])*delta(b,prime(sites[1]))
+function get_X_data(data::Array{Int8},ξ::Vector{Index{Int64}})
+	NM,N = size(data)
+	prob = get_Born_data_binary(data,ξ)
+	Hamming_tensor,a,b = get_h_tensor()
+  h = Hamming_tensor*δ(a,ξ[1])*δ(b,ξ[1]')
+
 	global purity_temp = prob*h
-	for i in 2:NA
-		Hamming_tensor = itensor(Hamming_matrix[i,:,:],a,b)
-		h = Hamming_tensor*delta(a,sites[i])*delta(b,prime(sites[i]))
+	for i in 2:N
+      h = Hamming_tensor*δ(a,ξ[i])*δ(b,ξ[i]')
 		global purity_temp = purity_temp*h
 	end
-	purity_temp = purity_temp*prime(prob)
-	#println("contraction done")
+	purity_temp = purity_temp*prob'
 	purity_temp = real(scalar(purity_temp))
-	X = purity_temp*2^NA
-	X = X*NM^2/(NM*(NM-1)) - 2^NA/(NM-1)
+	X = purity_temp*2^N
+	X = X*NM^2/(NM*(NM-1)) - 2^N/(NM-1)
 	return X
 end
 
-function get_Born_data_binary(data::Array{Int8},sitesA::Vector{Index{Int64}})
-	NM = size(data,1)
-	NA = size(data,2)
+function get_Born_data_binary(data::Array{Int8},ξ::Vector{Index{Int64}})
+	NM,N = size(data)
 	probf = StatsBase.countmap(eachrow(data))
-	prob = zeros(Int64,(2*ones(Int,NA))...)
+	prob = zeros(Int64,(2*ones(Int,N))...)
 	for (state,val) in probf
 		prob[state...] = val
 	end
-	probT = ITensor(prob,sitesA)/NM
+	probT = ITensor(prob,ξ)/NM
 	return probT
 end
