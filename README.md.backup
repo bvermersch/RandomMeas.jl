@@ -60,15 +60,15 @@ RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ
 
 1)  Energy/Energy variance measurements with classical shadows
 	+ Related Paper [Huang et al, Nat Phys 2020](https://doi.org/10.1038/s41567-020-0932-7)
-	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/EnergyVarianceMeasurements.ipynb)
+	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas_dev.jl/blob/master/examples/EnergyVarianceMeasurements.ipynb)
 
 2) Fidelities from common randomized measurements
 	+ Related paper [Vermersch, al, PRXQ 2024](https://doi.org/10.1103/PRXQuantum.5.010352)
-	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/FidelityCommonRandomizedMeasurements.ipynb)
+	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas_dev.jl/blob/master/examples/FidelityCommonRandomizedMeasurements.ipynb)
 
 3) Cross-Platform verication
 	+ Related paper [Elben et al, PRL 2019 ](https://doi.org/10.1103/PhysRevLett.124.010504)[Zhu et al, Nat. Comm 2022](https://www.nature.com/articles/s41467-022-34279-5)
-	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CrossPlatform.ipynb)
+	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas_dev.jl/blob/master/examples/CrossPlatform.ipynb)
 
 4) Entanglement Entropy of pure states & The page curve"
 	+ Related paper [Brydges et al, Science 2019](https://doi.org/10.1126/science.aau4963)
