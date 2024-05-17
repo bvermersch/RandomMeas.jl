@@ -1,6 +1,3 @@
-using Random
-using ProgressBars
-
 function get_rotations(s::Vector{Index{Int64}}, cat::Int=1)
     u = Vector{ITensor}()
     N = length(s)
