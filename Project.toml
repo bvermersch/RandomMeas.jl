@@ -3,6 +3,9 @@ uuid = "a9f96d1f-ed6a-4404-822f-5927c777f274"
 authors = ["Benoit Vermersch & Andreas Elben"]
 version = "1.0.0-DEV"
 
+[deps]
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
+
 [compat]
 julia = "1.10"
 
