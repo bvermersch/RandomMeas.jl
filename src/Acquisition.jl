@@ -24,7 +24,7 @@ Categories specified by  cat:
 function get_rotation(ξ::Index{Int64}, cat::Int)
     r_matrix = zeros(ComplexF64, (2, 2))
     if cat == 1
-        return op("RandomUnitary", s)
+        return op("RandomUnitary", ξ)
     elseif cat == 2
         b = rand(1:3)
         #println("basis B", b)
@@ -48,7 +48,7 @@ function get_rotation(ξ::Index{Int64}, cat::Int)
         b = rand(1:2)
         r_matrix[1, 1] = 1
         r_matrix[2, 2] = 1
-        r_tensor = itensor(r_matrix, s', s)
+        r_tensor = itensor(r_matrix, ξ', ξ)
         return r_tensor
     end
 end
