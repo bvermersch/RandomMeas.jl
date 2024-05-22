@@ -1,9 +1,7 @@
 # RandomMeas.jl: The randomized measurements toolbox in julia
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://bvermersch.github.io/RandomMeas.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bvermersch.github.io/RandomMeas.jl/dev/)
 [![Build Status](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/bvermersch/RandomMeas.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/bvermersch/RandomMeas.jl)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 <img src="Pics/RandomMeasurements.png" alt="drawing" width="250"/>. 
@@ -49,7 +47,7 @@ RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ
 2) Postprocessing routines for randomized measurements, eg to get the purity
 	
 	```julia
-	purity = get_purity_hamming(data[:,:,1:N÷2],ξ)
+	purity = get_purity_hamming(data,ξ)
 	``` 
 	
 2) Interface with matrix-product-states simulations with ITensors.jl & PastaQ.jl to simulate large-scale randomized measurements protocols.
@@ -60,15 +58,15 @@ RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ
 
 1)  Energy/Energy variance measurements with classical shadows
 	+ Related Paper [Huang et al, Nat Phys 2020](https://doi.org/10.1038/s41567-020-0932-7)
-	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas_dev.jl/blob/master/examples/EnergyVarianceMeasurements.ipynb)
+	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/EnergyVarianceMeasurements.ipynb)
 
 2) Fidelities from common randomized measurements
 	+ Related paper [Vermersch, al, PRXQ 2024](https://doi.org/10.1103/PRXQuantum.5.010352)
-	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas_dev.jl/blob/master/examples/FidelityCommonRandomizedMeasurements.ipynb)
+	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/FidelityCommonRandomizedMeasurements.ipynb)
 
 3) Cross-Platform verication
 	+ Related paper [Elben et al, PRL 2019 ](https://doi.org/10.1103/PhysRevLett.124.010504)[Zhu et al, Nat. Comm 2022](https://www.nature.com/articles/s41467-022-34279-5)
-	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas_dev.jl/blob/master/examples/CrossPlatform.ipynb)
+	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CrossPlatform.ipynb)
 
 4) Entanglement Entropy of pure states & The page curve"
 	+ Related paper [Brydges et al, Science 2019](https://doi.org/10.1126/science.aau4963)
@@ -97,4 +95,4 @@ RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ
 
 9) Virtual distillation
 	+ Related paper [Seif et al, PRX Quantum 4, 010303 2023](https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.4.010303)
-	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/examples/VirtualDistillation.ipynb)
+	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/VirtualDistillation.ipynb)

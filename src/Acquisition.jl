@@ -1,3 +1,8 @@
+"""
+    get_rotations!
+
+Generate a list of N single qubit unitaries to be applied on each qubit
+"""
 function get_rotations(ξ::Vector{Index{Int64}}, cat::Int=1)
     u = Vector{ITensor}()
     N = length(ξ)
@@ -7,11 +12,16 @@ function get_rotations(ξ::Vector{Index{Int64}}, cat::Int=1)
     return u
 end
 
-function get_rotation(s::Index{Int64}, cat::Int=1)
+"""
+    get_rotation(ξ::Index{Int64}, cat::Int)
+
+Generate a single qubit unitary with indices (ξ',ξ)
+Categories specified by  cat:
     #1: Haar
     #2: Pauli
-    #3: Clifford (TBD)
-    #4: Pauli X twirling
+    #6: Identity matrix
+"""
+function get_rotation(ξ::Index{Int64}, cat::Int)
     r_matrix = zeros(ComplexF64, (2, 2))
     if cat == 1
         return op("RandomUnitary", s)
@@ -32,24 +42,8 @@ function get_rotation(s::Index{Int64}, cat::Int=1)
             r_matrix[1, 2] = -1im / sqrt(2)
             r_matrix[2, 1] = -1im / sqrt(2)
         end
-        r_tensor = itensor(r_matrix, s', s)
+        r_tensor = itensor(r_matrix, ξ', ξ)
         return r_tensor
-    elseif cat == 4
-        b = rand(1:2)
-        #println("basis B", b)
-        if b == 1
-            r_matrix[1, 1] = 1
-            r_matrix[2, 2] = 1
-        else
-            r_matrix[1, 2] = 1
-            r_matrix[2, 1] = 1
-        end
-        r_tensor = itensor(r_matrix, s', s)
-        return r_tensor
-    elseif cat == 5
-        H = rand()*op("Sz",s)+op("Sx",s)+op("Sy",s)
-        u = exp(-1im*H)
-        return u
     elseif cat == 6
         b = rand(1:2)
         r_matrix[1, 1] = 1
@@ -60,7 +54,7 @@ function get_rotation(s::Index{Int64}, cat::Int=1)
 end
 
 """
-    get_RandomMeas!
+    get_RandomMeas!(data_s::Array{Int8}, ρ::Union{MPO,MPS}, u::Vector{ITensor})
 
 Sample randomized measurements from a MPS/MPO representation ρ 
 """
@@ -75,7 +69,7 @@ function get_RandomMeas!(data_s::Array{Int8}, ρ::Union{MPO,MPS}, u::Vector{ITen
 end
 
 """
-    get_Samples_Flat!
+    get_Samples_Flat!(data_s::Array{Int8}, state::Union{MPO,MPS})
 
 Sample randomized measurements from a MPS/MPO representation ρ 
 """
@@ -94,7 +88,7 @@ end
 """
     get_RandomMeas_MPO!
 
-Sample randomized measurements from a MPS/MPO representation ρ. The sampling is based from the MPO directly, i.e is memory-efficient 
+Sample randomized measurements from an MPO representation ρ. The sampling is based from the MPO directly, i.e is memory-efficient 
 """
 function get_RandomMeas_MPO!(data::Array{Int8}, ρ::MPO, u::Vector{ITensor}, NM::Int64)
     ξ = firstsiteinds(ρ;plev=0)
@@ -115,6 +109,11 @@ function get_RandomMeas_MPO!(data::Array{Int8}, ρ::MPO, u::Vector{ITensor}, NM:
 end
 
 
+"""
+    get_RandomMeas_MPS!(data::Array{Int8}, ψ::MPS, u::Vector{ITensor})
+
+Sample randomized measurements from an MPS representation ψ. The sampling is based from the MPS directly, i.e is memory-efficient 
+"""
 function get_RandomMeas_MPS!(data::Array{Int8}, ψ::MPS, u::Vector{ITensor})
     NM = size(data,1)
     #ppsiu = rotate_b(psi, u)
@@ -126,6 +125,11 @@ function get_RandomMeas_MPS!(data::Array{Int8}, ψ::MPS, u::Vector{ITensor})
 end
 
 
+"""
+    get_Born_MPS(ρ::MPO)
+
+Construct Born Probability vector P(s)=<s|ρ|s> as an MPS from an MPO representation ρ 
+"""
 function get_Born_MPS(ρ::MPO)
     ξ = firstsiteinds(ρ;plev=0)
     N = size(ξ, 1)
@@ -138,6 +142,11 @@ function get_Born_MPS(ρ::MPO)
     return P
 end
 
+"""
+    get_Born_MPS(ψ::MPS)
+
+Construct Born Probability vector P(s)=|ψ(s)|^2 as an MPS from an MPS representation ψ 
+"""
 function get_Born_MPS(ψ::MPS)
     ξ = siteinds(ψ)
     N = size(ξ, 1)
@@ -151,6 +160,11 @@ function get_Born_MPS(ψ::MPS)
 end
 
 
+"""
+    get_Born(ρ::MPO)
+
+Construct Born Probability vector P(s)=<s|ρ|s> from an MPO representation ρ 
+"""
 function get_Born(ρ::MPO)
     ξ = firstsiteinds(ρ;plev=0)
     N = size(ξ, 1)
@@ -165,6 +179,11 @@ function get_Born(ρ::MPO)
 end
 
 
+"""
+    get_Born(ψ::MPS)
+
+Construct Born Probability vector P(s)=|ψ(s)|^2 from an MPS representation ψ 
+"""
 function get_Born(ψ::MPS)
     ξ = siteinds(ψ )
     N = size(ξ, 1)

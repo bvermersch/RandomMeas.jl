@@ -1,3 +1,8 @@
+"""
+    acquire_shadows_batch_fromdata(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
+
+Constructs n batch shadows from measured data
+"""
 function acquire_shadows_batch_fromdata(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
     shadow = Vector{ITensor}()
     NA = size(data, 3)
@@ -16,6 +21,13 @@ function acquire_shadows_batch_fromdata(data::Array{Int8}, ξ::Vector{Index{Int6
     return shadow
 end
 
+
+
+"""
+    get_moments_shadows_batch(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64, nu::Int64)
+
+Obtain trace moments from batch shadows using U-statistics
+"""
 function get_moments_shadows_batch(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64, nu::Int64)
     p = Vector{Float64}()
 
@@ -37,6 +49,12 @@ function get_moments_shadows_batch(shadow::Vector{ITensor}, ξ::Vector{Index{Int
     return p
 end
 
+ 
+"""
+    get_shadow(P::ITensor, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G::Union{Vector{Float64},Nothing}=nothing)
+
+    Form shadow from Born probability represented as an ITensor
+"""
 function get_shadow(P::ITensor, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G::Union{Vector{Float64},Nothing}=nothing)
     NA = length(u)
     i1 = Index(2, "i1")
@@ -72,6 +90,11 @@ function get_shadow(P::ITensor, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G::
     return rho 
 end
 
+"""
+    get_shadow_factorized!(rho::Vector{ITensor}, M::Array{Int8}, s::Vector{Index{Int64}}, u::Vector{ITensor};G_vec::Union{Nothing,Vector{Float64}}=nothing)
+
+    build shadow as a tensor-product (memory-efficient)
+"""
 function get_shadow_factorized!(rho::Vector{ITensor}, M::Array{Int8}, s::Vector{Index{Int64}}, u::Vector{ITensor};G_vec::Union{Nothing,Vector{Float64}}=nothing)
 #function get_shadow_factorized!(rho::Vector{ITensor}, M::Array{Int8}, s::Vector{Index{Int64}}, u::Vector{ITensor};G_vec::Vector{Float64}=undef)
     N = length(u)
@@ -90,6 +113,11 @@ function get_shadow_factorized!(rho::Vector{ITensor}, M::Array{Int8}, s::Vector{
 end
 
 
+"""
+    get_expect_shadow(O, shadow, ξ::Vector{Index{Int64}})
+
+    Contract shadow with operator O to estimate the expectation value ``\\mathrm{tr}(O\\rho)``
+"""
 function get_expect_shadow(O::MPO, shadow::ITensor, ξ::Vector{Index{Int64}})
     N = size(ξ, 1)
     X = 1 * shadow'
@@ -131,17 +159,24 @@ function get_expect_shadow(ψ::MPS, shadow::Vector{MPO}, ξ::Vector{Index{Int64}
     return O_e
 end
 
-
+"""
+    square(shadow::ITensor)
+"""
 function square(shadow::ITensor)
     Y = multiply(shadow, shadow)
     return Y
 end
 
+"""
+    multiply(shadow::ITensor, shadow2::ITensor)
+"""
 function multiply(shadow::ITensor, shadow2::ITensor)
     return mapprime(shadow * prime(shadow2), 2, 1)
 end
 
-
+"""
+    power(shadow::ITensor, n::Int64)
+"""
 function power(shadow::ITensor, n::Int64)
     Y = deepcopy(shadow)
     for m in 1:n-1
@@ -150,6 +185,9 @@ function power(shadow::ITensor, n::Int64)
     return Y
 end
 
+"""
+    trace(shadow::ITensor, ξ::Vector{Index{Int64}})
+"""
 function trace(shadow::ITensor, ξ::Vector{Index{Int64}})
     NA = size(ξ, 1)
     Y = copy(shadow)

@@ -1,3 +1,8 @@
+"""
+    get_overlap(prob1::ITensor,prob2::ITensor,ξ::Vector{Index{Int64}},N::Int64)
+
+Extract an overlap estimation ``\\mathrm{tr}(\\rho_1\\rho_2)`` from two estimated Born probabilities [See Elben et al 2019: Cross Platform verification of intermediate scale quantum devices]
+"""
 function get_overlap(prob1::ITensor,prob2::ITensor,ξ::Vector{Index{Int64}},N::Int64)
 	Hamming_tensor,a,b = get_h_tensor()
   h = Hamming_tensor*δ(a,ξ[1])*δ(b,ξ[1]')
@@ -26,6 +31,11 @@ function get_h_tensor()
 end
 
 
+"""
+    get_purity_shadows(data::Array{Int8},ξ::Vector{Index{Int64}})
+
+Extract the purity from classical shadows
+"""
 function get_purity_shadows(data::Array{Int8},u::Vector{Vector{ITensor}},ξ::Vector{Index{Int64}};G::Union{Vector{Float64},Nothing}=nothing)
     nu,NM,NA = size(data)
     shadow = ITensor(vcat(ξ,ξ'))
@@ -39,6 +49,13 @@ function get_purity_shadows(data::Array{Int8},u::Vector{Vector{ITensor}},ξ::Vec
     return real(trace(power(shadow,2),ξ)-trace(shadow2,ξ))/(nu*(nu-1))
 end
 
+
+"""
+    get_purity_hamming(data::Array{Int8},ξ::Vector{Index{Int64}})
+
+Extract the purity from the Hamming distance formula
+purity = ``\\sum_s (-2)^{-D[s,s']}P(s)P(s')`` [Brydges et al, Science 2019]
+"""
 function get_purity_hamming(data::Array{Int8},ξ::Vector{Index{Int64}})
     nu,NM,NA = size(data)
     p2 = 0.
@@ -67,6 +84,12 @@ function get_X_data(data::Array{Int8},ξ::Vector{Index{Int64}})
 	return X
 end
 
+
+"""
+    get_Born_data_binary(data::Array{Int8},ξ::Vector{Index{Int64}})
+
+Construct histogram from randomized measurements as an ITensor representing the estimated Born probability
+"""
 function get_Born_data_binary(data::Array{Int8},ξ::Vector{Index{Int64}})
 	NM,N = size(data)
 	probf = StatsBase.countmap(eachrow(data))

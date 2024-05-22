@@ -1,3 +1,8 @@
+"""
+    flatten(O::Union{MPS,MPO,Vector{ITensor}})
+
+convert a MPS/MPO to ITensor by a brutal multiplication A[1] x A[2] x ...
+"""
 function flatten(O::Union{MPS,MPO,Vector{ITensor}})
 	N = length(O)
 	O_f = O[1]
@@ -7,6 +12,9 @@ function flatten(O::Union{MPS,MPO,Vector{ITensor}})
 	return O_f
 end
 
+"""
+    trace(ρ::MPO,s::Vector{Index{Int64}})
+"""
 function trace(ρ::MPO,s::Vector{Index{Int64}})
 	NA = size(s,1)
   X = ρ[1]*δ(s[1],s[1]')
@@ -16,6 +24,11 @@ function trace(ρ::MPO,s::Vector{Index{Int64}})
   return X[]
 end
 
+"""
+    reduce_dm(ρ::MPO,part::Vector{Int64})
+
+compute the reduce density matrix over sites mentionned in part
+"""
 function reduce_dm(ρ::MPO,part::Vector{Int64})
 	N = length(ρ)
 	NA = size(part,1)
@@ -43,6 +56,12 @@ function reduce_dm(ρ::MPO,part::Vector{Int64})
 	return ρA,sA
 end
 
+"""
+    reduce_dm(ρ::MPO,i::Int64,j::Int64)
+
+compute the reduced density matrix for sites i:j
+
+"""
 function reduce_dm(ρ::MPO,i::Int64,j::Int64)
 	N = length(rho)
   s = firstsiteinds(ρ;plev=0)
@@ -68,6 +87,13 @@ function reduce_dm(ρ::MPO,i::Int64,j::Int64)
 	return ρA,sA
 end
 
+
+"""
+    reduce_dm(ψ::MPS,i::Int64,j::Int64)
+
+compute the reduced density matrix for sites i:j
+
+"""
 function reduce_dm(ψ::MPS,i::Int64,j::Int64)
 	N = length(ψ)
 	s = siteinds(ψ)
@@ -87,11 +113,15 @@ function reduce_dm(ψ::MPS,i::Int64,j::Int64)
 	return ρA,sA
 end
 
+"""
+    get_purity(ψ::MPS,NA::Int64)
 
-function get_purity(state::MPS,NA::Int64)
+compute the purity of an MPS over the first NA sites
+"""
+function get_purity(ψ::MPS,NA::Int64)
 	N = length(state)
 	if NA<N
-		spec = get_spectrum(state,NA)
+		spec = get_spectrum(ψ,NA)
 		p = get_moment(spec,2)[1]
 	else
 		p = 1
@@ -99,6 +129,11 @@ function get_purity(state::MPS,NA::Int64)
 	return p
 end
 
+"""
+    get_purity(ψ::MPS,i::Int64,j::Int64)
+
+compute the purity over sites i:j
+"""
 function get_purity(ψ::MPS,i::Int64,j::Int64)
     N = length(ψ)
     ξ = siteinds(ψ)
@@ -119,21 +154,32 @@ function get_purity(ψ::MPS,i::Int64,j::Int64)
     return real(X[])
 end
 
-function get_purity(state::MPO)
-	orthogonalize!(state,1)
-	return real(scalar(state[1]*dag(state[1])))
+"""
+    get_purity(ρ::MPO)
+
+compute the purity of an MPO
+"""
+function get_purity(ρ::MPO)
+	orthogonalize!(ρ,1)
+	return real(scalar(ρ[1]*dag(ρ[1])))
 end
 
-function get_purity(state::MPO,part::Vector{Int64},s::Vector{Index{Int64}})
+"""
+    get_purity(ρ::MPO,part::Vector{Int64},ξ::Vector{Index{Int64}})
+
+Compute the purity over the sites of part
+"""
+function get_purity(ρ::MPO,part::Vector{Int64},ξ::Vector{Index{Int64}})
+ξ = firstsiteinds(ρ;plev=0)
 	A = 1
-	N = length(state)
+	N = length(ρ)
 	for l in 1:N
 		if l in part
-			B = state[l]*state[l]'
-			B *= delta(s[l],s[l]'')
+			B = ρ[l]*ρ[l]'
+			B *= δ(ξ[l],ξ[l]'')
 			A *= B
 		else
-			B = state[l]*delta(s[l],s[l]')
+			B = ρ[l]*δ(ξ[l],ξ[l]')
 			B *= B'
 			A *= B
 		end
@@ -141,9 +187,12 @@ function get_purity(state::MPO,part::Vector{Int64},s::Vector{Index{Int64}})
 	return real(scalar(A))
 end
 
-
-function get_spectrum(state::MPS,NA::Int64)
-        statel = copy(state)
+"""
+    get_spectrum(ψ::MPS,NA::Int64)
+    Compute entanglement spectrum of the first NA sites density matrix
+"""
+function get_spectrum(ψ::MPS,NA::Int64)
+        statel = copy(ψ)
 	orthogonalize!(statel,NA)
 	if NA>1
 		U,spec,V = svd(statel[NA], (linkind(statel, NA-1), siteind(statel,NA)))
@@ -153,6 +202,11 @@ function get_spectrum(state::MPS,NA::Int64)
 	return spec
 end
 
+"""
+    get_moment(spec::ITensor,n::Int)
+
+compute the moments ``\\mathrm{tr}(\\rho)'' from the entanglement spectrum
+"""
 function get_moment(spec::ITensor,n::Int)
 	p = Vector{Float64}()
 	for m in 2:n
@@ -165,6 +219,11 @@ function get_moment(spec::ITensor,n::Int)
 	return p
 end
 
+"""
+    get_entropy(spec::ITensor)
+
+compute von Neumann entropy from entanglement spectrum
+"""
 function get_entropy(spec::ITensor)
 	S = 0
 	for l=1:dim(spec, 1)

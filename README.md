@@ -30,8 +30,8 @@ RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ
 	
 	N  = 10
 	χ = 2^(N÷2)
-	nu=2000
-	NM=100
+	nu = 2000
+	NM = 100
 	ξ = siteinds("Qubit", N)
 	ψ = randomMPS(ξ; linkdims=χ);
 	data = zeros(Int8,(nu,NM,N))
@@ -39,7 +39,7 @@ RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ
 	u = Vector{Vector{ITensor}}()
 	for r in 1:nu
 	    push!(u,get_rotations(ξ,1)) #Haar rotations in A
-	    get_RandomMeas_MPS!(datat,ψ,u[r],NM)
+	    get_RandomMeas_MPS!(datat,ψ,u[r])
 	    data[r,:,:] = datat[:,:]
 	end
 	``` 
