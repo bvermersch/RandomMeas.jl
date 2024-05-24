@@ -41,7 +41,7 @@ function get_purity_shadows(data::Array{Int8},u::Vector{Vector{ITensor}},ξ::Vec
     shadow = ITensor(vcat(ξ,ξ'))
     shadow2 = ITensor(vcat(ξ,ξ'))
     for r in 1:nu
-        P = get_Born_data_binary(data[r,:,:],ξ)
+        P = get_Born(data[r,:,:],ξ)
         shadow_temp = get_shadow(P,ξ,u[r];G=G)
         shadow += shadow_temp
         shadow2 += power(shadow_temp,2)
@@ -60,15 +60,15 @@ function get_purity_hamming(data::Array{Int8},ξ::Vector{Index{Int64}})
     nu,NM,NA = size(data)
     p2 = 0.
     for r in 1:nu
-        p2 += get_X_data(data[r,:,:],ξ)/nu
+        p2 += get_purity_estimate(data[r,:,:],ξ)/nu
     end
     return p2
 end
 
 
-function get_X_data(data::Array{Int8},ξ::Vector{Index{Int64}})
+function get_purity_estimate(data::Array{Int8},ξ::Vector{Index{Int64}})
 	NM,N = size(data)
-	prob = get_Born_data_binary(data,ξ)
+	prob = get_Born(data,ξ)
 	Hamming_tensor,a,b = get_h_tensor()
   h = Hamming_tensor*δ(a,ξ[1])*δ(b,ξ[1]')
 
@@ -86,11 +86,11 @@ end
 
 
 """
-    get_Born_data_binary(data::Array{Int8},ξ::Vector{Index{Int64}})
+    get_Born(data::Array{Int8},ξ::Vector{Index{Int64}})
 
 Construct histogram from randomized measurements as an ITensor representing the estimated Born probability
 """
-function get_Born_data_binary(data::Array{Int8},ξ::Vector{Index{Int64}})
+function get_Born(data::Array{Int8},ξ::Vector{Index{Int64}})
 	NM,N = size(data)
 	probf = StatsBase.countmap(eachrow(data))
 	prob = zeros(Int64,(2*ones(Int,N))...)

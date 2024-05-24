@@ -54,27 +54,27 @@ function get_rotation(ξ::Index{Int64}, cat::Int)
 end
 
 """
-    get_RandomMeas!(data_s::Array{Int8}, ρ::Union{MPO,MPS}, u::Vector{ITensor})
+    get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor})
 
 Sample randomized measurements from a MPS/MPO representation ρ 
 """
-function get_RandomMeas!(data_s::Array{Int8}, ρ::Union{MPO,MPS}, u::Vector{ITensor})
-    #ρu = rotate_b(ρ, u)
+function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
     if typeof(ρ)==MPS
         ρu = apply(u,ρ)
     else
         ρu = apply(u,ρ;apply_dag=true)
     end
-    get_Samples_Flat!(data_s, ρu)
+    return get_Samples_Flat(ρu,NM)
 end
 
 """
-    get_Samples_Flat!(data_s::Array{Int8}, state::Union{MPO,MPS})
+    get_Samples_Flat(state::Union{MPO,MPS},NM::Int64)
 
 Sample randomized measurements from a MPS/MPO representation ρ 
 """
-function get_Samples_Flat!(data_s::Array{Int8}, state::Union{MPO,MPS})
-    NM,N = size(data_s)
+function get_Samples_Flat(state::Union{MPO,MPS},NM::Int64)
+    N = length(state)
+    data_s = zeros(Int8,NM,N)
     #This is borrowed from PastaQ
     Prob = get_Born(state)
     prob = real(array(Prob))
@@ -83,18 +83,19 @@ function get_Samples_Flat!(data_s::Array{Int8}, state::Union{MPO,MPS})
         data = StatsBase.sample(0:(1<<N-1), StatsBase.Weights(prob), 1)
         data_s[m, :] = 1 .+ digits(data[1], base=2, pad=N)
     end
+    return data_s
 end
 
 """
-    get_RandomMeas_MPO!
+    get_RandomMeas_MPO
 
 Sample randomized measurements from an MPO representation ρ. The sampling is based from the MPO directly, i.e is memory-efficient 
 """
-function get_RandomMeas_MPO!(data::Array{Int8}, ρ::MPO, u::Vector{ITensor}, NM::Int64)
+function get_RandomMeas_MPO(ρ::MPO, u::Vector{ITensor}, NM::Int64)
     ξ = firstsiteinds(ρ;plev=0)
-    #ρu = rotate_b(ρ, u)
     ρu = apply(u,ρ;apply_dag=true)
-    NA = length(u)
+    N= length(u)
+    data = zeros(Int8,NM,N)
     ρu[1] /= trace(ρu, ξ)
     if NA > 1
         for m in 1:NM
@@ -110,18 +111,18 @@ end
 
 
 """
-    get_RandomMeas_MPS!(data::Array{Int8}, ψ::MPS, u::Vector{ITensor})
+    get_RandomMeas_MPS(ψ::MPS, u::Vector{ITensor},NM::Int64)
 
 Sample randomized measurements from an MPS representation ψ. The sampling is based from the MPS directly, i.e is memory-efficient 
 """
-function get_RandomMeas_MPS!(data::Array{Int8}, ψ::MPS, u::Vector{ITensor})
-    NM = size(data,1)
-    #ppsiu = rotate_b(psi, u)
+function get_RandomMeas_MPS(ψ::MPS, u::Vector{ITensor},NM::Int64)
+    N = length(ψ)
+    data = zeros(Int8,NM,N)
     ψu = apply(reverse(u),ψ) #using reverse allows us to maintain orthocenter(ψ)=1 ;)
     for m in 1:NM
         data[m, :] = ITensors.sample(ψu)#[1:NA]
     end
-
+    return data
 end
 
 

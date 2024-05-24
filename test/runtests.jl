@@ -2,7 +2,7 @@ using RandomMeas
 using Test
 
 filenames = [
-  "test_purity.jl",
+  "test_examples.jl"
 ]
 
 @testset "RandomMeas.jl" begin

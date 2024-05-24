@@ -1,9 +1,9 @@
 """
-    acquire_shadows_batch_fromdata(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
+    get_batch_shadows(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
 
 Constructs n batch shadows from measured data
 """
-function acquire_shadows_batch_fromdata(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
+function get_batch_shadows(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
     shadow = Vector{ITensor}()
     NA = size(data, 3)
     nu = size(data, 1)
@@ -13,7 +13,7 @@ function acquire_shadows_batch_fromdata(data::Array{Int8}, ξ::Vector{Index{Int6
     nu_n = nu ÷ n
     for t in 1:n
         for r in 1+(t-1)*nu_n:t*nu_n
-            P = get_Born_data_binary(data[r, :,:], ξ)
+            P = get_Born(data[r, :,:], ξ)
             shadow_temp = get_shadow(P, ξ, u[r])
             shadow[t] += shadow_temp / nu_n
         end
@@ -24,11 +24,11 @@ end
 
 
 """
-    get_moments_shadows_batch(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64, nu::Int64)
+    get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64, nu::Int64)
 
-Obtain trace moments from batch shadows using U-statistics
+Obtain trace moments from  a vector of (batch) shadows using U-statistics
 """
-function get_moments_shadows_batch(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64, nu::Int64)
+function get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64, nu::Int64)
     p = Vector{Float64}()
 
     for m in 2:n
@@ -91,13 +91,13 @@ function get_shadow(P::ITensor, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G::
 end
 
 """
-    get_shadow_factorized!(rho::Vector{ITensor}, M::Array{Int8}, s::Vector{Index{Int64}}, u::Vector{ITensor};G_vec::Union{Nothing,Vector{Float64}}=nothing)
+    get_shadow_factorized(data::Array{Int8}, s::Vector{Index{Int64}}, u::Vector{};G_vec::Union{Nothing,Vector{Float64}}=nothing)
 
     build shadow as a tensor-product (memory-efficient)
 """
-function get_shadow_factorized!(rho::Vector{ITensor}, M::Array{Int8}, s::Vector{Index{Int64}}, u::Vector{ITensor};G_vec::Union{Nothing,Vector{Float64}}=nothing)
-#function get_shadow_factorized!(rho::Vector{ITensor}, M::Array{Int8}, s::Vector{Index{Int64}}, u::Vector{ITensor};G_vec::Vector{Float64}=undef)
+function get_shadow_factorized(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G_vec::Union{Nothing,Vector{Float64}}=nothing)
     N = length(u)
+    ρ = Vector{ITensor}()
     for i in 1:N
         if G_vec ==nothing
             α = 3
@@ -107,9 +107,10 @@ function get_shadow_factorized!(rho::Vector{ITensor}, M::Array{Int8}, s::Vector{
             β = (G_vec[i] - 2) / (2 * G_vec[i] - 1)
         end
         #u*_{s',s}|s'><s'|=u^dag_{s,s'}|s'><s'|
-        ψ = dag(u[i]) * onehot(s[i]' => M[i])
-        rho[i] = α * ψ' * dag(ψ) + β * δ(s[i], s[i]')
+        ψ = dag(u[i]) * onehot(ξ[i]' => data[i])
+        push!(ρ, α * ψ' * dag(ψ) + β * δ(ξ[i], ξ[i]'))
     end
+    return ρ
 end
 
 
@@ -135,6 +136,17 @@ function get_expect_shadow(O::MPO, shadow::Vector{ITensor}, ξ::Vector{Index{Int
         s = ξ[i]
         X *= shadow[i]'
         X *= O[i] * δ(s, s'')
+    end
+    return real(X[])
+end
+
+function get_expect_shadow(ψ::MPS, shadow::Vector{ITensor}, ξ::Vector{Index{Int64}})
+    N = size(ξ, 1)
+    X = 1
+    for i in 1:N
+        s = ξ[i]
+        X *= shadow[i]
+        X *= dag(ψ[i]') * ψ[i]
     end
     return real(X[])
 end

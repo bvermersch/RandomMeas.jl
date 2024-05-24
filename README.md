@@ -1,4 +1,4 @@
-# RandomMeas.jl: The randomized measurements toolbox in julia
+# RandomMeas: The randomized measurements toolbox in julia
 
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bvermersch.github.io/RandomMeas.jl/dev/)
 [![Build Status](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml?query=branch%3Amain)
@@ -7,14 +7,14 @@
 <img src="Pics/RandomMeasurements.png" alt="drawing" width="250"/>. 
 
 ## Install
-
-The package is under development. For the moment, you can clone the github repository and use 
+In a Julia terminal, install the package RandomMeas
 ```julia
-push!(LOAD_PATH,"pathtopackagedirectory/src/")
-using RandomMeas
+julia> ]
+
+pkg> add RandomMeas
 ```
 
-RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ.jl
+RandomMeas relies heavily on ITensors, and for some examples, uses  PastaQ
 
 ## Documentation
 [dev](https://bvermersch.github.io/RandomMeas.jl/dev/) -- documentation of the in-development version.
@@ -39,8 +39,7 @@ RandomMeas.jl relies heavily on ITensors.jl, and for some examples, uses  PastaQ
 	u = Vector{Vector{ITensor}}()
 	for r in 1:nu
 	    push!(u,get_rotations(ξ,1)) #Haar rotations in A
-	    get_RandomMeas_MPS!(datat,ψ,u[r])
-	    data[r,:,:] = datat[:,:]
+	    data[r,:,:] = get_RandomMeas(ψ,u[r],NM)
 	end
 	``` 
 
