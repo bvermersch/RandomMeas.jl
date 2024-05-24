@@ -15,14 +15,14 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
-NBInclude = "2"
-ProgressBars = "1"
-PastaQ = "0.1"
-ITensors = "0.3"
 Combinatorics = "1"
 ITensorMPS = "0.2"
-StatsBase = "0.33"
+ITensors = "0.3,0.6"
+NBInclude = "2"
+PastaQ = "0.1"
 Plots = "1"
+ProgressBars = "1"
+StatsBase = "0.33"
 julia = "1.10"
 
 [extras]
