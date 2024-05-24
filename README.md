@@ -4,7 +4,7 @@
 [![Build Status](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-<img src="Pics/RandomMeas.png" alt="drawing" width="250"/>. 
+<img src="Pics/RandomMeas.png" alt="drawing" width="500"/>. 
 
 ## Install
 In a Julia terminal, install the package RandomMeas
