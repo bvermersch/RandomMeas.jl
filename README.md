@@ -4,6 +4,10 @@
 [![Build Status](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
+This package presents efficient routines for testing and postprocessing randomized measurements, in order to estimate physical properties in quantum computers. 
+
+RandomMeas relies heavily on ITensors, and for some examples, uses  PastaQ
+
 <img src="Pics/RandomMeas.png" alt="drawing" width="500"/>. 
 
 ## Install
@@ -14,7 +18,6 @@ julia> ]
 pkg> add RandomMeas
 ```
 
-RandomMeas relies heavily on ITensors, and for some examples, uses  PastaQ
 
 ## Documentation
 [dev](https://bvermersch.github.io/RandomMeas.jl/dev/) -- documentation of the in-development version.
@@ -77,7 +80,7 @@ RandomMeas relies heavily on ITensors, and for some examples, uses  PastaQ
 	
 6) Analyzing the experimental data of Brydges et al, Science 2019
 	+ Related paper [Brydges et al, Science 2019](https://doi.org/10.1126/science.aau4963)
-	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/examples/BrydgesScience2019.ipynb)
+	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/BrydgesScience2019.ipynb)
 	
 7) Robust Shadow tomography
 	+ Related papers
