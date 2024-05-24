@@ -21,7 +21,7 @@ PastaQ = "0.1"
 ITensors = "0.3"
 Combinatorics = "1"
 ITensorMPS = "0.2"
-StatsBase = "0.34"
+StatsBase = "0.33"
 Plots = "1"
 julia = "1.10"
 
