@@ -24,11 +24,11 @@ end
 
 
 """
-    get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64, nu::Int64)
+    get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64)
 
 Obtain trace moments from  a vector of (batch) shadows using U-statistics
 """
-function get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64, nu::Int64)
+function get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64)
     p = Vector{Float64}()
 
     for m in 2:n
@@ -49,7 +49,7 @@ function get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64
     return p
 end
 
- 
+
 """
     get_shadow(P::ITensor, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G::Union{Vector{Float64},Nothing}=nothing)
 
@@ -71,8 +71,8 @@ function get_shadow(P::ITensor, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G::
         else
             α  = 3 / (2 * G[i] - 1)
             β  = (G[i] - 2) / (2 * G[i] - 1)
-            Hamming_matrix[1, 1] = (α+β)/2 
-            Hamming_matrix[2, 2] = (α+β)/2 
+            Hamming_matrix[1, 1] = (α+β)/2
+            Hamming_matrix[2, 2] = (α+β)/2
             Hamming_matrix[2, 1] = β/2
             Hamming_matrix[1, 2] = β/2
         end
@@ -87,7 +87,7 @@ function get_shadow(P::ITensor, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G::
         ut = dag(u[i]) * δ(s'', s)
         rho = mapprime(ut * rho, 2, 1)
     end
-    return rho 
+    return rho
 end
 
 """
