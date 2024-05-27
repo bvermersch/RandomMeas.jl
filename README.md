@@ -15,7 +15,6 @@ RandomMeas relies heavily on ITensors. Some examples use the packages PastaQ and
 In a Julia terminal, install the package RandomMeas
 ```julia
 julia> ]
-
 pkg> add RandomMeas
 ```
 
