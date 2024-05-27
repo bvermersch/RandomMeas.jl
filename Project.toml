@@ -22,7 +22,7 @@ NBInclude = "2"
 PastaQ = "0.1"
 Plots = "1"
 ProgressBars = "1"
-StatsBase = "0.33"
+StatsBase = "0.33, 0.34"
 julia = "1.10"
 
 [extras]
