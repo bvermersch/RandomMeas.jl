@@ -6,7 +6,7 @@
 
 This package presents efficient routines for testing and postprocessing randomized measurements, in order to estimate physical properties in quantum computers. 
 
-RandomMeas relies heavily on ITensors, and for some examples, uses  PastaQ
+RandomMeas relies heavily on ITensors. Some examples use the packages PastaQ and MAT
 
 <img src="Pics/RandomMeas.png" alt="drawing" width="500"/>. 
 
@@ -85,7 +85,8 @@ pkg> add RandomMeas
 7) Robust Shadow tomography
 	+ Related papers
 	[Chen et al PRX Q 2021](https://doi.org/10.1103/PRXQuantum.2.030348)
-	[Vitale et al, arxiv: arXiv:2307.16882]
+	[Koh et al Quantum 2022](https://quantum-journal.org/papers/q-2022-08-16-776/)
+	[Vitale et al](http://arxiv.org/abs/2307.16882)
 	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/RobustShadowTomography.ipynb)
 	
 8) Process Shadow tomography
