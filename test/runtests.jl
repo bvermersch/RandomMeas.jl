@@ -1,7 +1,7 @@
 using RandomMeas
 using Test
 
-filenames = [
+filenames = ["test_simple.jl",
   "test_examples.jl"
 ]
 

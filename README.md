@@ -10,6 +10,7 @@ RandomMeas relies heavily on ITensors. Some examples use the packages PastaQ and
 
 <img src="Pics/RandomMeas.png" alt="drawing" width="500"/>. 
 
+
 ## Install
 In a Julia terminal, install the package RandomMeas
 ```julia
@@ -28,28 +29,30 @@ pkg> add RandomMeas
 1) Routines to prepare on QPUs/simulate the data acquisition
 
 	```julia
-	using ITensors
+	using ITensors,ITensorMPS
 	using RandomMeas
+	N  = 2
+	ψ = random_mps(siteinds("Qubit", 2*N); linkdims=2^N);
+	ρ,ξ = reduce_dm(ψ,1,N)
 	
-	N  = 10
-	χ = 2^(N÷2)
-	nu = 2000
-	NM = 100
-	ξ = siteinds("Qubit", N)
-	ψ = randomMPS(ξ; linkdims=χ);
+
+	nu=100 #number of random unitaries
+	NM=100 #number of projective measurements
 	data = zeros(Int8,(nu,NM,N))
-	datat = zeros(Int8,(NM,N))
-	u = Vector{Vector{ITensor}}()
 	for r in 1:nu
-	    push!(u,get_rotations(ξ,1)) #Haar rotations in A
-	    data[r,:,:] = get_RandomMeas(ψ,u[r],NM)
+	    #generate Haar-random single qubit rotations
+	    u = get_rotations(ξ,1)
+	    #acquire RM measurements
+	    data[r,:,:] = get_RandomMeas(ρ,u,NM)
 	end
 	``` 
 
 2) Postprocessing routines for randomized measurements, eg to get the purity
 	
 	```julia
-	purity = get_purity_hamming(data,ξ)
+	purity_e = get_purity_hamming(data,ξ)
+    println("estimated purity ", purity_e)
+    println("exact purity ", get_purity(ρ))
 	``` 
 	
 2) Interface with matrix-product-states simulations with ITensors.jl & PastaQ.jl to simulate large-scale randomized measurements protocols.

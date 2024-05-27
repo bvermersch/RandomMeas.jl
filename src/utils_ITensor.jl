@@ -103,11 +103,11 @@ function reduce_dm(ψ::MPS,i::Int64,j::Int64)
 		ρA[l-i+1] = ψ'[l]*dag(ψ[l])
 	end
 	if i>1
-		l = commonindex(ψ[i-1],ψ[i])
+		l = commonind(ψ[i-1],ψ[i])
 		ρA[1] *= δ(l,l')
 	end
 	if j<N
-		l = commonindex(ψ[j],ψ[j+1])
+		l = commonind(ψ[j],ψ[j+1])
 		ρA[j-i+1] *= δ(l,l')
 	end
 	return ρA,sA
