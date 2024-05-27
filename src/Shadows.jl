@@ -24,7 +24,7 @@ end
 
 
 """
-    get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64)
+    get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}})
 
 Obtain trace moments from  a vector of (batch) shadows using U-statistics
 """
@@ -117,7 +117,7 @@ end
 """
     get_expect_shadow(O, shadow, ξ::Vector{Index{Int64}})
 
-    Contract shadow with operator O to estimate the expectation value ``\\mathrm{tr}(O\\rho)``
+Contract shadow with operator O to estimate the expectation value ``\\mathrm{tr}(O\\rho)``
 """
 function get_expect_shadow(O::MPO, shadow::ITensor, ξ::Vector{Index{Int64}})
     N = size(ξ, 1)
