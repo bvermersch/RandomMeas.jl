@@ -38,4 +38,10 @@ get_purity_hamming,
 get_purity,
 
 #Channels.jl
-Apply_depo_channel!
+Apply_depo_channel!,
+
+#ShallowShadows.jl
+EvaluateMeasurementChannel,
+Find_c,
+Find_d,
+get_ShallowShadow

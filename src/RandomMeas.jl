@@ -8,6 +8,7 @@ include("Postprocessing.jl")
 include("Shadows.jl")
 include("utils_ITensor.jl")
 include("Channels.jl")
+include("ShallowShadows.jl")
 
 
 end
