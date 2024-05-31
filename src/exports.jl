@@ -44,4 +44,5 @@ Apply_depo_channel!,
 EvaluateMeasurementChannel,
 Find_c,
 Find_d,
-get_ShallowShadow
+get_ShallowShadow,
+FitChannelMPO
