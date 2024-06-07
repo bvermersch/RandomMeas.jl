@@ -42,7 +42,6 @@ Apply_depo_channel!,
 
 #ShallowShadows.jl
 EvaluateMeasurementChannel,
-Find_c,
-Find_d,
+InversionChannel,
 get_ShallowShadow,
 FitChannelMPO
