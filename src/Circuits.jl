@@ -16,7 +16,7 @@ function Apply_depo_channel(ρ::MPO,p::Vector{Float64})
 end
 
 """
-    randomcircuit(N::Int64,depth::Int64)
+    RandomCircuit(ξ::Vector{Index{Int64}},depth::Int64)
 
 Create a random circuit of given depth. Returns the list of gates as a vector of ITensors
 """
