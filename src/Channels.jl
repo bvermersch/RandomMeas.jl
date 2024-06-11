@@ -1,4 +1,9 @@
-function Apply_depo_channel!(ρ::MPO,ξ::Vector{Index{Int64}},p::Vector{Float64})
+"""
+    Apply_depo_channel(ρ::MPO,ξ::Vector{Index{Int64}},p::Vector{Float64})
+
+Apply depolarization channel on all qubits with probabilities specficied by the vector p
+"""
+function Apply_depo_channel(ρ::MPO,ξ::Vector{Index{Int64}},p::Vector{Float64})
     N = length(ρ)
     for i in 1:N
         s = ξ[i]

@@ -19,7 +19,6 @@ function EvaluateMeasurementChannel(ψ::MPS,u::Vector{Vector{ITensor}})
         Mt = MPO(ξ)
         ψu = apply(u[r],ψ)
         Pu = get_Born_MPS(ψu)
-        truncate!(Pu;cutoff=1e-6)
         PostState = PostRotator(s,ξ,u[r])
         for i in 1:N
             Mt[i] = (Pu[i]*δ(ξ[i],s[i]))*PostState[i]
