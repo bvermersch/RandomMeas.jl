@@ -37,8 +37,9 @@ get_purity_shadows,
 get_purity_hamming,
 get_purity,
 
-#Channels.jl
+#Circuits.jl
 Apply_depo_channel,
+RandomCircuit,
 
 #ShallowShadows.jl
 EvaluateMeasurementChannel,
