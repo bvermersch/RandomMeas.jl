@@ -30,6 +30,13 @@ Modules = [RandomMeas]
 Pages = ["Shadows.jl"]
 ```
 
+## Routines for simulating quantum circuits
+
+```@autodocs
+Modules = [RandomMeas]
+Pages = ["Circuits.jl"]
+```
+
 ## Additional useful routines for ITensor
 
 ```@autodocs

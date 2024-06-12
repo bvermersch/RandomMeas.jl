@@ -161,10 +161,10 @@ function get_Born_MPS(ψ::MPS)
 end
 
 
-"""
-    get_Born(ρ::MPO)
+ """
+     get_Born(ρ::MPO)
 
-Construct Born Probability vector P(s)=<s|ρ|s> from an MPO representation ρ 
+ Construct Born Probability vector P(s) from an MPO representation ρ 
 """
 function get_Born(ρ::MPO)
     ξ = firstsiteinds(ρ;plev=0)
