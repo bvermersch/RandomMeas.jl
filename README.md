@@ -101,3 +101,7 @@ pkg> add RandomMeas
 9) Virtual distillation
 	+ Related paper [Seif et al, PRX Quantum 4, 010303 2023](https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.4.010303)
 	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/VirtualDistillation.ipynb)
+
+9) Cross-Entropy/Self-Cross entropy benchmarkingVirtual
+	+ Related paper [Andersen et al, arxiv:2405.17385](https://arxiv.org/abs/2405.17385)
+	+ [Jupyter notebook](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CrossEntropy.ipynb)
