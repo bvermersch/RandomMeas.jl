@@ -99,7 +99,7 @@ function get_shadow_factorized(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::V
     N = length(u)
     ρ = Vector{ITensor}()
     for i in 1:N
-        if G_vec ==nothing
+        if G_vec ===nothing
             α = 3
             β = -1
         else
