@@ -9,6 +9,11 @@ function PostRotator(s::Vector{Index{Int64}},ξ::Vector{Index{Int64}},u::Vector{
         return apply(ud,ρe,apply_dag=true)
 end
 
+"""
+    EvaluateMeasurementChannel(ψ::MPS,u::Vector{Vector{ITensor}})
+
+Evaluate a measurement channel Pu(s)ud|s><s|u using tensor network simulations
+"""
 function EvaluateMeasurementChannel(ψ::MPS,u::Vector{Vector{ITensor}})
     ξ = siteinds(ψ)
     N = length(ψ)
@@ -19,15 +24,30 @@ function EvaluateMeasurementChannel(ψ::MPS,u::Vector{Vector{ITensor}})
         Mt = MPO(ξ)
         ψu = apply(u[r],ψ)
         Pu = get_Born_MPS(ψu)
+        Pu = truncate(Pu;cutoff=1e-16)
+        # println("Pu ", maxlinkdim(Pu) )
         PostState = PostRotator(s,ξ,u[r])
+        PostState = truncate(PostState;cutoff=1e-16)
+        # println("PS ", maxlinkdim(PostState) )
         for i in 1:N
             Mt[i] = (Pu[i]*δ(ξ[i],s[i]))*PostState[i]
         end
-        push!(M,truncate(Mt;cutoff=1e-16))
+        # println("before ",maxlinkdim(Mt))
+        # println(inds(Pu[N÷2];tags="Link"))
+        # println(inds(PostState[N÷2];tags="Link"))
+        # println(inds(Mt[N÷2];tags="Link"))
+        Mt = truncate(Mt;cutoff=1e-16)
+        # println("after ",maxlinkdim(Mt))
+        push!(M,Mt)
     end
     return M
 end
 
+"""
+    FitChannelMPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
+
+FInd the best MPO that represents a measurement channel evaluated by EvaluateMeasurementChannel
+"""
 function FitChannelMPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
     Nu = length(M)
     ξ = firstsiteinds(M[1];plev=0)
@@ -153,8 +173,13 @@ function Cost_InversionChannel(c::Vector{ITensor},ρ0::MPO,Dσ0::Vector{ITensor}
     return real(X1[]-X2a[]-X2b[]+X3[])
 end
 
-#Find d such  that M^-1(σ0)=ρ0
-function InversionChannel(ρ0::MPO,σ0::MPO,χ ::Int64)
+"""
+    InversionChannel(ρ0::MPO,σ0::MPO,χ ::Int64,nsweeps::Int64)
+
+From a measured postselected state σ0, and an initial state, find the inverse channel that maps
+back σ0 to ρ0. χ is the bond dimension of the MPS that parametrizes the quantum channel. 
+"""
+function InversionChannel(ρ0::MPO,σ0::MPO,χ ::Int64,nsweeps::Int64)
     N = length(ρ0)
     ξ = firstsiteinds(ρ0;plev=0)
     s = siteinds("Qubit", N;addtags="input")
@@ -166,16 +191,31 @@ function InversionChannel(ρ0::MPO,σ0::MPO,χ ::Int64)
     end
     D = Dissipators(ξ,s,v)
     Dσ0 = [D[i]*σ0t[i] for i in 1:N]
-    di = randomMPS(Float64,v,;linkdims=χ).data
+    dt = randomMPS(Float64,v,;linkdims=χ)
     loss(d) = Cost_InversionChannel(d,ρ0,Dσ0)
-    optimizer = LBFGS(; maxiter=200, verbosity=1, gradtol = 1e-5)
-    loss_and_grad(x) = loss(x),loss'(x)
-    d, fs, gs, niter, normgradhistory = optimize(loss_and_grad, di, optimizer)
-    return d
+    optimizer = LBFGS(; maxiter=200, verbosity=0, gradtol = 1e-5)
+    for s in 1:nsweeps
+        for i in 1:N
+            orthogonalize!(dt,i)
+            lossi(di) = loss([dt[1:i-1];di;dt[i+1:N]])
+            loss_and_grad(x) = lossi(x),lossi'(x)
+            di, fs, gs, niter, normgradhistory = optimize(loss_and_grad, dt[i], optimizer)
+            dt[i] = di
+        end
+        println("sweep ",s, " loss ", loss(dt.data))
+    end
+    #loss_and_grad(x) = loss(x),loss'(x)
+    return dt
 end
 
 
-function get_ShallowShadow(data::Array{Int8},u::Vector{ITensor},d::Vector{ITensor},ξ::Vector{Index{Int64}})
+"""
+    get_ShallowShadow(data::Array{Int8},u::Vector{ITensor},d::MPS,ξ::Vector{Index{Int64}})
+
+Build shadows from measured data under shallow unitaries d and learnt channel parametrized by the MPS 
+d
+"""
+function get_ShallowShadow(data::Array{Int8},u::Vector{ITensor},d::MPS,ξ::Vector{Index{Int64}})
     NM,N = size(data)
     x = [firstind(d[i],tags="Site") for i in 1:N]
     s = siteinds("Qubit", N;addtags="input")
