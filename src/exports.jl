@@ -40,6 +40,7 @@ get_purity,
 #Circuits.jl
 Apply_depo_channel,
 RandomCircuit,
+RandomPauliLayer,
 
 #ShallowShadows.jl
 EvaluateMeasurementChannel,

@@ -33,3 +33,27 @@ function RandomCircuit(ξ::Vector{Index{Int64}},depth::Int64)
     end
     return circuit
 end
+
+"""
+    RandomPauliLayer(ξ::Vector{Index{Int64}},p::Vector{Float64})
+
+Create a layer of stochastic Pauli operations with probability (1-3*p/4,p/4,p/4,p/4)
+(corresponding to local depolarization with probability p)
+"""
+function RandomPauliLayer(ξ::Vector{Index{Int64}},p::Vector{Float64})
+    N = length(ξ)
+    circuit = ITensor[]
+    for i in 1:N
+        if rand()>1-3*p[i]/4
+            a = rand()
+            if a<1/3
+                push!(circuit,op("X",ξ[i]))
+            elseif a<2/3
+                push!(circuit,op("Y",ξ[i]))
+            else
+                push!(circuit,op("Z",ξ[i]))
+            end
+        end
+    end
+    return circuit
+end
