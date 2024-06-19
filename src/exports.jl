@@ -7,7 +7,8 @@ get_RandomMeas,
 get_RandomMeas_MPS,
 get_RandomMeas_MPO,
 get_expect_shadow,
-get_Samples_Flat,
+get_XEB,
+get_selfXEB,
 
 #Shadows.jl
 get_shadow,

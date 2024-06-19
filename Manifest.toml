@@ -2,7 +2,7 @@
 
 julia_version = "1.10.0"
 manifest_format = "2.0"
-project_hash = "1571ace68796139ce4c0c31f8ef388a41bfb24d1"
+project_hash = "94c8edc0499377bfafad407790aa04f69e989974"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -642,6 +642,12 @@ deps = ["Dates", "Mmap", "Parsers", "Unicode"]
 git-tree-sha1 = "31e996f0a15c7b280ba9f76636b3ff9e2ae58c9a"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.4"
+
+[[deps.Jackknife]]
+deps = ["Statistics", "Test"]
+git-tree-sha1 = "6bd323cb089c551386417ffbcb833527f2d6e3cd"
+uuid = "133c4774-c510-5f25-b650-129312f89f69"
+version = "0.4.0"
 
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]

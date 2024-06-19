@@ -201,3 +201,35 @@ function get_Born(ψ::MPS)
     return P
 end
 
+"""
+    get_XEB(ψ::MPS,ρ::MPO,NM::Int64)
+
+Return the linear cross-entropy for NM samples of the mixed state, with respect to a
+theory state ψ
+"""
+function get_XEB(ψ::MPS,ρ::MPO,NM::Int64)
+    ξ = siteinds(ψ )
+    data = get_Samples_Flat(ρ,NM)
+    P0 = get_Born_MPS(ψ)
+    XEB = 0.
+    N = length(ψ)
+    for m in 1:NM
+        V = ITensor(1.)
+        for j=1:N
+              V *= (P0[j]*state(ξ[j],data[m,j]))
+        end
+        XEB += 2^N/NM*real(V[])-1/NM
+    end
+    return XEB
+end
+
+"""
+    get_selfXEB(ψ::MPS)
+
+Returns the self-XEB 2^N sum_s |ψ(s)|^4-1 
+"""
+function get_selfXEB(ψ::MPS)
+    P0 = get_Born_MPS(ψ)
+    N = length(ψ)
+    return 2^N*real(inner(P0,P0))-1
+end

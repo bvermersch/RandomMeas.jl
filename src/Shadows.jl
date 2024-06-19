@@ -30,9 +30,9 @@ Obtain trace moments from  a vector of (batch) shadows using U-statistics
 """
 function get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64)
     p = Vector{Float64}()
-
+    n_shadows = length(shadow)
     for m in 2:n
-        r_a = collect(permutations(1:n, m)) #m_uplet of n batches
+        r_a = collect(permutations(1:n_shadows, m)) #m_uplet of n_shadows batches
         alpha = length(r_a)
         est = 0
         push!(p, 0)
