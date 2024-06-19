@@ -68,7 +68,7 @@ pkg> add RandomMeas
 
 4) [Entanglement Entropy of pure states & The page curve"](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/PureStateEntanglement.ipynb)
 
-5) [Mixed-state entanglement: "The $p_3$-PPT condition" and batch shadows](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/MixedStateEntanglement.ipynb)
+5) [Mixed-state entanglement: "The p3-PPT condition" and batch shadows](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/MixedStateEntanglement.ipynb)
 
 6) [Analyzing the experimental data of Brydges et al, Science 2019](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/BrydgesScience2019.ipynb)
 
@@ -81,3 +81,5 @@ pkg> add RandomMeas
 10) [Cross-Entropy/Self-Cross entropy benchmarking](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CrossEntropy.ipynb)
 
 11) [Noisy circuit simulations with tensor networks](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CircuitNoiseSimulations.ipynb)
+
+12) [Classical shadows with shallow circuits](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/ShallowShadows.ipynb)
