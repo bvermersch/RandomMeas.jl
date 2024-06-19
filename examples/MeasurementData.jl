@@ -44,6 +44,21 @@ end
 
 
 
+"""
+    get_born_probabilities(measurement_data::MeasurementData; site_indices::Vector{Index{Int64}}=measurement_data.site_indices)
+
+Compute the Born probabilities for a given `measurement_data` object.
+
+# Arguments
+- `measurement_data::MeasurementData`: The measurement data object containing the measurement results.
+- `site_indices::Vector{Index{Int64}}`: (optional) The indices of the sites for which to compute the probabilities. Defaults to `measurement_data.site_indices`.
+
+# Returns
+- `probT::Array{ITensor, 2}`: The Born probabilities for each unitary.
+
+# Example
+
+"""
 function get_born_probabilities(measurement_data::MeasurementData;site_indices::Vector{Index{Int64}}=measurement_data.site_indices)
 
     NU, NM, N = size(measurement_data.measurement_results)
@@ -55,6 +70,19 @@ function get_born_probabilities(measurement_data::MeasurementData;site_indices::
     return probT
 end
 
+
+function reduce_to_subystem(MeasurementData::measurement_data, subsystem::Vector{Int})
+    @assert length(subsystem) <= MeasurementData.N "Dimension mismatch: subsystem should have length less than or equal to $MeasurementData.N"
+    @assert all(1 .<= subsystem .<= MeasurementData.N) "Dimension mismatch: subsystem should have elements between 1 and $MeasurementData.N"
+    @assert subsystem == sort(subsystem) "Subsystem should be ordered"
+    site_indices = MeasurementData.site_indices[subsystem]
+    measurement_results = MeasurementData.measurement_results[:, :, subsystem]
+    local_unitaries = MeasurementData.local_unitaries[:, subsystem]
+    return MeasurementData(measurement_results, local_unitaries, site_indices=site_indices)
+end
+
+
+#### Helper functions
 """
     get_born_probabilities(data::Array{Int8,2})
 
@@ -68,15 +96,4 @@ function get_born_probabilities(data::Array{Int8,2})
 		prob[state...] = val
 	end
 	return prob/NM
-end
-
-
-function reduce_to_subystem(MeasurementData::measurement_data, subsystem::Vector{Int})
-    @assert length(subsystem) <= MeasurementData.N "Dimension mismatch: subsystem should have length less than or equal to $MeasurementData.N"
-    @assert all(1 .<= subsystem .<= MeasurementData.N) "Dimension mismatch: subsystem should have elements between 1 and $MeasurementData.N"
-    @assert subsystem == sort(subsystem) "Subsystem should be ordered"
-    site_indices = MeasurementData.site_indices[subsystem]
-    measurement_results = MeasurementData.measurement_results[:, :, subsystem]
-    local_unitaries = MeasurementData.local_unitaries[:, subsystem]
-    return MeasurementData(measurement_results, local_unitaries, site_indices=site_indices)
 end
