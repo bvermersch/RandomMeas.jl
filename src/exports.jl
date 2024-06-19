@@ -7,6 +7,7 @@ get_RandomMeas,
 get_RandomMeas_MPS,
 get_RandomMeas_MPO,
 get_expect_shadow,
+get_Samples_Flat,
 
 #Shadows.jl
 get_shadow,
@@ -41,6 +42,7 @@ get_purity,
 Apply_depo_channel,
 RandomCircuit,
 RandomPauliLayer,
+RandomMagneticFieldLayer,
 
 #ShallowShadows.jl
 EvaluateMeasurementChannel,

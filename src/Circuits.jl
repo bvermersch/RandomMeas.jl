@@ -57,3 +57,17 @@ function RandomPauliLayer(ξ::Vector{Index{Int64}},p::Vector{Float64})
     end
     return circuit
 end
+
+"""
+    RandomMagneticFieldLayer(ξ::Vector{Index{Int64}},p::Vector{Float64})
+
+Create a layer with Random Rz gates of average angle π p.
+"""
+function RandomMagneticFieldLayer(ξ::Vector{Index{Int64}},p::Vector{Float64})
+    N = length(ξ)
+    circuit = ITensor[]
+    for i in 1:N
+        push!(circuit,op("Rz",ξ[i];θ=2*π*p[i]*rand()))
+    end
+    return circuit
+end
