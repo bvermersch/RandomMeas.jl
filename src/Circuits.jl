@@ -1,9 +1,9 @@
 """
-    Apply_depo_channel(ρ::MPO,p::Vector{Float64})
+    apply_depo_channel(ρ::MPO,p::Vector{Float64})
 
 Apply depolarization channel on all qubits with probabilities specficied by the vector p
 """
-function Apply_depo_channel(ρ::MPO,p::Vector{Float64})
+function apply_depo_channel(ρ::MPO,p::Vector{Float64})
     N = length(ρ)
     ξ = firstsiteinds(ρ;plev=0)
     ρ1 = copy(ρ)
@@ -16,11 +16,11 @@ function Apply_depo_channel(ρ::MPO,p::Vector{Float64})
 end
 
 """
-    RandomCircuit(ξ::Vector{Index{Int64}},depth::Int64)
+    random_circuit(ξ::Vector{Index{Int64}},depth::Int64)
 
 Create a random circuit of given depth. Returns the list of gates as a vector of ITensors
 """
-function RandomCircuit(ξ::Vector{Index{Int64}},depth::Int64)
+function random_circuit(ξ::Vector{Index{Int64}},depth::Int64)
     N = length(ξ)
     circuit = ITensor[]
     for d in 1:depth
@@ -35,12 +35,12 @@ function RandomCircuit(ξ::Vector{Index{Int64}},depth::Int64)
 end
 
 """
-    RandomPauliLayer(ξ::Vector{Index{Int64}},p::Vector{Float64})
+    random_Pauli_layer(ξ::Vector{Index{Int64}},p::Vector{Float64})
 
 Create a layer of stochastic Pauli operations with probability (1-3*p/4,p/4,p/4,p/4)
 (corresponding to local depolarization with probability p)
 """
-function RandomPauliLayer(ξ::Vector{Index{Int64}},p::Vector{Float64})
+function random_Pauli_layer(ξ::Vector{Index{Int64}},p::Vector{Float64})
     N = length(ξ)
     circuit = ITensor[]
     for i in 1:N
@@ -63,7 +63,7 @@ end
 
 Create a layer with Random Rz gates of average angle π p.
 """
-function RandomMagneticFieldLayer(ξ::Vector{Index{Int64}},p::Vector{Float64})
+function random_magnetic_field_layer(ξ::Vector{Index{Int64}},p::Vector{Float64})
     N = length(ξ)
     circuit = ITensor[]
     for i in 1:N

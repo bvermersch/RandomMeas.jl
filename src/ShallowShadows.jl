@@ -10,11 +10,11 @@ function PostRotator(s::Vector{Index{Int64}},ξ::Vector{Index{Int64}},u::Vector{
 end
 
 """
-    EvaluateMeasurementChannel(ψ::MPS,u::Vector{Vector{ITensor}})
+    get_output_state(ψ::MPS,u::Vector{Vector{ITensor}})
 
-Evaluate a measurement channel Pu(s)ud|s><s|u using tensor network simulations
+Evaluate an output state Pu(s)ud|s><s|u using tensor network simulations
 """
-function EvaluateMeasurementChannel(ψ::MPS,u::Vector{Vector{ITensor}})
+function get_output_state(ψ::MPS,u::Vector{Vector{ITensor}})
     ξ = siteinds(ψ)
     N = length(ψ)
     s = siteinds("Qubit", N;addtags="input")
@@ -44,11 +44,11 @@ function EvaluateMeasurementChannel(ψ::MPS,u::Vector{Vector{ITensor}})
 end
 
 """
-    FitChannelMPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
+    fit_output_MPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
 
-FInd the best MPO that represents a measurement channel evaluated by EvaluateMeasurementChannel
+Find the best MPO that represents an output state evaluated by get_output_state
 """
-function FitChannelMPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
+function fit_output_MPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
     Nu = length(M)
     ξ = firstsiteinds(M[1];plev=0)
     N = length(ξ)
@@ -71,16 +71,16 @@ function FitChannelMPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
         end
     end
     #first overlap
-    for sw in 1:nsweeps
+    @showprogress dt=1  for sw in 1:nsweeps
         dist2 = real(inner(σ,σ))
-        @showprogress dt=1 for m in M
+        for m in M
             dist2 -= real(inner(m,σ))/Nu
             dist2 -= real(inner(σ,m))/Nu
         end
-        println("Lower bound to distance ",dist2)
+        println("Cost function ",dist2)
         #println("overlap ",real(sum([inner(m,σ) for m in M]))/Nu/norm(σ)^2)
         #left part of the sweep
-        @showprogress dt=1 for i in 1:N
+        for i in 1:N
             if i==1
                 σ[1] = sum(Ma[:,1].*R[:,2])/Nu
             elseif i<N
@@ -133,7 +133,7 @@ function FitChannelMPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
            dist2 -= real(inner(σ,m))/Nu
            dist2 -= real(inner(m,σ))/Nu
     end
-    println("Lower bound to distance ",dist2)
+    println("Cost function ",dist2)
     return σ
 end
 
@@ -174,15 +174,16 @@ function Cost_InversionChannel(c::Vector{ITensor},ρ0::MPO,Dσ0::Vector{ITensor}
 end
 
 """
-    InversionChannel(ρ0::MPO,σ0::MPO,χ ::Int64,nsweeps::Int64)
+    invert_channel(ρ0::MPO,σ0::MPO,χ ::Int64,nsweeps::Int64)
 
 From a measured postselected state σ0, and an initial state, find the inverse channel that maps
 back σ0 to ρ0. χ is the bond dimension of the MPS that parametrizes the quantum channel.
 
 """
-function InversionChannel(ρ0::MPO,σ0::MPO,χ ::Int64,nsweeps::Int64)
-    N = length(ρ0)
-    ξ = firstsiteinds(ρ0;plev=0)
+function invert_channel(ψ0::MPS,σ0::MPO,χ ::Int64,nsweeps::Int64)
+    N = length(ψ0)
+    ξ = siteinds(ψ0)
+    ρ0 = outer(ψ0',ψ0)
     s = siteinds("Qubit", N;addtags="input")
     v = siteinds("Qubit", N;addtags="virtual")
 
@@ -203,7 +204,7 @@ function InversionChannel(ρ0::MPO,σ0::MPO,χ ::Int64,nsweeps::Int64)
             di, fs, gs, niter, normgradhistory = optimize(loss_and_grad, dt[i], optimizer)
             dt[i] = di
         end
-        println("sweep ",s, " loss ", loss(dt.data))
+        println("sweep ",s, " cost function ", loss(dt.data))
     end
     #loss_and_grad(x) = loss(x),loss'(x)
     return dt
@@ -211,12 +212,12 @@ end
 
 
 """
-    get_ShallowShadow(data::Array{Int8},u::Vector{ITensor},d::MPS,ξ::Vector{Index{Int64}})
+    get_shallow_shadow(data::Array{Int},u::Vector{ITensor},d::MPS,ξ::Vector{Index{Int64}})
 
 Build shadows from measured data under shallow unitaries d and learnt channel parametrized by the MPS
 d
 """
-function get_ShallowShadow(data::Array{Int},u::Vector{ITensor},d::MPS,ξ::Vector{Index{Int64}})
+function get_shallow_shadow(data::Array{Int},u::Vector{ITensor},d::MPS,ξ::Vector{Index{Int64}})
     NM,N = size(data)
     x = [firstind(d[i],tags="Site") for i in 1:N]
     s = siteinds("Qubit", N;addtags="input")

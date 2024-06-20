@@ -64,15 +64,15 @@ function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
     else
         ρu = apply(u,ρ;apply_dag=true)
     end
-    return get_Samples_Flat(ρu,NM)
+    return get_samples_flat(ρu,NM)
 end
 
 """
-    get_Samples_Flat(state::Union{MPO,MPS},NM::Int64)
+    get_samples_flat(state::Union{MPO,MPS},NM::Int64)
 
 Sample randomized measurements from a MPS/MPO representation ρ 
 """
-function get_Samples_Flat(state::Union{MPO,MPS},NM::Int64)
+function get_samples_flat(state::Union{MPO,MPS},NM::Int64)
     N = length(state)
     data_s = zeros(Int8,NM,N)
     #This is borrowed from PastaQ
@@ -209,7 +209,7 @@ theory state ψ
 """
 function get_XEB(ψ::MPS,ρ::MPO,NM::Int64)
     ξ = siteinds(ψ )
-    data = get_Samples_Flat(ρ,NM)
+    data = get_samples_flat(ρ,NM)
     P0 = get_Born_MPS(ψ)
     XEB = 0.
     N = length(ψ)

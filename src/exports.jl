@@ -40,13 +40,13 @@ get_purity_hamming,
 get_purity,
 
 #Circuits.jl
-Apply_depo_channel,
-RandomCircuit,
-RandomPauliLayer,
-RandomMagneticFieldLayer,
+apply_depo_channel,
+random_circuit,
+random_Pauli_layer,
+random_magnetic_field_layer,
 
 #ShallowShadows.jl
-EvaluateMeasurementChannel,
-InversionChannel,
-get_ShallowShadow,
-FitChannelMPO
+get_output_state,
+invert_channel,
+get_shallow_shadow,
+fit_output_MPO
