@@ -177,14 +177,15 @@ end
     InversionChannel(ρ0::MPO,σ0::MPO,χ ::Int64,nsweeps::Int64)
 
 From a measured postselected state σ0, and an initial state, find the inverse channel that maps
-back σ0 to ρ0. χ is the bond dimension of the MPS that parametrizes the quantum channel. 
+back σ0 to ρ0. χ is the bond dimension of the MPS that parametrizes the quantum channel.
+
 """
 function InversionChannel(ρ0::MPO,σ0::MPO,χ ::Int64,nsweeps::Int64)
     N = length(ρ0)
     ξ = firstsiteinds(ρ0;plev=0)
     s = siteinds("Qubit", N;addtags="input")
     v = siteinds("Qubit", N;addtags="virtual")
-    
+
     σ0t = MPO(s)
     for i in 1:N
         σ0t[i] = σ0[i]*δ(ξ[i],s[i])*δ(ξ[i]',s[i]')
@@ -212,10 +213,10 @@ end
 """
     get_ShallowShadow(data::Array{Int8},u::Vector{ITensor},d::MPS,ξ::Vector{Index{Int64}})
 
-Build shadows from measured data under shallow unitaries d and learnt channel parametrized by the MPS 
+Build shadows from measured data under shallow unitaries d and learnt channel parametrized by the MPS
 d
 """
-function get_ShallowShadow(data::Array{Int8},u::Vector{ITensor},d::MPS,ξ::Vector{Index{Int64}})
+function get_ShallowShadow(data::Array{Int},u::Vector{ITensor},d::MPS,ξ::Vector{Index{Int64}})
     NM,N = size(data)
     x = [firstind(d[i],tags="Site") for i in 1:N]
     s = siteinds("Qubit", N;addtags="input")
@@ -234,4 +235,3 @@ function get_ShallowShadow(data::Array{Int8},u::Vector{ITensor},d::MPS,ξ::Vecto
     end
     return shadow
 end
-
