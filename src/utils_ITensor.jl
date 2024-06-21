@@ -60,36 +60,36 @@ function reduce_dm(ρ::MPO,part::Vector{Int64})
 	return ρA,sA
 end
 
-"""
-    reduce_dm(ρ::MPO,i::Int64,j::Int64)
+# """
+#     reduce_dm(ρ::MPO,i::Int64,j::Int64)
 
-compute the reduced density matrix for sites i:j
+# compute the reduced density matrix for sites i:j
 
-"""
-function reduce_dm(ρ::MPO,i::Int64,j::Int64)
-	N = length(rho)
-  s = firstsiteinds(ρ;plev=0)
-	sA = s[i:j]
-	ρA = MPO(sA)
+# """
+# function reduce_dm(ρ::MPO,i::Int64,j::Int64)
+# 	N = length(ρ)
+#   	s = firstsiteinds(ρ;plev=0)
+# 	sA = s[i:j]
+# 	ρA = MPO(sA)
 
-	for k in i:j
-		ρA[k-i+1] = ρ[i]
-	end
+# 	for k in i:j
+# 		ρA[k-i+1] = ρ[i]
+# 	end
 
-	L = 1
-	for k in 1:i-1
-		L *=ρ[k]*δ(s[k],s[k]')
-	end
-	rhoA[i] *= L
+# 	L = 1
+# 	for k in 1:i-1
+# 		L *=ρ[k]*δ(s[k],s[k]')
+# 	end
+# 	ρA[i] *= L
 	
-	R = 1
-	for k in j+1:N
-		R *= ρ[k]*δ(s[k],s[k]')
-	end
-	ρA[j] *= R
-	orthogonalize!(ρA,1)
-	return ρA,sA
-end
+# 	R = 1
+# 	for k in j+1:N
+# 		R *= ρ[k]*δ(s[k],s[k]')
+# 	end
+# 	ρA[j] *= R
+# 	orthogonalize!(ρA,1)
+# 	return ρA,sA
+# end
 
 
 """
