@@ -83,3 +83,5 @@ pkg> add RandomMeas
 11) [Noisy circuit simulations with tensor networks](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CircuitNoiseSimulations.ipynb)
 
 12) [Classical shadows with shallow circuits](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/ShallowShadows.ipynb)
+
+13) [Surface code and the measurement of the topological entanglement entropy](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/EntanglementSurfaceCode.ipynb)

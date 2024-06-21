@@ -32,13 +32,14 @@ compute the reduce density matrix over sites mentionned in part
 function reduce_dm(ρ::MPO,part::Vector{Int64})
 	N = length(ρ)
 	NA = size(part,1)
-  s = firstsiteinds(ρ;plev=0)
+    s = firstsiteinds(ρ;plev=0)
 	sA = s[part]
 	ρA = MPO(sA)
 	L = 1
 	for i in 1:part[1]-1
 		L *= ρ[i]*δ(s[i],s[i]')
 	end
+
 	for j in 1:NA
 		if j<NA
 			imax = part[j+1]-1
@@ -47,12 +48,15 @@ function reduce_dm(ρ::MPO,part::Vector{Int64})
 		end
 		R = 1
 		for i in part[j]+1:imax
-        R *= ρ[i]*δ(s[i],s[i]')
+       		 R *= ρ[i]*δ(s[i],s[i]')
 		end
-		ρA[j] = L*ρ[part[j]]*R
-		L = 1
+		if j==1
+			ρA[1] = L*ρ[part[1]]*R
+		else
+			ρA[j] =  ρ[part[j]]*R
+		end
 	end
-	orthogonalize!(ρA,1)
+	#orthogonalize!(ρA,1)
 	return ρA,sA
 end
 
