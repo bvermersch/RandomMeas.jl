@@ -16,6 +16,15 @@ function apply_depo_channel(ρ::MPO,p::Vector{Float64})
 end
 
 """
+    apply_depo_channel(ψ::MPS,p::Vector{Float64})
+
+Apply depolarization channel on all qubits with probabilities specficied by the vector p
+"""
+function apply_depo_channel(ψ::MPS,p::Vector{Float64})
+    return apply_depo_channel(outer(ψ',ψ),p)
+end
+
+"""
     random_circuit(ξ::Vector{Index{Int64}},depth::Int64)
 
 Create a random circuit of given depth. Returns the list of gates as a vector of ITensors

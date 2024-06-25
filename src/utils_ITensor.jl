@@ -123,7 +123,7 @@ end
 compute the purity of an MPS over the first NA sites
 """
 function get_purity(ψ::MPS,NA::Int64)
-	N = length(state)
+	N = length(ψ)
 	if NA<N
 		spec = get_spectrum(ψ,NA)
 		p = get_moment(spec,2)[1]
@@ -196,7 +196,7 @@ end
     Compute entanglement spectrum of the first NA sites density matrix
 """
 function get_spectrum(ψ::MPS,NA::Int64)
-        statel = copy(ψ)
+    statel = copy(ψ)
 	orthogonalize!(statel,NA)
 	if NA>1
 		U,spec,V = svd(statel[NA], (linkind(statel, NA-1), siteind(statel,NA)))
