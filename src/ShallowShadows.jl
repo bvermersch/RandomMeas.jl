@@ -193,7 +193,7 @@ function invert_channel(ψ0::MPS,σ0::MPO,χ ::Int64,nsweeps::Int64)
     end
     D = Dissipators(ξ,s,v)
     Dσ0 = [D[i]*σ0t[i] for i in 1:N]
-    dt = randomMPS(Float64,v,;linkdims=χ)
+    dt = randomMPS(Float64,v;linkdims=χ)
     loss(d) = Cost_InversionChannel(d,ρ0,Dσ0)
     optimizer = LBFGS(; maxiter=200, verbosity=0, gradtol = 1e-5)
     for s in 1:nsweeps
