@@ -1,57 +1,49 @@
-function PostRotator(s::Vector{Index{Int64}},ξ::Vector{Index{Int64}},u::Vector{ITensor})
-        N = length(ξ)
-        ρe = MPO(ξ)
-        for i in 1:N
-            ρe[i] = δ(ξ[i],ξ[i]',s[i])
-        end
-        ## Realizes the post-selected state U^\dag|ket{s}\bra{s}U (for any s)
-        ud = reverse([swapprime(dag(ut),0,1) for ut in u])
-        return apply(ud,ρe,apply_dag=true)
-end
-
 """
-    get_output_state(ψ::MPS,u::Vector{Vector{ITensor}})
+    get_depolarization_vectors(u:: Vector{Vector{ITensor}},ξ::Vector{Index{Int64}})
 
-Evaluate an output state Pu(s)ud|s><s|u using tensor network simulations
+TBW
 """
-function get_output_state(ψ::MPS,u::Vector{Vector{ITensor}})
-    ξ = siteinds(ψ)
-    N = length(ψ)
-    s = siteinds("Qubit", N;addtags="input")
-    Nu = length(u)
-    M = Vector{MPO}()
-    @showprogress dt=1 for r in 1:Nu
-        Mt = MPO(ξ)
-        ψu = apply(u[r],ψ)
-        Pu = get_Born_MPS(ψu)
-        Pu = truncate(Pu;cutoff=1e-16)
-        # println("Pu ", maxlinkdim(Pu) )
-        PostState = PostRotator(s,ξ,u[r])
-        PostState = truncate(PostState;cutoff=1e-16)
-        # println("PS ", maxlinkdim(PostState) )
-        for i in 1:N
-            Mt[i] = (Pu[i]*δ(ξ[i],s[i]))*PostState[i]
-        end
-        # println("before ",maxlinkdim(Mt))
-        # println(inds(Pu[N÷2];tags="Link"))
-        # println(inds(PostState[N÷2];tags="Link"))
-        # println(inds(Mt[N÷2];tags="Link"))
-        Mt = truncate(Mt;cutoff=1e-16)
-        # println("after ",maxlinkdim(Mt))
-        push!(M,Mt)
-    end
-    return M
-end
-
-"""
-    fit_output_MPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
-
-Find the best MPO that represents an output state evaluated by get_output_state
-"""
-function fit_output_MPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
-    Nu = length(M)
-    ξ = firstsiteinds(M[1];plev=0)
+function get_depolarization_vectors(u:: Vector{Vector{ITensor}},ξ::Vector{Index{Int64}})
     N = length(ξ)
+    v = siteinds("Qubit", N; addtags="virtual")
+    s = siteinds("Qubit", N;addtags="input")
+
+    Nu = length(u)
+    c = Vector{MPS}()
+    ψ0 = MPS(ξ,["Dn" for n in 1:N]  ) 
+
+    @showprogress dt=1 for r in 1:Nu
+        ψu = apply(u[r],ψ0)
+        Pu = get_Born_MPS(ψu)
+
+        O = MPO(ξ)
+        for i in 1:N
+            s0 = state(ξ[i],"Dn")
+            s1 = state(ξ[i],"Up")
+            O[i] = s0*s0'*onehot(v''[i]=>1)-s1*s1'*onehot(v''[i]=>1)
+            O[i] += 2*s1*s1'*onehot(v''[i]=>2)
+        end
+        Ou = apply(u[r],O;apply_dag=true)
+        POu = get_Born_MPS(Ou)
+
+        for i in 1:N
+            Pu[i] *= POu[i]*δ(v[i],v[i]'')
+        end
+        orthogonalize!(Pu,1)
+        push!(c,Pu)
+    end
+    return c
+end
+
+"""
+    fit_depolarization_vector(M::Union{Vector{MPO},Vector{MPS}},χ::Int64,nsweeps::Int64)
+
+TBW
+"""
+function fit_depolarization_vector(M::Union{Vector{MPO},Vector{MPS}},χ::Int64,nsweeps::Int64)
+    Nu = length(M)
+    #ξ = firstsiteinds(M[1];plev=0)
+    N = length(M[1])
     σ = truncate(M[1];maxdim=χ)
     orthogonalize!(σ,1)
 
@@ -61,7 +53,6 @@ function fit_output_MPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
     for r in 1:Nu
         Ma[r,:] = M[r].data
     end
-    R[1,1] = ITensor(ξ[1])
     #init the right environments
     for r in 1:Nu
         X = 1.
@@ -137,102 +128,90 @@ function fit_output_MPO(M::Vector{MPO},χ::Int64,nsweeps::Int64)
     return σ
 end
 
-function Dissipators(ξ::Vector{Index{Int64}},s::Vector{Index{Int64}},v::Vector{Index{Int64}})
-    N = length(ξ)
-    D = Vector{ITensor}(undef,N)
+#useful function for get_inverse_depolarization_vector
+function inner_vec(A::Vector{ITensor},B::Vector{ITensor})
+    N = length(A)
+    X = 1
     for i in 1:N
-        D[i] = onehot(v[i]=>1)*δ(ξ[i],s[i])*δ(ξ'[i],s'[i])
-        D[i] += onehot(v[i]=>2)*δ(ξ[i],ξ'[i])*δ(s'[i],s[i])/2
+        X *= A[i]*prime(dag(B[i]);tags="Link")
     end
-    return D
+    return real(X[])
+end
+
+#useful function for get_inverse_depolarization_vector
+function or_product(A::Vector{ITensor},B::Vector{ITensor},or_op::Vector{ITensor})
+    N = length(A)
+    return  map((i) -> A[i]'*B[i]''*or_op[i], range(1,N)) 
 end
 
 
-function Cost_InversionChannel(c::Vector{ITensor},ρ0::MPO,Dσ0::Vector{ITensor})
+"""
+    get_inverse_depolarization_vector(c::MPS,χ::Int,sweeps::Int)
+
+TBW
+"""
+function get_inverse_depolarization_vector(c::MPS,χ::Int,nsweeps::Int)
+    v = siteinds(c)
     N = length(c)
-    X1 = 1
-    for i in 1:N
-        Y = Dσ0[i]*c[i]
-        X1 *= Y*prime(dag(Y),tags="Link")
-    end
-    X2a = 1
-    for i in 1:N
-        Y = Dσ0[i]*c[i]
-        X2a *= Y*prime(dag(ρ0[i]),tags="Link")
-    end
-    X2b = 1
-    for i in 1:N
-        Y = Dσ0[i]*c[i]
-        X2b *= dag(Y)*prime(ρ0[i],tags="Link")
-    end
-    X3 = 1
-    for i in 1:N
-        Y = ρ0[i]
-        X3*= Y*prime(dag(ρ0[i]),tags="Link")
-    end
-    return real(X1[]-X2a[]-X2b[]+X3[])
-end
+    c_ = c.data
+    d = randomMPS(Float64,v;linkdims=χ)
+    optimizer = LBFGS(; maxiter=100, verbosity=0, gradtol = 1e-6)
 
-"""
-    invert_channel(ρ0::MPO,σ0::MPO,χ ::Int64,nsweeps::Int64)
-
-From a measured postselected state σ0, and an initial state, find the inverse channel that maps
-back σ0 to ρ0. χ is the bond dimension of the MPS that parametrizes the quantum channel.
-
-"""
-function invert_channel(ψ0::MPS,σ0::MPO,χ ::Int64,nsweeps::Int64)
-    N = length(ψ0)
-    ξ = siteinds(ψ0)
-    ρ0 = outer(ψ0',ψ0)
-    s = siteinds("Qubit", N;addtags="input")
-    v = siteinds("Qubit", N;addtags="virtual")
-
-    σ0t = MPO(s)
+    e = ITensor[]
+    or_op = ITensor[]
     for i in 1:N
-        σ0t[i] = σ0[i]*δ(ξ[i],s[i])*δ(ξ[i]',s[i]')
+        push!(e,onehot(v[i]=>1))
+        X = onehot(v[i]=>1)*onehot(v[i]'=>1)*onehot(v[i]''=>1)
+        X += onehot(v[i]=>2)*onehot(v[i]'=>1)*onehot(v[i]''=>2)
+        X += onehot(v[i]=>2)*onehot(v[i]'=>2)*onehot(v[i]''=>1)
+        X += onehot(v[i]=>2)*onehot(v[i]'=>2)*onehot(v[i]''=>2)
+        push!(or_op,X)
     end
-    D = Dissipators(ξ,s,v)
-    Dσ0 = [D[i]*σ0t[i] for i in 1:N]
-    dt = randomMPS(Float64,v;linkdims=χ)
-    loss(d) = Cost_InversionChannel(d,ρ0,Dσ0)
-    optimizer = LBFGS(; maxiter=200, verbosity=0, gradtol = 1e-5)
+    
+
+    loss(x) = inner_vec(or_product(c_,x,or_op),or_product(c_,x,or_op))-inner_vec(or_product(c_,x,or_op),e)-inner_vec(e,or_product(c_,x,or_op))+inner_vec(e,e)
+
     for s in 1:nsweeps
-        for i in 1:N
-            orthogonalize!(dt,i)
-            lossi(di) = loss([dt[1:i-1];di;dt[i+1:N]])
-            loss_and_grad(x) = lossi(x),lossi'(x)
-            di, fs, gs, niter, normgradhistory = optimize(loss_and_grad, dt[i], optimizer)
-            dt[i] = di
+        for j in 1:N
+                if s÷2==0 #right moving sweep
+                    i = j
+                else
+                    i = N+1-j #left moving
+                end
+                orthogonalize!(d,j)
+                lossi(xi) = loss([d[1:i-1];xi;d[i+1:N]])
+                loss_and_grad(xi) = lossi(xi),lossi'(xi)
+                #@show i,s,lossi'(d[i])
+                di, fs, gs, niter, normgradhistory = optimize(loss_and_grad, d[i], optimizer)
+                d[i] = di
         end
-        println("sweep ",s, " cost function ", loss(dt.data))
+        println("sweep ",s, " cost function ", loss(d.data)) 
     end
-    #loss_and_grad(x) = loss(x),loss'(x)
-    return dt
+    return d
 end
 
-
 """
-    get_shallow_shadow(data::Array{Int},u::Vector{ITensor},d::MPS,ξ::Vector{Index{Int64}})
+    apply_inverse_channel(O::MPO,d::MPS)
 
-Build shadows from measured data under shallow unitaries d and learnt channel parametrized by the MPS
-d
+TBW
 """
-function get_shallow_shadow(data::Array{Int},u::Vector{ITensor},d::MPS,ξ::Vector{Index{Int64}})
-    NM,N = size(data)
-    x = [firstind(d[i],tags="Site") for i in 1:N]
+function apply_inverse_channel(O::MPO,d::MPS)
+    ξ = firstsiteinds(O;plev=0)
+    v = siteinds(d)
+    N = length(ξ)
     s = siteinds("Qubit", N;addtags="input")
-    PostState = PostRotator(s,ξ,u)
-    D = Dissipators(s,ξ,x)
-    Dd = [D[i]*d[i] for i in 1:N]
-    shadow = Vector{MPO}()
-    for m in 1:NM
-        push!(shadow,MPO(ξ))
-        for i in 1:N
-            shadow[m][i] = PostState[i]*onehot(s[i]=>data[m,i])
-            shadow[m][i] *= Dd[i]
-            replaceind!(shadow[m][i],s[i],ξ[i])
-            replaceind!(shadow[m][i],s[i]',ξ[i]')
-        end
+    Of = copy(O)
+    for i in 1:N
+        #initial state
+        Oi = O[i]*δ(ξ[i],s[i])*δ(ξ'[i],s'[i])
+
+        #dissipator
+        D = onehot(v[i]=>1)*δ(ξ[i],s[i])*δ(ξ'[i],s'[i])
+        D += onehot(v[i]=>2)*δ(ξ[i],ξ'[i])*δ(s'[i],s[i])/2
+        D *= d[i]
+
+        #final state
+        Of[i] = D*Oi
     end
-    return shadow
+    return orthogonalize(Of,1)
 end
