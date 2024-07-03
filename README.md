@@ -60,28 +60,45 @@ pkg> add RandomMeas
 
 ## Examples with Jupyter notebooks
 
-1) [Energy/Energy variance measurements with classical shadows](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/EnergyVarianceMeasurements.ipynb)
+### Classical shadows
 
-2) [Fidelities from common randomized measurements](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/FidelityCommonRandomizedMeasurements.ipynb)
+1) [Energy/Energy variance measurements with classical shadows](examples/EnergyVarianceMeasurements.ipynb)
 
-3) [Cross-Platform verication](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CrossPlatform.ipynb)
+2) [Robust Shadow tomography](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/RobustShadowTomography.ipynb)
 
-4) [Entanglement Entropy of pure states & The page curve"](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/PureStateEntanglement.ipynb)
+3) [Process Shadow tomography](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/ProcessShadowTomography.ipynb)
 
-5) [Mixed-state entanglement: The p3-PPT condition and batch shadows](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/MixedStateEntanglement.ipynb)
+4) [Classical shadows with shallow circuits](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/ShallowShadows.ipynb)
 
-6) [Analyzing the experimental data of Brydges et al, Science 2019](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/BrydgesScience2019.ipynb)
+5) [Virtual distillation](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/VirtualDistillation.ipynb)
 
-7) [Robust Shadow tomography](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/RobustShadowTomography.ipynb)
+### Quantum benchmark
 
-8) [Process Shadow tomography](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/ProcessShadowTomography.ipynb)
+6) [Cross-Entropy/Self-Cross entropy benchmarking](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CrossEntropy.ipynb)
 
-9) [Virtual distillation](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/VirtualDistillation.ipynb)
+7) [Fidelities from common randomized measurements](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/FidelityCommonRandomizedMeasurements.ipynb)
 
-10) [Cross-Entropy/Self-Cross entropy benchmarking](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CrossEntropy.ipynb)
+8) [Cross-Platform verification](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CrossPlatform.ipynb)
 
-11) [Noisy circuit simulations with tensor networks](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CircuitNoiseSimulations.ipynb)
+### Entanglement
 
-12) [Classical shadows with shallow circuits](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/ShallowShadows.ipynb)
+9) [Entanglement entropy of pure states"](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/PureStateEntanglement.ipynb)
 
-13) [Surface code and the measurement of the topological entanglement entropy](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/EntanglementSurfaceCode.ipynb)
+10) [Analyzing the experimental data of Brydges et al, Science 2019](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/BrydgesScience2019.ipynb)
+
+11) [Surface code and the measurement of the topological entanglement entropy](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/EntanglementSurfaceCode.ipynb)
+
+12) [Mixed-state entanglement: The p3-PPT condition and batch shadows](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/MixedStateEntanglement.ipynb)
+
+### Miscellanous
+
+13) [Noisy circuit simulations with tensor networks](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/CircuitNoiseSimulations.ipynb)
+
+14) [Estimating statistical error bars via Jackknife resampling](https://github.com/bvermersch/RandomMeas.jl/blob/main/examples/ErrorBars.ipynb)
+
+
+
+
+
+
+
