@@ -95,10 +95,3 @@ pkg> add RandomMeas
 13) [Noisy circuit simulations with tensor networks](examples/CircuitNoiseSimulations.ipynb)
 
 14) [Estimating statistical error bars via Jackknife resampling](examples/ErrorBars.ipynb)
-
-
-
-
-
-
-
