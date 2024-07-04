@@ -7,6 +7,8 @@ get_RandomMeas,
 get_RandomMeas_MPS,
 get_RandomMeas_MPO,
 get_expect_shadow,
+get_XEB,
+get_selfXEB,
 
 #Shadows.jl
 get_shadow,
@@ -37,5 +39,14 @@ get_purity_shadows,
 get_purity_hamming,
 get_purity,
 
-#Channels.jl
-Apply_depo_channel!
+#Circuits.jl
+apply_depo_channel,
+random_circuit,
+random_Pauli_layer,
+random_magnetic_field_layer,
+
+#ShallowShadows.jl
+get_depolarization_vectors,
+fit_depolarization_vector,
+get_inverse_depolarization_vector,
+apply_inverse_channel

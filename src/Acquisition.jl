@@ -64,15 +64,15 @@ function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
     else
         ρu = apply(u,ρ;apply_dag=true)
     end
-    return get_Samples_Flat(ρu,NM)
+    return get_samples_flat(ρu,NM)
 end
 
 """
-    get_Samples_Flat(state::Union{MPO,MPS},NM::Int64)
+    get_samples_flat(state::Union{MPO,MPS},NM::Int64)
 
 Sample randomized measurements from a MPS/MPO representation ρ 
 """
-function get_Samples_Flat(state::Union{MPO,MPS},NM::Int64)
+function get_samples_flat(state::Union{MPO,MPS},NM::Int64)
     N = length(state)
     data_s = zeros(Int8,NM,N)
     #This is borrowed from PastaQ
@@ -161,10 +161,10 @@ function get_Born_MPS(ψ::MPS)
 end
 
 
-"""
-    get_Born(ρ::MPO)
+ """
+     get_Born(ρ::MPO)
 
-Construct Born Probability vector P(s)=<s|ρ|s> from an MPO representation ρ 
+ Construct Born Probability vector P(s) from an MPO representation ρ 
 """
 function get_Born(ρ::MPO)
     ξ = firstsiteinds(ρ;plev=0)
@@ -201,3 +201,35 @@ function get_Born(ψ::MPS)
     return P
 end
 
+"""
+    get_XEB(ψ::MPS,ρ::MPO,NM::Int64)
+
+Return the linear cross-entropy for NM samples of the mixed state, with respect to a
+theory state ψ
+"""
+function get_XEB(ψ::MPS,ρ::MPO,NM::Int64)
+    ξ = siteinds(ψ )
+    data = get_samples_flat(ρ,NM)
+    P0 = get_Born_MPS(ψ)
+    XEB = 0.
+    N = length(ψ)
+    for m in 1:NM
+        V = ITensor(1.)
+        for j=1:N
+              V *= (P0[j]*state(ξ[j],data[m,j]))
+        end
+        XEB += 2^N/NM*real(V[])-1/NM
+    end
+    return XEB
+end
+
+"""
+    get_selfXEB(ψ::MPS)
+
+Returns the self-XEB 2^N sum_s |ψ(s)|^4-1 
+"""
+function get_selfXEB(ψ::MPS)
+    P0 = get_Born_MPS(ψ)
+    N = length(ψ)
+    return 2^N*real(inner(P0,P0))-1
+end

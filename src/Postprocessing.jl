@@ -86,11 +86,11 @@ end
 
 
 """
-    get_Born(data::Array{Int8},ξ::Vector{Index{Int64}})
+    get_Born(data::Array{Int},ξ::Vector{Index{Int64}})
 
 Construct histogram from randomized measurements as an ITensor representing the estimated Born probability
 """
-function get_Born(data::Array{Int8},ξ::Vector{Index{Int64}})
+function get_Born(data::Array{Int},ξ::Vector{Index{Int64}})
 	NM,N = size(data)
 	probf = StatsBase.countmap(eachrow(data))
 	prob = zeros(Int64,(2*ones(Int,N))...)

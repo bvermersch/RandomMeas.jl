@@ -1,9 +1,9 @@
 """
-    get_batch_shadows(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
+    get_batch_shadows(data::Array{Int}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
 
 Constructs n batch shadows from measured data
 """
-function get_batch_shadows(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
+function get_batch_shadows(data::Array{Int}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
     shadow = Vector{ITensor}()
     NA = size(data, 3)
     nu = size(data, 1)
@@ -30,9 +30,9 @@ Obtain trace moments from  a vector of (batch) shadows using U-statistics
 """
 function get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64)
     p = Vector{Float64}()
-
+    n_shadows = length(shadow)
     for m in 2:n
-        r_a = collect(permutations(1:n, m)) #m_uplet of n batches
+        r_a = collect(permutations(1:n_shadows, m)) #m_uplet of n_shadows batches
         alpha = length(r_a)
         est = 0
         push!(p, 0)
@@ -91,15 +91,15 @@ function get_shadow(P::ITensor, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G::
 end
 
 """
-    get_shadow_factorized(data::Array{Int8}, s::Vector{Index{Int64}}, u::Vector{};G_vec::Union{Nothing,Vector{Float64}}=nothing)
+    get_shadow_factorized(data::Array{Int}, s::Vector{Index{Int64}}, u::Vector{};G_vec::Union{Nothing,Vector{Float64}}=nothing)
 
     build shadow as a tensor-product (memory-efficient)
 """
-function get_shadow_factorized(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G_vec::Union{Nothing,Vector{Float64}}=nothing)
+function get_shadow_factorized(data::Array{Int}, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G_vec::Union{Nothing,Vector{Float64}}=nothing)
     N = length(u)
     ρ = Vector{ITensor}()
     for i in 1:N
-        if G_vec ==nothing
+        if G_vec ===nothing
             α = 3
             β = -1
         else

@@ -32,13 +32,14 @@ compute the reduce density matrix over sites mentionned in part
 function reduce_dm(ρ::MPO,part::Vector{Int64})
 	N = length(ρ)
 	NA = size(part,1)
-  s = firstsiteinds(ρ;plev=0)
+    s = firstsiteinds(ρ;plev=0)
 	sA = s[part]
 	ρA = MPO(sA)
 	L = 1
 	for i in 1:part[1]-1
 		L *= ρ[i]*δ(s[i],s[i]')
 	end
+
 	for j in 1:NA
 		if j<NA
 			imax = part[j+1]-1
@@ -47,45 +48,48 @@ function reduce_dm(ρ::MPO,part::Vector{Int64})
 		end
 		R = 1
 		for i in part[j]+1:imax
-        R *= ρ[i]*δ(s[i],s[i]')
+       		 R *= ρ[i]*δ(s[i],s[i]')
 		end
-		ρA[j] = L*ρ[part[j]]*R
-		L = 1
+		if j==1
+			ρA[1] = L*ρ[part[1]]*R
+		else
+			ρA[j] =  ρ[part[j]]*R
+		end
 	end
-	orthogonalize!(ρA,1)
+	#orthogonalize!(ρA,1)
 	return ρA,sA
 end
 
-"""
-    reduce_dm(ρ::MPO,i::Int64,j::Int64)
+# """
+#     reduce_dm(ρ::MPO,i::Int64,j::Int64)
 
-compute the reduced density matrix for sites i:j
+# compute the reduced density matrix for sites i:j
 
-"""
-function reduce_dm(ρ::MPO,i::Int64,j::Int64)
-	N = length(rho)
-  s = firstsiteinds(ρ;plev=0)
-	sA = s[i:j]
-	ρA = MPO(sA)
+# """
+# function reduce_dm(ρ::MPO,i::Int64,j::Int64)
+# 	N = length(ρ)
+#   	s = firstsiteinds(ρ;plev=0)
+# 	sA = s[i:j]
+# 	ρA = MPO(sA)
 
-	for k in i:j
-		ρA[k-i+1] = ρ[i]
-	end
+# 	for k in i:j
+# 		ρA[k-i+1] = ρ[i]
+# 	end
 
-	L = 1
-	for k in 1:i-1
-		L *=ρ[k]*δ(s[k],s[k]')
-	end
-	rhoA[i] *= L
+# 	L = 1
+# 	for k in 1:i-1
+# 		L *=ρ[k]*δ(s[k],s[k]')
+# 	end
+# 	ρA[i] *= L
 	
-	R = 1
-	for k in j+1:N
-		R *= ρ[k]*δ(s[k],s[k]')
-	end
-	ρA[j] *= R
-	orthogonalize!(ρA,1)
-	return ρA,sA
-end
+# 	R = 1
+# 	for k in j+1:N
+# 		R *= ρ[k]*δ(s[k],s[k]')
+# 	end
+# 	ρA[j] *= R
+# 	orthogonalize!(ρA,1)
+# 	return ρA,sA
+# end
 
 
 """
@@ -119,7 +123,7 @@ end
 compute the purity of an MPS over the first NA sites
 """
 function get_purity(ψ::MPS,NA::Int64)
-	N = length(state)
+	N = length(ψ)
 	if NA<N
 		spec = get_spectrum(ψ,NA)
 		p = get_moment(spec,2)[1]
@@ -192,7 +196,7 @@ end
     Compute entanglement spectrum of the first NA sites density matrix
 """
 function get_spectrum(ψ::MPS,NA::Int64)
-        statel = copy(ψ)
+    statel = copy(ψ)
 	orthogonalize!(statel,NA)
 	if NA>1
 		U,spec,V = svd(statel[NA], (linkind(statel, NA-1), siteind(statel,NA)))
