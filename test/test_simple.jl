@@ -7,7 +7,7 @@ N  = 2
 
 nu=100 #number of random unitaries
 NM=100 #number of projective measurements
-data = zeros(Int8,(nu,NM,N))
+data = zeros(Int,(nu,NM,N))
 for r in 1:nu
     #generate Haar-random single qubit rotations
     u = get_rotations(ξ,1)

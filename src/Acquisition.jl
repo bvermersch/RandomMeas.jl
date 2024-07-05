@@ -74,8 +74,8 @@ Sample randomized measurements from a MPS/MPO representation ρ
 """
 function get_samples_flat(state::Union{MPO,MPS},NM::Int64)
     N = length(state)
-    data_s = zeros(Int8,NM,N)
-    #This is borrowed from PastaQ
+    data_s = zeros(Int,NM,N)
+    #Note: This is borrowed from PastaQ
     Prob = get_Born(state)
     prob = real(array(Prob))
     prob = reshape(prob, 2^N)
@@ -95,7 +95,7 @@ function get_RandomMeas_MPO(ρ::MPO, u::Vector{ITensor}, NM::Int64)
     ξ = firstsiteinds(ρ;plev=0)
     ρu = apply(u,ρ;apply_dag=true)
     N= length(u)
-    data = zeros(Int8,NM,N)
+    data = zeros(Int,NM,N)
     ρu[1] /= trace(ρu, ξ)
     if NA > 1
         for m in 1:NM
@@ -117,7 +117,7 @@ Sample randomized measurements from an MPS representation ψ. The sampling is ba
 """
 function get_RandomMeas_MPS(ψ::MPS, u::Vector{ITensor},NM::Int64)
     N = length(ψ)
-    data = zeros(Int8,NM,N)
+    data = zeros(Int,NM,N)
     ψu = apply(reverse(u),ψ) #using reverse allows us to maintain orthocenter(ψ)=1 ;)
     for m in 1:NM
         data[m, :] = ITensors.sample(ψu)#[1:NA]
