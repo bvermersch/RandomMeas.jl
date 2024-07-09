@@ -46,7 +46,7 @@ random_Pauli_layer,
 random_magnetic_field_layer,
 
 #ShallowShadows.jl
-get_output_state,
-invert_channel,
-get_shallow_shadow,
-fit_output_MPO
+get_depolarization_vectors,
+fit_depolarization_vector,
+get_inverse_depolarization_vector,
+apply_inverse_channel

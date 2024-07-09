@@ -1,9 +1,9 @@
 """
-    get_batch_shadows(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
+    get_batch_shadows(data::Array{Int}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
 
 Constructs n batch shadows from measured data
 """
-function get_batch_shadows(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
+function get_batch_shadows(data::Array{Int}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
     shadow = Vector{ITensor}()
     NA = size(data, 3)
     nu = size(data, 1)
@@ -91,11 +91,11 @@ function get_shadow(P::ITensor, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G::
 end
 
 """
-    get_shadow_factorized(data::Array{Int8}, s::Vector{Index{Int64}}, u::Vector{};G_vec::Union{Nothing,Vector{Float64}}=nothing)
+    get_shadow_factorized(data::Array{Int}, s::Vector{Index{Int64}}, u::Vector{};G_vec::Union{Nothing,Vector{Float64}}=nothing)
 
     build shadow as a tensor-product (memory-efficient)
 """
-function get_shadow_factorized(data::Array{Int8}, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G_vec::Union{Nothing,Vector{Float64}}=nothing)
+function get_shadow_factorized(data::Array{Int}, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G_vec::Union{Nothing,Vector{Float64}}=nothing)
     N = length(u)
     ρ = Vector{ITensor}()
     for i in 1:N

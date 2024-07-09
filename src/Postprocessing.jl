@@ -36,7 +36,7 @@ end
 
 Extract the purity from classical shadows
 """
-function get_purity_shadows(data::Array{Int8},u::Vector{Vector{ITensor}},ξ::Vector{Index{Int64}};G::Union{Vector{Float64},Nothing}=nothing)
+function get_purity_shadows(data::Array{Int},u::Vector{Vector{ITensor}},ξ::Vector{Index{Int64}};G::Union{Vector{Float64},Nothing}=nothing)
     nu,NM,NA = size(data)
     shadow = ITensor(vcat(ξ,ξ'))
     shadow2 = ITensor(vcat(ξ,ξ'))
@@ -56,7 +56,7 @@ end
 Extract the purity from the Hamming distance formula
 purity = ``\\sum_s (-2)^{-D[s,s']}P(s)P(s')`` [Brydges et al, Science 2019]
 """
-function get_purity_hamming(data::Array{Int8},ξ::Vector{Index{Int64}})
+function get_purity_hamming(data::Array{Int},ξ::Vector{Index{Int64}})
     nu,NM,NA = size(data)
     p2 = 0.
     for r in 1:nu
@@ -66,7 +66,7 @@ function get_purity_hamming(data::Array{Int8},ξ::Vector{Index{Int64}})
 end
 
 
-function get_purity_estimate(data::Array{Int8},ξ::Vector{Index{Int64}})
+function get_purity_estimate(data::Array{Int},ξ::Vector{Index{Int64}})
 	NM,N = size(data)
 	prob = get_Born(data,ξ)
 	Hamming_tensor,a,b = get_h_tensor()
@@ -86,11 +86,11 @@ end
 
 
 """
-    get_Born(data::Array{Int8},ξ::Vector{Index{Int64}})
+    get_Born(data::Array{Int},ξ::Vector{Index{Int64}})
 
 Construct histogram from randomized measurements as an ITensor representing the estimated Born probability
 """
-function get_Born(data::Array{Int8},ξ::Vector{Index{Int64}})
+function get_Born(data::Array{Int},ξ::Vector{Index{Int64}})
 	NM,N = size(data)
 	probf = StatsBase.countmap(eachrow(data))
 	prob = zeros(Int64,(2*ones(Int,N))...)
