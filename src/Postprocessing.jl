@@ -32,7 +32,7 @@ end
 
 
 """
-    get_purity_shadows(data::Array{Int8},ξ::Vector{Index{Int64}})
+    get_purity_shadows(data::Array{Int},ξ::Vector{Index{Int64}})
 
 Extract the purity from classical shadows
 """
@@ -51,7 +51,7 @@ end
 
 
 """
-    get_purity_hamming(data::Array{Int8},ξ::Vector{Index{Int64}})
+    get_purity_hamming(data::Array{Int},ξ::Vector{Index{Int64}})
 
 Extract the purity from the Hamming distance formula
 purity = ``\\sum_s (-2)^{-D[s,s']}P(s)P(s')`` [Brydges et al, Science 2019]
