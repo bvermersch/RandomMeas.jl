@@ -185,7 +185,7 @@ function get_inverse_depolarization_vector(c::MPS,χ::Int,nsweeps::Int)
                 di, fs, gs, niter, normgradhistory = optimize(loss_and_grad, d[i], optimizer)
                 d[i] = di
         end
-        println("sweep ",s, " cost function ", loss(d.data)) 
+        println("sweep ",s, " Cost function ", loss(d.data)) 
     end
     return d
 end
@@ -193,7 +193,7 @@ end
 """
     apply_inverse_channel(O::MPO,d::MPS)
 
-TBW
+something
 """
 function apply_inverse_channel(O::MPO,d::MPS)
     ξ = firstsiteinds(O;plev=0)
