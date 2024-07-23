@@ -81,7 +81,7 @@ end
 # 		L *=ρ[k]*δ(s[k],s[k]')
 # 	end
 # 	ρA[i] *= L
-	
+
 # 	R = 1
 # 	for k in j+1:N
 # 		R *= ρ[k]*δ(s[k],s[k]')
@@ -211,16 +211,26 @@ end
 
 compute the moments ``\\mathrm{tr}(\\rho)'' from the entanglement spectrum
 """
-function get_moment(spec::ITensor,n::Int)
-	p = Vector{Float64}()
-	for m in 2:n
-		pm = 0
-		for l=1:dim(spec, 1)
-			pm += spec[l,l]^(2*m)
-		end
-		push!(p,pm)
-	end
-	return p
+function get_moments(spec::ITensor, kth_moments::Vector{Int})
+
+        # Check if any entry is smaller than 1 or larger than n_shadows
+        @assert all(kth_moments .>= 1) "Only integer valued moments Tr[rho^k] with k >=1 can be computed."
+
+        p= Vector{Float64}()
+
+        for k in kth_moments
+            pk = 0
+            for l in 1:dim(spec, 1)
+                pk += spec[l, l]^(2 * k)
+            end
+            push!(p, pk)
+        end
+
+        return p
+end
+
+function get_moment(spec::ITensor, kth_moment::Int)
+    return get_moments(spec, [kth_moment])[1]
 end
 
 """

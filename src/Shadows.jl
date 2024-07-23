@@ -28,25 +28,34 @@ end
 
 Obtain trace moments from  a vector of (batch) shadows using U-statistics
 """
-function get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, n::Int64)
-    p = Vector{Float64}()
-    n_shadows = length(shadow)
-    for m in 2:n
-        r_a = collect(permutations(1:n_shadows, m)) #m_uplet of n_shadows batches
-        alpha = length(r_a)
-        est = 0
-        push!(p, 0)
-        for r in r_a
-            X = multiply(shadow[r[1]], shadow[r[2]])
-            for m1 in 3:m
-                X = multiply(X, shadow[r[m1]])
-            end
-            p[m-1] += real(trace(X, ξ))
-        end
-        p[m-1] /= alpha
+function get_moments(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, kth_moments::Vector{Int})
 
+    p = Vector{Float64}() # Initialize the vector with zeros
+    n_shadows = length(shadow)
+
+    # Check if any entry is smaller than 1
+    @assert all(kth_moments .>= 1) "Only integer valued moments Tr[rho^k] with k >=1 can be computed."
+
+    # Check if any entry is larger than n_shadows
+    @assert all(kth_moments .<= n_shadows) "The number of (batch) shadows needs to be greater or equal to the largest moment k."
+
+    for k in kth_moments # Iterate over elements of moments
+        est = 0
+        for r in permutations(1:n_shadows, k)
+            X = shadow[r[1]]
+            for m in 2:k
+                X = multiply(X, shadow[r[m]])
+            end
+            est += real(trace(X, ξ)) # Accumulate the estimate
+        end
+        push!(p, est / length(permutations(1:n_shadows, k))) # Update the corresponding element in p
     end
+
     return p
+end
+
+function get_moment(shadow::Vector{ITensor}, ξ::Vector{Index{Int64}}, kth_moment::Int)
+    return get_moments(shadow, ξ, [kth_moment])[1]
 end
 
 
