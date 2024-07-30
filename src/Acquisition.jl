@@ -56,9 +56,9 @@ function get_rotation(ξ::Index{Int64}, ensemble::String = "Haar")
     end
 end
 
-function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64, mode::String="dense")
+function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64, mode::String)
 
-    @assert mode in ["dense", "MPS", "MPO"]: "Invalid mode"
+    @assert mode in ["dense", "MPS", "MPO"] "Invalid mode"
 
     if mode == "dense"
         return get_RandomMeas_dense(ρ, u, NM)
