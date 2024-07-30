@@ -56,12 +56,27 @@ function get_rotation(ξ::Index{Int64}, ensemble::String = "Haar")
     end
 end
 
+function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64, mode::String="dense")
+
+    @assert mode in ["dense", "MPS", "MPO"]: "Invalid mode"
+
+    if mode == "dense"
+        return get_RandomMeas_dense(ρ, u, NM)
+    elseif mode == "MPS"
+        return get_RandomMeas_MPS(ρ, u, NM)
+    elseif mode == "MPO"
+        return get_RandomMeas_MPO(ρ, u, NM)
+    end
+
+end
+
+
 """
-    get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor})
+    get_RandomMeas_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
 
 Sample randomized measurements from a MPS/MPO representation ρ
 """
-function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
+function get_RandomMeas_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
     if typeof(ρ)==MPS
         ρu = apply(u,ρ)
     else
@@ -92,7 +107,7 @@ end
 """
     get_RandomMeas_MPO
 
-Sample randomized measurements from an MPO representation ρ. The sampling is based from the MPO directly, i.e is memory-efficient
+Sample randomized measurements from an MPO representation ρ. The sampling is based from the MPO directly, i.e., is memory-efficient
 """
 function get_RandomMeas_MPO(ρ::MPO, u::Vector{ITensor}, NM::Int64)
     ξ = firstsiteinds(ρ;plev=0)
