@@ -40,9 +40,9 @@ pkg> add RandomMeas
  data = zeros(Int8,(nu,NM,N))
  for r in 1:nu
      #generate Haar-random single qubit rotations
-     u = get_rotations(ξ,1)
+     u = get_rotations(ξ,"Haar")
      #acquire RM measurements
-     data[r,:,:] = get_RandomMeas(ρ,u,NM)
+     data[r,:,:] = get_RandomMeas(ρ,u,NM,"dense")
  end
  ```
 

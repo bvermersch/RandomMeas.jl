@@ -10,12 +10,11 @@ NM=100 #number of projective measurements
 data = zeros(Int,(nu,NM,N))
 for r in 1:nu
     #generate Haar-random single qubit rotations
-    u = get_rotations(ξ,1)
+    u = get_rotations(ξ,"Haar")
     #acquire RM measurements
-    data[r,:,:] = get_RandomMeas(ρ,u,NM)
+    data[r,:,:] = get_RandomMeas(ρ,u,NM,"dense")
 end
 
 purity_e = get_purity_hamming(data,ξ)
 println("estimated purity ", purity_e)
 println("exact purity ", get_purity(ρ))
-

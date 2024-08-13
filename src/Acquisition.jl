@@ -1,31 +1,34 @@
 """
-    get_rotations!
+    get_rotations(ξ::Vector{Index{Int64}}, ensemble::String="Haar")
 
-Generate a list of N single qubit unitaries to be applied on each qubit
+Generate a list of N  single qubit unitaries with indices (ξ'[i],ξ[i]) (i=1,...,N) sampled randomly from the ensemble:
+    "Haar" (default): Haar random single qubit unitary
+    "Pauli": Random Pauli rotation sampled uniformly from {RX, RY, RZ}
+    "Identity": (fixed) Identity matrix
 """
-function get_rotations(ξ::Vector{Index{Int64}}, cat::Int=1)
+function get_rotations(ξ::Vector{Index{Int64}}, ensemble::String="Haar")
     u = Vector{ITensor}()
     N = length(ξ)
     for i in 1:N
-        push!(u, get_rotation(ξ[i], cat))
+        push!(u, get_rotation(ξ[i], ensemble))
     end
     return u
 end
 
 """
-    get_rotation(ξ::Index{Int64}, cat::Int)
+    get_rotation(ξ::Index{Int64}, ensemble::String = "Haar")
 
 Generate a single qubit unitary with indices (ξ',ξ)
-Categories specified by  cat:
-    #1: Haar
-    #2: Pauli
-    #6: Identity matrix
+sampled from the ensemble:
+    "Haar" (default): Haar random single qubit unitary
+    "Pauli": Random Pauli rotation sampled uniformly from {RX, RY, RZ}
+    "Identity": (fixed) Identity matrix
 """
-function get_rotation(ξ::Index{Int64}, cat::Int)
+function get_rotation(ξ::Index{Int64}, ensemble::String = "Haar")
     r_matrix = zeros(ComplexF64, (2, 2))
-    if cat == 1
+    if ensemble == "Haar"
         return op("RandomUnitary", ξ)
-    elseif cat == 2
+    elseif ensemble == "Pauli"
         b = rand(1:3)
         #println("basis B", b)
         if b == 1
@@ -44,7 +47,7 @@ function get_rotation(ξ::Index{Int64}, cat::Int)
         end
         r_tensor = itensor(r_matrix, ξ', ξ)
         return r_tensor
-    elseif cat == 6
+    elseif ensemble == "Identity"
         b = rand(1:2)
         r_matrix[1, 1] = 1
         r_matrix[2, 2] = 1
@@ -53,12 +56,27 @@ function get_rotation(ξ::Index{Int64}, cat::Int)
     end
 end
 
-"""
-    get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor})
+function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64, mode::String)
 
-Sample randomized measurements from a MPS/MPO representation ρ 
+    @assert mode in ["dense", "MPS", "MPO"] "Invalid mode"
+
+    if mode == "dense"
+        return get_RandomMeas_dense(ρ, u, NM)
+    elseif mode == "MPS"
+        return get_RandomMeas_MPS(ρ, u, NM)
+    elseif mode == "MPO"
+        return get_RandomMeas_MPO(ρ, u, NM)
+    end
+
+end
+
+
 """
-function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
+    get_RandomMeas_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
+
+Sample randomized measurements from a MPS/MPO representation ρ
+"""
+function get_RandomMeas_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
     if typeof(ρ)==MPS
         ρu = apply(u,ρ)
     else
@@ -70,7 +88,7 @@ end
 """
     get_samples_flat(state::Union{MPO,MPS},NM::Int64)
 
-Sample randomized measurements from a MPS/MPO representation ρ 
+Sample randomized measurements from a MPS/MPO representation ρ
 """
 function get_samples_flat(state::Union{MPO,MPS},NM::Int64)
     N = length(state)
@@ -89,7 +107,7 @@ end
 """
     get_RandomMeas_MPO
 
-Sample randomized measurements from an MPO representation ρ. The sampling is based from the MPO directly, i.e is memory-efficient 
+Sample randomized measurements from an MPO representation ρ. The sampling is based from the MPO directly, i.e., is memory-efficient
 """
 function get_RandomMeas_MPO(ρ::MPO, u::Vector{ITensor}, NM::Int64)
     ξ = firstsiteinds(ρ;plev=0)
@@ -113,7 +131,7 @@ end
 """
     get_RandomMeas_MPS(ψ::MPS, u::Vector{ITensor},NM::Int64)
 
-Sample randomized measurements from an MPS representation ψ. The sampling is based from the MPS directly, i.e is memory-efficient 
+Sample randomized measurements from an MPS representation ψ. The sampling is based from the MPS directly, i.e is memory-efficient
 """
 function get_RandomMeas_MPS(ψ::MPS, u::Vector{ITensor},NM::Int64)
     N = length(ψ)
@@ -129,7 +147,7 @@ end
 """
     get_Born_MPS(ρ::MPO)
 
-Construct Born Probability vector P(s)=<s|ρ|s> as an MPS from an MPO representation ρ 
+Construct Born Probability vector P(s)=<s|ρ|s> as an MPS from an MPO representation ρ
 """
 function get_Born_MPS(ρ::MPO)
     ξ = firstsiteinds(ρ;plev=0)
@@ -146,7 +164,7 @@ end
 """
     get_Born_MPS(ψ::MPS)
 
-Construct Born Probability vector P(s)=|ψ(s)|^2 as an MPS from an MPS representation ψ 
+Construct Born Probability vector P(s)=|ψ(s)|^2 as an MPS from an MPS representation ψ
 """
 function get_Born_MPS(ψ::MPS)
     ξ = siteinds(ψ)
@@ -164,7 +182,7 @@ end
  """
      get_Born(ρ::MPO)
 
- Construct Born Probability vector P(s) from an MPO representation ρ 
+ Construct Born Probability vector P(s) from an MPO representation ρ
 """
 function get_Born(ρ::MPO)
     ξ = firstsiteinds(ρ;plev=0)
@@ -183,7 +201,7 @@ end
 """
     get_Born(ψ::MPS)
 
-Construct Born Probability vector P(s)=|ψ(s)|^2 from an MPS representation ψ 
+Construct Born Probability vector P(s)=|ψ(s)|^2 from an MPS representation ψ
 """
 function get_Born(ψ::MPS)
     ξ = siteinds(ψ )
@@ -226,7 +244,7 @@ end
 """
     get_selfXEB(ψ::MPS)
 
-Returns the self-XEB 2^N sum_s |ψ(s)|^4-1 
+Returns the self-XEB 2^N sum_s |ψ(s)|^4-1
 """
 function get_selfXEB(ψ::MPS)
     P0 = get_Born_MPS(ψ)

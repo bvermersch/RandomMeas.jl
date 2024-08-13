@@ -4,8 +4,6 @@ export
 get_rotation,
 get_rotations,
 get_RandomMeas,
-get_RandomMeas_MPS,
-get_RandomMeas_MPO,
 get_expect_shadow,
 get_XEB,
 get_selfXEB,
