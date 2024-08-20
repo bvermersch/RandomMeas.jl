@@ -3,7 +3,7 @@
 
 Constructs n batch shadows from measured data
 """
-function get_batch_shadows(data::Array{Int}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64)
+function get_batch_shadows(data::Array{Int}, ξ::Vector{Index{Int64}}, u::Vector{Vector{ITensor}}, n::Int64;G::Union{Vector{Float64},Nothing}=nothing)
     shadow = Vector{ITensor}()
     NA = size(data, 3)
     nu = size(data, 1)
@@ -14,7 +14,7 @@ function get_batch_shadows(data::Array{Int}, ξ::Vector{Index{Int64}}, u::Vector
     for t in 1:n
         for r in 1+(t-1)*nu_n:t*nu_n
             P = get_Born(data[r, :,:], ξ)
-            shadow_temp = get_shadow(P, ξ, u[r])
+            shadow_temp = get_shadow(P, ξ, u[r];G=G)
             shadow[t] += shadow_temp / nu_n
         end
     end
