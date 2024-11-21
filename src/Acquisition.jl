@@ -9,52 +9,14 @@ Generate a list of N  single qubit unitaries with indices (ξ'[i],ξ[i]) (i=1,..
 function get_rotations(ξ::Vector{Index{Int64}}, ensemble::String="Haar")
     u = Vector{ITensor}()
     N = length(ξ)
+
     for i in 1:N
         push!(u, get_rotation(ξ[i], ensemble))
     end
     return u
 end
 
-"""
-    get_rotation(ξ::Index{Int64}, ensemble::String = "Haar")
 
-Generate a single qubit unitary with indices (ξ',ξ)
-sampled from the ensemble:
-    "Haar" (default): Haar random single qubit unitary
-    "Pauli": Random Pauli rotation sampled uniformly from {RX, RY, RZ}
-    "Identity": (fixed) Identity matrix
-"""
-function get_rotation(ξ::Index{Int64}, ensemble::String = "Haar")
-    r_matrix = zeros(ComplexF64, (2, 2))
-    if ensemble == "Haar"
-        return op("RandomUnitary", ξ)
-    elseif ensemble == "Pauli"
-        b = rand(1:3)
-        #println("basis B", b)
-        if b == 1
-            r_matrix[1, 1] = 1
-            r_matrix[2, 2] = 1
-        elseif b == 2
-            r_matrix[1, 1] = 1 / sqrt(2)
-            r_matrix[2, 1] = 1 / sqrt(2)
-            r_matrix[1, 2] = 1 / sqrt(2)
-            r_matrix[2, 2] = -1 / sqrt(2)
-        else
-            r_matrix[1, 1] = 1 / sqrt(2)
-            r_matrix[2, 2] = 1 / sqrt(2)
-            r_matrix[1, 2] = -1im / sqrt(2)
-            r_matrix[2, 1] = -1im / sqrt(2)
-        end
-        r_tensor = itensor(r_matrix, ξ', ξ)
-        return r_tensor
-    elseif ensemble == "Identity"
-        b = rand(1:2)
-        r_matrix[1, 1] = 1
-        r_matrix[2, 2] = 1
-        r_tensor = itensor(r_matrix, ξ', ξ)
-        return r_tensor
-    end
-end
 
 function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64, mode::String)
 
