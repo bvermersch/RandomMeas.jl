@@ -1,8 +1,5 @@
 module RandomMeas
 
-using Reexport
-@reexport using ITensors,ITensorMPS
-
 include("imports.jl")
 include("exports.jl")
 

@@ -1,29 +1,9 @@
-using ITensors
-using NPZ
-
 # Abstract Base Type for Measurement Settings
 """
 Abstract type representing general measurement settings.
 Specific implementations (e.g., LocalUnitaryMeasurementSettings) should subtype this.
 """
 abstract type AbstractMeasurementSettings end
-
-
-"""
-    NoMeasurementSettings
-
-A concrete subtype of `AbstractMeasurementSettings` representing the absence of measurement settings.
-
-# Purpose:
-This type is used in the "Null Object" pattern to avoid using `nothing` as a placeholder for the `measurement_settings` field in `MeasurementData`. By using `NoMeasurementSettings`, all instances of `MeasurementData` have a consistent, type-safe representation of their settings, even when no settings are provided.
-
-# Example:
-```julia
-settings = NoMeasurementSettings()
-```
-"""
-struct NoMeasurementSettings <: AbstractMeasurementSettings
-end
 
 # Local Unitary Measurement Settings
 """
@@ -80,7 +60,7 @@ Overloaded constructor for LocalUnitaryMeasurementSettings.
 """
 function LocalUnitaryMeasurementSettings(
     N::Int, NU::Int;
-    site_indices::Union{Vector{Index}, Nothing} = nothing,
+    site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing,
     ensemble::String = "Haar"
 )
     # Generate site indices if not provided

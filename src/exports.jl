@@ -1,16 +1,20 @@
+using Reexport
+@reexport using ITensors,ITensorMPS
+
 export
 
+MeasurementSettings,
+MeasurementData,
+
  #Acquisition.jl
-get_rotation,
-get_rotations,
-get_RandomMeas,
-get_expect_shadow,
+simulate_RandomMeas,
 get_XEB,
 get_selfXEB,
 
 #Shadows.jl
 get_shadow,
 get_shadow_factorized,
+get_expect_shadow,
 get_batch_shadows,
 get_moments,
 

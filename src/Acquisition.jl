@@ -1,35 +1,52 @@
-"""
-    get_rotations(ξ::Vector{Index{Int64}}, ensemble::String="Haar")
-
-Generate a list of N  single qubit unitaries with indices (ξ'[i],ξ[i]) (i=1,...,N) sampled randomly from the ensemble:
-    "Haar" (default): Haar random single qubit unitary
-    "Pauli": Random Pauli rotation sampled uniformly from {RX, RY, RZ}
-    "Identity": (fixed) Identity matrix
-"""
-function get_rotations(ξ::Vector{Index{Int64}}, ensemble::String="Haar")
-    u = Vector{ITensor}()
-    N = length(ξ)
-
-    for i in 1:N
-        push!(u, get_rotation(ξ[i], ensemble))
-    end
-    return u
-end
-
-
-
-function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64, mode::String)
+function simulate_RandomMeas(
+    state::Union{MPO, MPS},
+    settings::LocalUnitaryMeasurementSettings,
+    NM::Int64,
+    mode::String
+)::MeasurementData{LocalUnitaryMeasurementSettings}
 
     @assert mode in ["dense", "MPS", "MPO"] "Invalid mode"
 
-    if mode == "dense"
-        return get_RandomMeas_dense(ρ, u, NM)
-    elseif mode == "MPS"
-        return get_RandomMeas_MPS(ρ, u, NM)
-    elseif mode == "MPO"
-        return get_RandomMeas_MPO(ρ, u, NM)
+    # Extract parameters
+    N, NU = settings.N, settings.NU
+    local_unitaries = settings.local_unitaries
+
+    # Perform index compatibility check
+    for n in 1:N
+
+        @assert settings.site_indices[n] in inds(state[n]) "Invalid site index $n"
+
+        site_index_settings =
+        state_indices = inds(state[n])
+
+        #@show site_index_settings
+        #@show state_indices
+
+        #@assert site_index_settings in state_indices "Mismatch at site $n: $site_index_settings not found in the state indices $state_indices."
     end
 
+    # Allocate memory for the measurement results: NU x NM x N
+    measurement_results = Array{Int}(undef, NU, NM, N)
+
+    # Loop over measurement settings
+    for r in 1:NU
+        u = local_unitaries[r, :]  # Extract the unitaries for the r-th measurement setting
+
+        # Perform NM measurements for the current setting
+        if mode == "dense"
+            measurement_results[r, :, :] .= simulate_RandomMeas_dense(state, u, NM)
+        elseif mode == "MPS"
+            measurement_results[r, :, :] .= simulate_RandomMeas_MPS(state, u, NM)
+        elseif mode == "MPO"
+            measurement_results[r, :, :] .= simulate_RandomMeas_MPO(state, u, NM)
+        end
+    end
+
+    # Return the results as a MeasurementData object
+    return MeasurementData(
+        measurement_results;
+        measurement_settings=settings
+    )
 end
 
 
@@ -38,7 +55,7 @@ end
 
 Sample randomized measurements from a MPS/MPO representation ρ
 """
-function get_RandomMeas_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
+function simulate_RandomMeas_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
     if typeof(ρ)==MPS
         ρu = apply(u,ρ)
     else
@@ -63,6 +80,7 @@ function get_samples_flat(state::Union{MPO,MPS},NM::Int64)
         data = StatsBase.sample(0:(1<<N-1), StatsBase.Weights(prob), 1)
         data_s[m, :] = 1 .+ digits(data[1], base=2, pad=N)
     end
+
     return data_s
 end
 
@@ -71,7 +89,7 @@ end
 
 Sample randomized measurements from an MPO representation ρ. The sampling is based from the MPO directly, i.e., is memory-efficient
 """
-function get_RandomMeas_MPO(ρ::MPO, u::Vector{ITensor}, NM::Int64)
+function simulate_RandomMeas_MPO(ρ::MPO, u::Vector{ITensor}, NM::Int64)
     ξ = firstsiteinds(ρ;plev=0)
     ρu = apply(u,ρ;apply_dag=true)
     N= length(u)
@@ -95,7 +113,7 @@ end
 
 Sample randomized measurements from an MPS representation ψ. The sampling is based from the MPS directly, i.e is memory-efficient
 """
-function get_RandomMeas_MPS(ψ::MPS, u::Vector{ITensor},NM::Int64)
+function simulate_RandomMeas_MPS(ψ::MPS, u::Vector{ITensor},NM::Int64)
     N = length(ψ)
     data = zeros(Int,NM,N)
     ψu = apply(reverse(u),ψ) #using reverse allows us to maintain orthocenter(ψ)=1 ;)

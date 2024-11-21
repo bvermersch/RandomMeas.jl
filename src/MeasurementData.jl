@@ -1,6 +1,6 @@
-using ITensors
-using NPZ
-include("MeasurementSettings.jl") #Todo: Remove this line when include in the pacakge
+# using ITensors
+# using NPZ
+# include("MeasurementSettings.jl") #Todo: Remove this line when include in the pacakge
 
 """
     struct MeasurementData{T}
@@ -11,7 +11,7 @@ A container for measurement data and settings used in quantum experiments.
 - `N::Int`: Number of sites (qubits).
 - `NU::Int`: Number of measurement settings.
 - `NM::Int`: Number of measurements per setting.
-- `measurement_results::Array{Bool, 3}`: A 3D array of binary measurement results with dimensions `(NU, NM, N)`.
+- `measurement_results::Array{Int, 3}`: A 3D array of binary measurement results with dimensions `(NU, NM, N)`.
 - `measurement_settings::T`: Measurement settings of type `T` or `nothing` if not provided.
 
 # Type Parameter
@@ -24,17 +24,17 @@ struct MeasurementData{T}
     N::Int                              # Number of sites (qubits)
     NU::Int                             # Number of measurement settings
     NM::Int                             # Number of measurements per setting
-    measurement_results::Array{Bool, 3} # Binary measurement results (size: NU x NM x N)
+    measurement_results::Array{Int, 3} # Binary measurement results (size: NU x NM x N)
     measurement_settings::T   # Measurement settings (or nothing if not provided)
 end
 
 """
-    MeasurementData(measurement_results::Array{Bool, 3}; measurement_settings::Union{T, Nothing} = nothing)
+    MeasurementData(measurement_results::Array{Int, 3}; measurement_settings::Union{T, Nothing} = nothing)
 
 Creates a `MeasurementData` object by inferring the dimensions of the measurement results and validating the provided settings.
 
 # Arguments
-- `measurement_results::Array{Bool, 3}`: A 3D array of binary measurement results with shape `(NU, NM, N)`.
+- `measurement_results::Array{Int, 3}`: A 3D array of binary measurement results with shape `(NU, NM, N)`.
 - `measurement_settings::Union{T <: AbstractMeasurementSettings, Nothing}` (optional): Measurement settings or `nothing` if not provided.
 
 # Returns
@@ -47,15 +47,15 @@ A `MeasurementData` object with inferred dimensions and validated settings.
 ```julia
 # With measurement settings
 settings = LocalUnitaryMeasurementSettings(4, 3, ensemble="Haar")
-results = rand(Bool, 3, 10, 4)
+results = rand(Int, 3, 10, 4)
 data_with_settings = MeasurementData(results; measurement_settings=settings)
 
 # Without measurement settings
-data_without_settings = MeasurementData(rand(Bool, 3, 10, 4))
+data_without_settings = MeasurementData(rand(Int, 3, 10, 4))
 ```
 """
 function MeasurementData(
-    measurement_results::Array{Bool, 3};
+    measurement_results::Array{Int, 3};
     measurement_settings::Union{T, Nothing} = nothing
 ) where {T <: AbstractMeasurementSettings}
     # Infer dimensions from measurement_results
