@@ -19,7 +19,7 @@ function get_overlap(prob1::ITensor,prob2::ITensor,ξ::Vector{Index{Int64}},N::I
 end
 
 function get_h_tensor()
-	Hamming_matrix = zeros(Float64,(2,2))	
+	Hamming_matrix = zeros(Float64,(2,2))
 	Hamming_matrix[1,1] = 1
 	Hamming_matrix[2,2] = 1
 	Hamming_matrix[2,1] = -0.5
@@ -67,7 +67,10 @@ end
 
 
 function get_purity_estimate(data::Array{Int},ξ::Vector{Index{Int64}})
+
 	NM,N = size(data)
+    ξ
+    data
 	prob = get_Born(data,ξ)
 	Hamming_tensor,a,b = get_h_tensor()
   h = Hamming_tensor*δ(a,ξ[1])*δ(b,ξ[1]')
