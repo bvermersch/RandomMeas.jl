@@ -117,46 +117,56 @@ end
 
 # Export Method
 """
-Export the unitaries in a LocalUnitaryMeasurementSettings object to an .npy file.
+Export the unitaries in a LocalUnitaryMeasurementSettings object to an .npz file with a single field: local_unitaries.
 
 # Arguments:
 - `ms::LocalUnitaryMeasurementSettings`: The measurement settings to export.
-- `filepath::String`: Path to the output file.
+- `filepath::String`: Path to the output .npz file.
 """
 function export_unitaries(ms::LocalUnitaryMeasurementSettings, filepath::String)
-    exported_array = Array{ComplexF64}(undef, ms.NU, ms.N, 2, 2)
+    # Prepare the local_unitaries array for export
+    local_unitaries = Array{ComplexF64}(undef, ms.NU, ms.N, 2, 2)
     for r in 1:ms.NU
         for n in 1:ms.N
-            exported_array[r, n, :, :] = Array(ms.local_unitaries[r, n], ms.site_indices[n]', ms.site_indices[n])
+            local_unitaries[r, n, :, :] = Array(ms.local_unitaries[r, n], ms.site_indices[n]', ms.site_indices[n])
         end
     end
-    npzwrite(filepath, exported_array)
+
+    # Write to the .npz file
+    npzwrite(filepath, Dict("local_unitaries" => local_unitaries))
     println("Exported to NPZ file: $filepath")
 end
 
 # Import Method
 """
-Import unitaries from an .npy file and create a LocalUnitaryMeasurementSettings object.
+Import unitaries from an .npz file and create a LocalUnitaryMeasurementSettings object.
 
 # Arguments:
-- `filepath::String`: Path to the input file.
+- `filepath::String`: Path to the input .npz file.
 - `site_indices::Union{Vector{Index{Int64}}, Nothing}`: Optional site indices. If not provided, they will be generated.
 
 # Returns:
 - A LocalUnitaryMeasurementSettings object.
 """
 function import_unitaries(filepath::String; site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing)::LocalUnitaryMeasurementSettings
-    unitaries = npzread(filepath)  # Shape: NU x N x 2 x 2
-    NU, N, rows, cols = size(unitaries)
+    # Read the .npz file
+    data = npzread(filepath)
+
+    # Extract the local_unitaries field
+    @assert haskey(data, "local_unitaries") "Missing 'local_unitaries' field in the NPZ file."
+    local_unitaries_array = data["local_unitaries"]  # Shape: NU x N x 2 x 2
+    NU, N, rows, cols = size(local_unitaries_array)
     @assert rows == 2 && cols == 2 "Unitary matrices must have size 2x2."
 
+    # Generate or validate site indices
     site_indices = site_indices === nothing ? siteinds("Qubit", N) : site_indices
     @assert length(site_indices) == N "Length of site_indices must match N."
 
+    # Convert the array into ITensors
     local_unitaries = Array{ITensor, 2}(undef, NU, N)
     for r in 1:NU
         for n in 1:N
-            local_unitaries[r, n] = ITensor(unitaries[r, n, :, :], site_indices[n]', site_indices[n])
+            local_unitaries[r, n] = ITensor(local_unitaries_array[r, n, :, :], site_indices[n]', site_indices[n])
         end
     end
 
