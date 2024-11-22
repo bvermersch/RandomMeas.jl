@@ -76,35 +76,31 @@ end
 
 #### **1. `import_measurement_data`**
 """
-    import_measurement_data(results_path::String; unitaries_path::Union{String, Nothing} = nothing)
+    import_measurement_data(results_path::String)
 
-Imports measurement results and optional unitary settings from files.
+Imports measurement results and optional unitary settings from an `.npz` archive.
 
 # Arguments
-- `results_path::String`: Path to the `.npy` file containing the measurement results. The file should contain a 3D binary array of shape `(NU, NM, N)`.
-- `unitaries_path::Union{String, Nothing}` (optional): Path to the `.npy` file containing unitary settings. If not provided, `measurement_settings` is set to `nothing`.
+- `results_path::String`: Path to the `.npz` file containing measurement results and optional unitaries.
 
 # Returns
 A `MeasurementData` object containing the imported results and settings.
 
 # Examples
 ```julia
-# Import with unitaries
-data_with_unitaries = import_measurement_data("results.npy"; unitaries_path="unitaries.npy")
-
-# Import without unitaries
-data_without_unitaries = import_measurement_data("results.npy")
+# Import with unitaries included in the same file
+data_with_unitaries = import_measurement_data("data.npz")
 ```
 """
-function import_measurement_data(
-    results_path::String;
-    unitaries_path::Union{String, Nothing} = nothing
-)::MeasurementData
-    # Load measurement results
-    measurement_results = npzread(results_path)  # Shape: NU x NM x N
+function import_measurement_data(results_path::String)::MeasurementData
+    # Load the .npz file
+    data = npzread(results_path)
+    # Extract and validate measurement_results
+    @assert haskey(data, "measurement_results") "The NPZ file must contain a 'measurement_results' field."
+    measurement_results = data["measurement_results"]  # Shape: NU x NM x N
 
-    # Load measurement settings if a path is provided
-    measurement_settings = unitaries_path !== nothing ? import_unitaries(unitaries_path) : nothing
+    # Extract local_unitaries if available
+    measurement_settings = haskey(data, "local_unitaries") ? LocalUnitaryMeasurementSettings(data["local_unitaries"]) : nothing
 
     # Create and return MeasurementData
     return MeasurementData(measurement_results; measurement_settings=measurement_settings)
@@ -114,31 +110,40 @@ end
 """
     import_measurement_results(results_path::String; measurement_settings=nothing)
 
-Imports only the measurement results from a file and optionally associates predefined measurement settings.
+Imports only the measurement results from an `.npz` file and optionally associates predefined measurement settings.
 
 # Arguments
-- `results_path::String`: Path to the `.npy` file containing the measurement results. The file should contain a 3D binary array of shape `(NU, NM, N)`.
-- `measurement_settings` (optional): A predefined measurement settings object. If not provided, `measurement_settings` is set to `nothing`.
+- `results_path::String`: Path to the `.npz` file containing the measurement results and optionally unitaries.
+- `measurement_settings` (optional): A predefined measurement settings object. If not provided, unitaries from the archive are used, if available.
 
 # Returns
-A `MeasurementData` object containing the imported results and the provided settings.
+A `MeasurementData` object containing the imported results and the provided or extracted settings.
 
 # Examples
 ```julia
 # Import with predefined settings
-settings = LocalUnitaryMeasurementSettings(4, 3, ensemble="Haar")
-data_with_settings = import_measurement_results("results.npy"; measurement_settings=settings)
+settings = LocalUnitaryMeasurementSettings(...)
+data_with_settings = import_measurement_results("data.npz"; measurement_settings=settings)
 
-# Import without settings
-data_without_settings = import_measurement_results("results.npy")
+# Import and use unitaries from the file
+data_with_unitaries = import_measurement_results("data.npz")
 ```
 """
 function import_measurement_results(
     results_path::String;
     measurement_settings=nothing
-)::MeasurementData
-    # Load measurement results
-    measurement_results = npzread(results_path)  # Shape: NU x NM x N
+    )::MeasurementData
+    # Load the .npz file
+    data = npzread(results_path)
+
+    # Extract and validate measurement_results
+    @assert haskey(data, "measurement_results") "The NPZ file must contain a 'measurement_results' field."
+    measurement_results = data["measurement_results"]  # Shape: NU x NM x N
+
+    # Use provided settings or extract from file
+    if measurement_settings === nothing && haskey(data, "local_unitaries")
+        measurement_settings = LocalUnitaryMeasurementSettings(data["local_unitaries"])
+    end
 
     # Create and return MeasurementData
     return MeasurementData(measurement_results; measurement_settings=measurement_settings)
