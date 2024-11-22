@@ -19,7 +19,7 @@ function get_overlap(prob1::ITensor,prob2::ITensor,ξ::Vector{Index{Int64}},N::I
 end
 
 function get_h_tensor()
-	Hamming_matrix = zeros(Float64,(2,2))	
+	Hamming_matrix = zeros(Float64,(2,2))
 	Hamming_matrix[1,1] = 1
 	Hamming_matrix[2,2] = 1
 	Hamming_matrix[2,1] = -0.5
@@ -51,26 +51,42 @@ end
 
 
 """
-    get_purity_hamming(data::Array{Int},ξ::Vector{Index{Int64}})
+    get_purity_hamming(data::Array{Int}, subsystem::Vector{Int64}=1:N)
 
-Extract the purity from the Hamming distance formula
-purity = ``\\sum_s (-2)^{-D[s,s']}P(s)P(s')`` [Brydges et al, Science 2019]
+Extract the purity from the Hamming distance formula:
+    purity = ``\\sum_s (-2)^{-D[s,s']}P(s)P(s')`` [Brydges et al, Science 2019]
+
+# Arguments
+- `data::Array{Int}`: The measurement data of shape (NU, NM, N) where NU is the number of realizations, NM is the number of shots, and N is the number of qubits.
+- `subsystem::Vector{Int64}` (optional): A vector of integers specifying the subsystem of qubits to compute the purity for. Default is `1:N`, meaning all qubits.
+
+# Returns
+- The computed purity for the specified subsystem of qubits.
+
+# Example
+```julia
+purity = get_purity_hamming(data, [1, 2])  # Compute purity for qubits 1 and 2
+```
 """
-function get_purity_hamming(data::Array{Int},ξ::Vector{Index{Int64}})
-    nu,NM,NA = size(data)
-    p2 = 0.
-    for r in 1:nu
-        p2 += get_purity_estimate(data[r,:,:],ξ)/nu
-    end
-    return p2
+function get_purity_direct(data::MeasurementData, subsystem::Vector{Int} = collect(1:data.N))
+
+    # Ensure subsystem is a valid selection
+    @assert all(x -> x >= 1 && x <= data.N, subsystem)
+    @assert length(unique(subsystem)) == length(subsystem)  # Ensure no duplicates
+
+    return sum(get_purity_estimate_single_meas_setting(data.measurement_results[r, :, subsystem]) for r in 1:data.NU) / data.NU
+
 end
 
 
-function get_purity_estimate(data::Array{Int},ξ::Vector{Index{Int64}})
-	NM,N = size(data)
+function get_purity_estimate_single_meas_setting(data::Array{Int})
+
+	@show NM,N = size(data)
+    @show ξ = siteinds("Qubit",N)
+
 	prob = get_Born(data,ξ)
 	Hamming_tensor,a,b = get_h_tensor()
-  h = Hamming_tensor*δ(a,ξ[1])*δ(b,ξ[1]')
+    h = Hamming_tensor*δ(a,ξ[1])*δ(b,ξ[1]')
 
 	global purity_temp = prob*h
 	for i in 2:N

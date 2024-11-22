@@ -37,9 +37,8 @@ get_h_tensor,
 get_overlap,
 get_Born_MPS,
 get_Born,
-get_purity_estimate,
 get_purity_shadows,
-get_purity_hamming,
+get_purity_direct,
 get_purity,
 
 #Circuits.jl
