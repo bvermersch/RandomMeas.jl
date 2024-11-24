@@ -6,6 +6,7 @@ export
 MeasurementSettings,
 MeasurementData,
 import_measurement_data,
+export_measurement_data,
 
  #Acquisition.jl
 simulate_RandomMeas,
