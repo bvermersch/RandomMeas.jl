@@ -115,7 +115,7 @@ function get_RandomMeas_MPO(ρ::MPO, u::Vector{ITensor}, NM::Int64)
     N= length(u)
     data = zeros(Int,NM,N)
     ρu[1] /= trace(ρu, ξ)
-    if NA > 1
+    if N > 1
         for m in 1:NM
             data[m, :] = ITensors.sample(ρu)
         end
