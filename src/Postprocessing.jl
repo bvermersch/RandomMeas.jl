@@ -81,9 +81,8 @@ end
 
 function get_purity_estimate_single_meas_setting(data::Array{Int})
 
-	@show NM,N = size(data)
-    @show ξ = siteinds("Qubit",N)
-    @show data
+	NM,N = size(data)
+    ξ = siteinds("Qubit",N)
 
 	prob = get_Born(data,ξ)
 	Hamming_tensor,a,b = get_h_tensor()

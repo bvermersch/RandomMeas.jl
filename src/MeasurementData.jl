@@ -102,12 +102,23 @@ data_with_indices = import_measurement_data("data.npz"; site_indices=siteinds("Q
 data = import_measurement_data("data.npz")
 ```
 """
-function import_measurement_data(filepath::String; predefined_settings=nothing, site_indices=nothing)::MeasurementData
+function import_measurement_data(filepath::String; predefined_settings=nothing, site_indices=nothing, add_value=1)::MeasurementData
     # Load data from the archive
     data = npzread(filepath)
 
     # Extract measurement results
     measurement_results = data["measurement_results"]  # Shape: NU x NM x N
+
+    # Check if 0 is contained and print a message if true
+    if 0 in measurement_results
+        println("Warning: Julia works with indices starting at 1. Binary data should therefore use 1 and 2, not 0 and 1. Please check the data and consider changing add_value parameter.")
+    end
+
+    # Optionally add a value to all elements
+    if add_value != 0
+        measurement_results .+= add_value
+        println("Warning: Added $add_value to all elements of the measurement results.")
+    end
 
     # Determine measurement settings
     if predefined_settings !== nothing
