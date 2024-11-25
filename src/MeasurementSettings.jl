@@ -45,9 +45,39 @@ struct LocalUnitaryMeasurementSettings <: AbstractMeasurementSettings
     end
 end
 
-# Overloaded Constructor
 """
-Overloaded constructor for LocalUnitaryMeasurementSettings.
+Create a `LocalUnitaryMeasurementSettings` object from an NU x N x 2 x 2 array.
+
+# Arguments:
+- `local_unitaries_array::Array{ComplexF64, 4}`: NU x N x 2 x 2 array of unitaries.
+- `site_indices::Union{Vector{Index{Int64}}, Nothing}`: Optional vector of site indices. If not provided, it will be generated.
+
+# Returns:
+- A `LocalUnitaryMeasurementSettings` object.
+"""
+function LocalUnitaryMeasurementSettings(local_unitaries_array::Array{ComplexF64, 4}; site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing)
+    # Extract dimensions
+    NU, N, rows, cols = size(local_unitaries_array)
+    @assert rows == 2 && cols == 2 "Unitary matrices must have size 2x2."
+
+    # Generate or validate site indices
+    site_indices = site_indices === nothing ? siteinds("Qubit", N) : site_indices
+    @assert length(site_indices) == N "Length of site_indices must match N."
+
+    # Convert the array into ITensors
+    local_unitaries = Array{ITensor, 2}(undef, NU, N)
+    for r in 1:NU
+        for n in 1:N
+            local_unitaries[r, n] = ITensor(local_unitaries_array[r, n, :, :], site_indices[n]', site_indices[n])
+        end
+    end
+
+    # Call the main constructor
+    return LocalUnitaryMeasurementSettings(N, NU, local_unitaries, site_indices)
+end
+
+"""
+Create a `LocalUnitaryMeasurementSettings` object by random sampling local unitaries
 
 # Arguments:
 - `N::Int`: Number of sites.
@@ -154,21 +184,5 @@ function import_unitaries(filepath::String; site_indices::Union{Vector{Index{Int
 
     # Extract the local_unitaries field
     @assert haskey(data, "local_unitaries") "Missing 'local_unitaries' field in the NPZ file."
-    local_unitaries_array = data["local_unitaries"]  # Shape: NU x N x 2 x 2
-    NU, N, rows, cols = size(local_unitaries_array)
-    @assert rows == 2 && cols == 2 "Unitary matrices must have size 2x2."
 
-    # Generate or validate site indices
-    site_indices = site_indices === nothing ? siteinds("Qubit", N) : site_indices
-    @assert length(site_indices) == N "Length of site_indices must match N."
-
-    # Convert the array into ITensors
-    local_unitaries = Array{ITensor, 2}(undef, NU, N)
-    for r in 1:NU
-        for n in 1:N
-            local_unitaries[r, n] = ITensor(local_unitaries_array[r, n, :, :], site_indices[n]', site_indices[n])
-        end
-    end
-
-    return LocalUnitaryMeasurementSettings(N, NU, local_unitaries, site_indices)
-end
+    return LocalUnitaryMeasurementSettings(data["local_unitaries"]; site_indices=site_indices)
