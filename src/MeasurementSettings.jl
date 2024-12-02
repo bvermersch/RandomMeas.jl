@@ -186,3 +186,4 @@ function import_unitaries(filepath::String; site_indices::Union{Vector{Index{Int
     @assert haskey(data, "local_unitaries") "Missing 'local_unitaries' field in the NPZ file."
 
     return LocalUnitaryMeasurementSettings(data["local_unitaries"]; site_indices=site_indices)
+end
