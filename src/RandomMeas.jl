@@ -5,6 +5,7 @@ include("exports.jl")
 
 include("MeasurementSettings.jl")
 include("MeasurementData.jl")
+include("Shadows_Struct.jl")
 
 include("Acquisition.jl")
 include("Postprocessing.jl")

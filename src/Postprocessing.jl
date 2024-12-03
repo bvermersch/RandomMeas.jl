@@ -1,3 +1,6 @@
+using StatsBase
+
+
 """
     get_purity_direct(data::Array{Int}, subsystem::Vector{Int64}=1:N)
 
@@ -194,11 +197,18 @@ Construct the Hamming tensor for given indices.
   - Off-diagonal elements are set to `-0.5`.
 
 """
-function get_h_tensor(s::Index, s_prime::Index)
+function get_h_tensor(s::Index, s_prime::Index, G::Float64 = 1.0)
     Hamming_tensor = ITensor(Float64, s, s_prime)
-    Hamming_tensor[s => 1, s_prime => 1] = 1.0
-    Hamming_tensor[s => 2, s_prime => 2] = 1.0
-    Hamming_tensor[s => 1, s_prime => 2] = -0.5
-    Hamming_tensor[s => 2, s_prime => 1] = -0.5
+
+    # Compute α and β for the Hamming matrix
+    α = 3.0 / (2.0 * G - 1.0)
+    β = (G - 2.0) / (2.0 * G - 1.0)
+
+    # Populate the Hamming tensor
+    Hamming_tensor[s => 1, s_prime => 1] = (α + β) / 2.0
+    Hamming_tensor[s => 2, s_prime => 2] = (α + β) / 2.0
+    Hamming_tensor[s => 1, s_prime => 2] = β / 2.0
+    Hamming_tensor[s => 2, s_prime => 1] = β / 2.0
+
     return Hamming_tensor
 end

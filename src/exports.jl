@@ -5,6 +5,8 @@ export
 
 MeasurementSettings,
 MeasurementData,
+get_factorized_shadows,
+get_dense_shadows,
 import_measurement_data,
 export_measurement_data,
 
