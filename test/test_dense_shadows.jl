@@ -2,9 +2,12 @@ using Test
 using ITensors
 using StatsBase
 
-include("../src/MeasurementSettings.jl")  # Path to MeasurementSettings.jl
-include("../src/MeasurementData.jl")     # Path to MeasurementData.jl
-include("../src/Shadows_Struct.jl")      # Path to Shadows_Struct.jl
+include("../src/MeasurementSettings.jl")
+include("../src/MeasurementData.jl")
+include("../src/AbstractShadows.jl")
+include("../src/DenseShadows.jl")
+
+
 include("../src/Shadows.jl")      # Path to Shadows_Struct.jl
 include("../src/Postprocessing.jl")      # Path to Postprocessing.jl
 
@@ -15,24 +18,22 @@ include("../src/Postprocessing.jl")      # Path to Postprocessing.jl
     local_unitaries = [op("RandomUnitary", ξ[i]) for i in 1:N]  # Generate random unitaries
     measurement_results = rand(1:2, 10, N)  # Simulated binary results (1, 2 for Julia indexing)
     P = get_Born(measurement_results, ξ)  # Compute Born probabilities
-    G_vec = [1.2, 0.8, 1.5, 1.0]  # Example G values for robustness
+    G = [1.2, 0.8, 1.5, 1.0]  # Example G values for robustness
 
     # Test DenseShadow constructor with ITensor P
     @testset "Constructor with ITensor P" begin
-        shadow = DenseShadow(P, local_unitaries; G=G_vec)
+        shadow = DenseShadow(P, local_unitaries; G=G)
         @test shadow.N == N
         @test shadow.ξ == ξ
-        @test shadow.G == G_vec
-        @test isa(shadow.dense_shadow, ITensor)
+        @test isa(shadow.shadow_data, ITensor)
     end
 
     # Test DenseShadow constructor with measurement_results
     @testset "Constructor with measurement_results" begin
-        shadow = DenseShadow(measurement_results, local_unitaries; G=G_vec)
+        shadow = DenseShadow(measurement_results, local_unitaries; G=G)
         @test shadow.N == N
         @test shadow.ξ == ξ
-        @test shadow.G == G_vec
-        @test isa(shadow.dense_shadow, ITensor)
+        @test isa(shadow.shadow_data, ITensor)
     end
 
     # Test batched dense shadows
@@ -45,7 +46,7 @@ include("../src/Postprocessing.jl")      # Path to Postprocessing.jl
         )
         batched_shadows = get_dense_shadows(
             measurement_data;
-            G_vec=G_vec,
+            G=G,
             number_of_ru_batches=3,
             number_of_projective_measurement_batches=2
         )
@@ -64,7 +65,7 @@ end
     N = 4   # Number of qubits/sites
     NU = 5  # Number of random unitaries
     NM = 10 # Number of projective measurements
-    G_vec = fill(1.0, N) # G values (no measurement errors)
+    G = fill(1.0, N) # G values (no measurement errors)
 
     # Generate measurement settings
     measurement_settings = LocalUnitaryMeasurementSettings(N, NU, ensemble="Haar")
@@ -76,7 +77,7 @@ end
     measurement_data = MeasurementData(measurement_results; measurement_settings=measurement_settings)
 
     # Compute dense shadows using the new method
-    dense_shadows = get_dense_shadows(measurement_data; G_vec=G_vec)
+    dense_shadows = get_dense_shadows(measurement_data; G=G)
 
     # Compare with old method for each unitary
     for r in 1:NU
@@ -84,10 +85,10 @@ end
         P = get_Born(measurement_results[r, :, :], ξ)
 
         # Compute shadow using the old method
-        old_shadow = get_shadow(P, ξ, local_unitaries[r, :]; G=G_vec)
+        old_shadow = get_shadow(P, ξ, local_unitaries[r, :]; G=G)
 
         # Extract shadow from the new method
-        new_shadow = dense_shadows[r, 1].dense_shadow
+        new_shadow = dense_shadows[r, 1].shadow_data
 
         # Compare the two shadows
         @test isapprox(new_shadow, old_shadow, atol=1e-10)

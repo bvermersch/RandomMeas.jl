@@ -5,7 +5,10 @@ include("exports.jl")
 
 include("MeasurementSettings.jl")
 include("MeasurementData.jl")
-include("Shadows_Struct.jl")
+
+include("AbstractShadow.jl")
+include("FactorizedShadow.jl")
+include("DenseShadow.jl")
 
 include("Acquisition.jl")
 include("Postprocessing.jl")
