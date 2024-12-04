@@ -196,3 +196,31 @@ function trace(shadow::FactorizedShadow)
 
     return total_trace
 end
+
+
+"""
+    convert_to_dense_shadow(factorized_shadow::FactorizedShadow)
+
+Convert a `FactorizedShadow` object into a `DenseShadow` object.
+
+# Arguments
+- `factorized_shadow::FactorizedShadow`: The `FactorizedShadow` object to convert.
+
+# Returns
+A `DenseShadow` object with the combined ITensor.
+"""
+function convert_to_dense_shadow(factorized_shadow::FactorizedShadow)::DenseShadow
+    N = factorized_shadow.N
+    ξ = factorized_shadow.ξ
+
+    # Start with the first shadow tensor
+    dense_tensor = factorized_shadow.shadow_data[1]
+
+    # Multiply all shadow tensors to combine them into a dense ITensor
+    for i in 2:N
+        dense_tensor *= factorized_shadow.shadow_data[i]
+    end
+
+    # Return a DenseShadow object
+    return DenseShadow(dense_tensor, N, ξ)
+end
