@@ -197,6 +197,61 @@ function trace(shadow::FactorizedShadow)
     return total_trace
 end
 
+"""
+    partial_trace(shadow::FactorizedShadow, subsystem::Vector{Int}; assume_unit_trace::Bool = false)
+
+Compute the partial trace of a `FactorizedShadow` object over the complement of the specified subsystem.
+
+# Arguments
+- `shadow::FactorizedShadow`: The factorized shadow to compute the partial trace for.
+- `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
+- `assume_unit_trace::Bool` (optional): If `true`, assumes all traced-out tensors have unit trace and skips explicit computation (default: `false`).
+
+# Returns
+A new `FactorizedShadow` object reduced to the specified subsystem.
+
+# Notes
+- If `assume_unit_trace` is `true`, avoids explicit trace computation for efficiency.
+- If `assume_unit_trace` is `false`, computes the traces of all tensors outside the subsystem and multiplies their product into the remaining tensors.
+- Issues a warning if the trace product deviates significantly from 1 when `assume_unit_trace` is `false`.
+"""
+function partial_trace(shadow::FactorizedShadow, subsystem::Vector{Int}; assume_unit_trace::Bool = false)::FactorizedShadow
+    # Validate the subsystem
+    @assert all(x -> x >= 1 && x <= shadow.N, subsystem) "Subsystem indices must be between 1 and N."
+    @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."
+
+    # Extract tensors and site indices for the subsystem
+    reduced_shadow_data = shadow.shadow_data[subsystem]
+    reduced_ξ = shadow.ξ[subsystem]
+
+    if !assume_unit_trace
+
+        # Initialize trace product (default to 1 if assume_unit_trace is true)
+        trace_product = 1.0
+
+        # Iterate over sites not in the subsystem and compute the trace
+        for i in setdiff(1:shadow.N, subsystem)
+            tensor = shadow.shadow_data[i]
+            trace_value = scalar(tensor * δ(shadow.ξ[i], prime(shadow.ξ[i])))
+            trace_product *= trace_value
+        end
+
+        # Issue a warning if the total trace product deviates significantly from 1
+        if !isapprox(trace_product, 1.0; atol=1e-10)
+            @warn "The trace product of the traced-out tensors is not 1 (actual value: $trace_product)."
+        end
+
+        # Multiply the trace product into the subsystem tensors
+        for i in eachindex(reduced_shadow_data)
+            reduced_shadow_data[i] *= trace_product
+        end
+
+    end
+
+    # Construct and return the reduced FactorizedShadow
+    return FactorizedShadow(reduced_shadow_data, length(subsystem), reduced_ξ)
+end
+
 
 """
     convert_to_dense_shadow(factorized_shadow::FactorizedShadow)

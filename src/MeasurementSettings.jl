@@ -187,3 +187,37 @@ function import_unitaries(filepath::String; site_indices::Union{Vector{Index{Int
 
     return LocalUnitaryMeasurementSettings(data["local_unitaries"]; site_indices=site_indices)
 end
+
+
+"""
+    reduce_to_subsystem(settings::LocalUnitaryMeasurementSettings, subsystem::Vector{Int})
+
+Reduce a `LocalUnitaryMeasurementSettings` object to a specified subsystem.
+
+# Arguments
+- `settings::LocalUnitaryMeasurementSettings`: The original measurement settings object.
+- `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
+
+# Returns
+A new `LocalUnitaryMeasurementSettings` object corresponding to the specified subsystem.
+"""
+function reduce_to_subsystem(
+    settings::LocalUnitaryMeasurementSettings,
+    subsystem::Vector{Int}
+)::LocalUnitaryMeasurementSettings
+    # Validate the subsystem
+    @assert all(x -> x >= 1 && x <= settings.N, subsystem) "Subsystem indices must be between 1 and N."
+    @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."
+
+    # Extract the reduced local unitaries and site indices
+    reduced_unitaries = settings.local_unitaries[:, subsystem]
+    reduced_indices = settings.site_indices[subsystem]
+
+    # Create the new LocalUnitaryMeasurementSettings object
+    return LocalUnitaryMeasurementSettings(
+        length(subsystem),  # New N is the size of the subsystem
+        settings.NU,        # NU remains the same
+        reduced_unitaries,
+        reduced_indices
+    )
+end

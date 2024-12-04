@@ -138,6 +138,7 @@ A vector of trace moments corresponding to `kth_moments`.
 - Uses all combinations of rows (random unitaries) and Cartesian products of columns (measurements) to compute the moments.
 """
 function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int})
+    #TODO: The trace moment function is invariant under cyclic permutations. We can exploit this to reduce the number of evaluations.
     n_ru, n_m = size(shadows)
     p = Float64[]  # Initialize the vector for trace moments
     n_shadows = n_ru * n_m
@@ -155,8 +156,8 @@ function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vec
     end
 
     # Issue warning if total evaluations exceed threshold
-    if total_evaluations>1000
-        @warn "Total number of trace_product function evaluations equals $total_evaluations. Consider batching to reduce the number of evaluations."
+    if total_evaluations>10000
+        @warn "Total number of trace_product function evaluations to estimate all $kth_moments moments equals $total_evaluations."
     end
 
     for k in kth_moments
@@ -240,6 +241,52 @@ function trace(shadow::AbstractShadow)
     end
 end
 
+"""
+    partial_trace(shadow::AbstractShadow, subsystem::Vector{Int})
+
+Compute the partial trace of a shadow object over the complement of the specified subsystem.
+
+# Arguments
+- `shadow::AbstractShadow`: The shadow object to compute the partial trace for.
+- `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
+
+# Returns
+A new shadow object reduced to the specified subsystem.
+"""
+function partial_trace(shadow::AbstractShadow, subsystem::Vector{Int};assume_unit_trace::Bool=false)
+    if shadow isa DenseShadow
+        return partial_trace(shadow::DenseShadow, subsystem)
+    elseif shadow isa FactorizedShadow
+        return partial_trace(shadow::FactorizedShadow, subsystem;assume_unit_trace=assume_unit_trace)
+    else
+        throw(ArgumentError("Unsupported shadow type: $(typeof(shadow))"))
+    end
+end
+
+
+"""
+    partial_trace(shadows::AbstractArray{<:AbstractShadow}, subsystem::Vector{Int})
+
+Compute the partial trace for each shadow in a collection of shadows.
+
+# Arguments
+- `shadows::AbstractArray{<:AbstractShadow}`: A collection of shadow objects (vector or 2D array).
+- `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
+
+# Returns
+An array of shadows reduced to the specified subsystem, with the same dimensions as the input array.
+"""
+function partial_trace(shadows::AbstractArray{<:AbstractShadow}, subsystem::Vector{Int};assume_unit_trace::Bool=false)
+    # Allocate a new array with the same dimensions as the input
+    reduced_shadows = similar(shadows)
+
+    # Iterate over all elements in the array
+    for idx in eachindex(shadows)
+        reduced_shadows[idx] = partial_trace(shadows[idx], subsystem ; assume_unit_trace=assume_unit_trace)
+    end
+
+    return reduced_shadows
+end
 
 # #### Helper functions
 

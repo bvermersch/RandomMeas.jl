@@ -109,15 +109,15 @@ function import_measurement_data(filepath::String; predefined_settings=nothing, 
     # Extract measurement results
     measurement_results = data["measurement_results"]  # Shape: NU x NM x N
 
-    # Check if 0 is contained and print a message if true
-    if 0 in measurement_results
-        println("Warning: Julia works with indices starting at 1. Binary data should therefore use 1 and 2, not 0 and 1. Please check the data and consider changing add_value parameter.")
-    end
-
     # Optionally add a value to all elements
     if add_value != 0
         measurement_results .+= add_value
-        println("Warning: Added $add_value to all elements of the measurement results.")
+        @warn "The add_value parameter is $add_value and added to all measurement results. The measurement results contain now only $(Set(measurement_results)) ."
+    end
+
+    # Check if 0 is contained and print a message if true
+    if 0 in measurement_results
+        @warn "Julia works with indices starting at 1. Binary data should therefore use 1 and 2, not 0 and 1. To fix this, use the add_value parameter."
     end
 
     # Determine measurement settings
@@ -138,6 +138,7 @@ function import_measurement_data(filepath::String; predefined_settings=nothing, 
     else
         # Default to nothing if no settings are provided or found
         measurement_settings = nothing
+        @warn "Measurement settings not found in the file and not provided. Using default settings."
     end
 
     # Create and return MeasurementData
@@ -206,4 +207,35 @@ function export_measurement_data(data::MeasurementData, filepath::String)
     # Write the data to the specified file path
     npzwrite(filepath, export_dict)
     #println("Measurement data successfully exported to $filepath.")
+end
+
+
+"""
+    reduce_to_subsystem(data::MeasurementData{LocalUnitaryMeasurementSettings}, subsystem::Vector{Int})
+
+Reduce a `MeasurementData` object (with `LocalUnitaryMeasurementSettings`) to a specified subsystem.
+
+# Arguments
+- `data::MeasurementData{LocalUnitaryMeasurementSettings}`: The original measurement data object.
+- `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
+
+# Returns
+A new `MeasurementData` object corresponding to the specified subsystem.
+"""
+function reduce_to_subsystem(
+    data::MeasurementData{LocalUnitaryMeasurementSettings},
+    subsystem::Vector{Int}
+)::MeasurementData{LocalUnitaryMeasurementSettings}
+    # Validate the subsystem
+    @assert all(x -> x >= 1 && x <= data.N, subsystem) "Subsystem indices must be between 1 and N."
+    @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."
+
+    # Reduce the measurement settings
+    reduced_settings = reduce_to_subsystem(data.measurement_settings, subsystem)
+
+    # Reduce the measurement results: NU x NM x N → NU x NM x |subsystem|
+    reduced_results = data.measurement_results[:, :, subsystem]
+
+    # Create and return the new MeasurementData object
+    return MeasurementData(reduced_results; measurement_settings=reduced_settings)
 end

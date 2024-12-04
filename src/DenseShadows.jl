@@ -126,8 +126,6 @@ function get_dense_shadows(
     ru_batches = [((b - 1) * batch_size + 1):(b == number_of_ru_batches ? NU : b * batch_size) for b in 1:number_of_ru_batches]
     batch_size = div(NM, number_of_projective_measurement_batches)
     measurement_batches = [((b - 1) * batch_size + 1):(b == number_of_projective_measurement_batches ? NM : b * batch_size) for b in 1:number_of_projective_measurement_batches]
-    @show ru_batches
-    @show measurement_batches
 
     # Initialize array to store dense shadows
     shadows = Array{DenseShadow}(undef, number_of_ru_batches, number_of_projective_measurement_batches)
@@ -230,7 +228,39 @@ function trace(shadow::DenseShadow)
 end
 
 
+"""
+    partial_trace(shadow::DenseShadow, subsystem::Vector{Int})
 
+Compute the partial trace of a `DenseShadow` object over the complement of the specified subsystem.
+
+# Arguments
+- `shadow::DenseShadow`: The dense shadow to compute the partial trace for.
+- `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
+
+# Returns
+A new `DenseShadow` object reduced to the specified subsystem.
+"""
+function partial_trace(shadow::DenseShadow, subsystem::Vector{Int})::DenseShadow
+    # Validate the subsystem
+    @assert all(x -> x >= 1 && x <= shadow.N, subsystem) "Subsystem indices must be between 1 and N."
+    @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."
+
+    # Determine indices to trace out
+    trace_out_indices = setdiff(1:shadow.N, subsystem)
+    trace_out_ξ = shadow.ξ[trace_out_indices]
+
+    # Compute the partial trace
+    reduced_shadow_data = copy(shadow.shadow_data)
+    for idx in trace_out_ξ
+        reduced_shadow_data *= δ(idx, prime(idx))  # Contract indices to perform the trace
+    end
+
+    # Extract the reduced site indices
+    reduced_ξ = shadow.ξ[subsystem]
+
+    # Construct and return the reduced DenseShadow
+    return DenseShadow(reduced_shadow_data, length(subsystem), reduced_ξ)
+end
 
 ############
 
@@ -251,9 +281,11 @@ This function is specifically optimized fork = 2, providing significant speed-up
 - **No Batching:** All measurement results are processed without dividing into batches, ensuring smallest statistical errors.
 
 """
-function get_purity_dense_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSettings})
+function get_purity_dense_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSettings}, subsystem::Vector{Int} = collect(1:data.N))
 
-    @warn "This function is not yet optimized for k=2. Instead, it use standar dense batch shadows to compute the purity."
+    #TODO  "This function is not yet optimized for k=2. Instead, it use standard dense batch shadows to compute the purity."
+
+    measurement_data = reduce_to_subsystem(measurement_data, subsystem)
 
     dense_shadows = get_dense_shadows(measurement_data,number_of_ru_batches=2)
 

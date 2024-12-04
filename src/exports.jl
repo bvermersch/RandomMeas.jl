@@ -3,24 +3,39 @@ using Reexport
 
 export
 
+#MeasurementSeetings
 MeasurementSettings,
+reduce_to_subsystem,
+
+#MeasurementData
 MeasurementData,
-get_factorized_shadows,
-get_dense_shadows,
 import_measurement_data,
 export_measurement_data,
+
+#AbstractShadows
+AbstractShadow,
+get_expect_shadow,
+get_trace_moments,
+get_trace_product,
+multiply,
+trace,
+partial_trace,
+
+#DenseShadows
+DenseShadow,
+get_dense_shadows,
+get_purity_dense_shadows,
+
+#FactorizedShadows
+FactorizedShadow,
+get_factorized_shadows,
+convert_to_dense_shadow,
 
  #Acquisition.jl
 simulate_RandomMeas,
 get_XEB,
 get_selfXEB,
 
-#Shadows.jl
-get_shadow,
-get_shadow_factorized,
-get_expect_shadow,
-get_batch_shadows,
-get_moments,
 
 #utils_ITensor.jl
 flatten,
