@@ -1,7 +1,36 @@
+"""
+    simulate_local_measurements(
+        state::Union{MPO, MPS},
+        NM::Int64;
+        mode::String = "MPS/MPO",
+        measurement_settings::Union{LocalUnitaryMeasurementSettings, Nothing} = nothing
+    )::MeasurementData{LocalUnitaryMeasurementSettings}
+
+Simulate local randomized measurements on a quantum state represented as an `MPO` or `MPS`.
+
+# Arguments
+- `state::Union{MPO, MPS}`: The quantum state to be measured, represented as a matrix product operator (MPO) or matrix product state (MPS).
+- `NM::Int64`: The number of measurement shots to simulate for each unitary setting.
+- `mode::String` (optional): Specifies the simulation method.
+  - `"dense"`: Simulates measurements using the dense representation of the state.
+  - `"MPS/MPO"` (default): Simulates measurements using tensor network (TN) methods for memory efficiency.
+  - Any other value will result in an error.
+- `measurement_settings::Union{LocalUnitaryMeasurementSettings, Nothing}` (optional): Specifies the local unitary settings for the measurements.
+  - If `nothing`, defaults to computational basis measurements.
+
+# Returns
+A `MeasurementData{LocalUnitaryMeasurementSettings}` object containing the simulated measurement results.
+
+# Notes
+- If no `measurement_settings` are provided, the function generates default computational basis measurements.
+- The `mode` parameter determines whether to use dense or tensor network methods for the simulation:
+  - `"dense"`: Directly computes measurements from the full probability distribution of the state.
+  - `"MPS/MPO"`: Uses the tensor network structure of the state to simulate measurements more efficiently.
+"""
 function simulate_local_measurements(
     state::Union{MPO, MPS},
     NM::Int64;
-    mode::Union{String, Nothing} = nothing,
+    mode::String = "MPS/MPO",
     measurement_settings::Union{LocalUnitaryMeasurementSettings, Nothing} = nothing,
 )::MeasurementData{LocalUnitaryMeasurementSettings}
 
@@ -29,8 +58,10 @@ function simulate_local_measurements(
         # Perform NM measurements for the current setting
         if mode == "dense"
             measurement_results[r, :, :] .= simulate_local_measurements_dense(state, u, NM)
-        else
+        elseif mode == "MPS/MPO"
             measurement_results[r, :, :] .= simulate_local_measurements_TN(state, u, NM)
+        else
+            throw(ArgumentError("Invalid mode: $mode"))
         end
 
     end
@@ -44,9 +75,22 @@ end
 
 
 """
-    simulate_local_measurements_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
+    simulate_local_measurements_dense(
+        ρ::Union{MPO, MPS},
+        u::Vector{ITensor},
+        NM::Int64
+    )
 
-Sample local measurements from a probability vector (2^N dimensional) constracted from an MPS/MPO ρ
+Simulate local measurements using the dense representation of the quantum state.
+
+# Arguments
+- `ρ::Union{MPO, MPS}`: The quantum state to be measured, represented as an MPO (mixed state) or MPS (pure state).
+- `u::Vector{ITensor}`: A vector of local unitary transformations to apply before measurement.
+- `NM::Int64`: The number of measurement shots to simulate.
+
+# Returns
+A 2D array of measurement results with dimensions `(NM, N)`, where `N` is the number of qubits/sites.
+
 """
 function simulate_local_measurements_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
     if typeof(ρ)==MPS
@@ -58,9 +102,22 @@ function simulate_local_measurements_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor
 end
 
 """
-    simulate_local_measurements_TN(ρ::MPO, u::Vector{ITensor}, NM::Int64)
+    simulate_local_measurements_TN(
+        ψ::MPS,
+        u::Vector{ITensor},
+        NM::Int64
+    )
 
-Sample lcoal measurements from an MPO representation ρ. The sampling is based from the MPO directly, i.e., is memory-efficient
+Simulate local measurements on a pure state using tensor network methods.
+
+# Arguments
+- `ψ::MPS`: The quantum state to be measured, represented as an MPS.
+- `u::Vector{ITensor}`: A vector of local unitary transformations to apply before measurement.
+- `NM::Int64`: The number of measurement shots to simulate.
+
+# Returns
+A 2D array of measurement results with dimensions `(NM, N)`, where `N` is the number of qubits/sites.
+
 """
 function simulate_local_measurements_TN(ρ::MPO, u::Vector{ITensor}, NM::Int64)
     ξ = firstsiteinds(ρ;plev=0)
@@ -83,9 +140,20 @@ end
 
 
 """
-    simulate_local_measurements_TN(ψ::MPS, u::Vector{ITensor},NM::Int64)
+    get_samples_dense(
+        state::Union{MPO, MPS},
+        NM::Int64
+    )
 
-Sample randomized measurements from an MPS representation ψ. The sampling is based from the MPS directly, i.e is memory-efficient
+Sample randomized measurements using the dense representation of the quantum state.
+
+# Arguments
+- `state::Union{MPO, MPS}`: The quantum state to be measured, represented as an MPO or MPS.
+- `NM::Int64`: The number of measurement shots to simulate.
+
+# Returns
+A 2D array of measurement results with dimensions `(NM, N)`, where `N` is the number of qubits/sites.
+
 """
 function simulate_local_measurements_TN(ψ::MPS, u::Vector{ITensor},NM::Int64)
     N = length(ψ)
