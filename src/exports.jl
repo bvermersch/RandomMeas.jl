@@ -4,7 +4,7 @@ using Reexport
 export
 
 #MeasurementSeetings
-MeasurementSettings,
+LocalUnitaryMeasurementSettings,
 reduce_to_subsystem,
 
 #MeasurementData
@@ -32,9 +32,7 @@ get_factorized_shadows,
 convert_to_dense_shadow,
 
  #Acquisition.jl
-simulate_RandomMeas,
-get_XEB,
-get_selfXEB,
+simulate_local_measurements,
 
 
 #utils_ITensor.jl
@@ -49,6 +47,8 @@ get_spectrum,
 multiply,
 square,
 trace,
+get_selfXEB,
+
 
 #Postprocessing.jl
 get_h_tensor,
@@ -58,6 +58,8 @@ get_Born,
 get_purity_shadows,
 get_purity_direct,
 get_purity,
+get_XEB,
+
 
 #Circuits.jl
 apply_depo_channel,

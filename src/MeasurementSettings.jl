@@ -112,7 +112,7 @@ Generate a single qubit unitary with indices (ξ', ξ) sampled from the specifie
 
 # Arguments:
 - `ξ::Index{Int64}`: Site index.
-- `ensemble::String`: Type of unitary ensemble ("Haar", "Pauli", "Identity").
+- `ensemble::String`: Type of unitary ensemble ("Haar", "Pauli", "CompBasis").
 
 # Returns:
 - An ITensor representing the unitary.
@@ -138,7 +138,7 @@ function get_rotation(site_index::Index{Int64}, ensemble::String = "Haar")
             r_matrix[2, 1] = -1im / sqrt(2)
         end
         return ITensor(r_matrix, site_index', site_index)
-    elseif ensemble == "Identity"
+    elseif ensemble == "CompBasis"
         r_matrix[1, 1] = 1
         r_matrix[2, 2] = 1
         return ITensor(r_matrix, site_index', site_index)

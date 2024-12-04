@@ -1,6 +1,3 @@
-using StatsBase
-
-
 """
     get_purity_direct(data::Array{Int}, subsystem::Vector{Int64}=1:N)
 
@@ -211,4 +208,41 @@ function get_h_tensor(s::Index, s_prime::Index, G::Float64 = 1.0)
     Hamming_tensor[s => 2, s_prime => 1] = β / 2.0
 
     return Hamming_tensor
+end
+
+
+"""
+    get_XEB(ψ::MPS, measurement_data::MeasurementData{LocalUnitaryMeasurementSettings})
+
+Return the linear cross-entropy for the measurement results in `measurement_data`, with respect to a theory state `ψ`.
+
+# Arguments:
+- `ψ::MPS`: The theoretical state to compare against.
+- `measurement_data::MeasurementData{LocalUnitaryMeasurementSettings}`: The measurement data object containing results and settings.
+
+# Returns:
+The linear cross-entropy as a `Float64`.
+"""
+function get_XEB(ψ::MPS, measurement_data::MeasurementData{LocalUnitaryMeasurementSettings})
+    # Extract site indices and measurement results
+    ξ = siteinds(ψ)
+    data = measurement_data.measurement_results
+    NU, NM, N = measurement_data.NU, measurement_data.NM, measurement_data.N  # Extract number of measurement settings (NU), measurements per settings (NM) and qubits/sites (N)
+    @assert NU == 1 "Only one computational basis measurements are supported for XEB."
+
+    P0 = get_Born_MPS(ψ)  # Compute theoretical Born probabilities
+
+    # Initialize XEB value
+    XEB = 0.0
+
+    # Loop through the measurement results
+    for m in 1:NM
+        V = ITensor(1.0)
+        for j in 1:N
+            V *= (P0[j] * state(ξ[j], data[1, m, j]))
+        end
+        XEB += 2^N / NM * real(V[]) - 1 / NM
+    end
+
+    return XEB
 end

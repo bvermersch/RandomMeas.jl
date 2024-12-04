@@ -246,3 +246,90 @@ function get_entropy(spec::ITensor)
 	end
 	return S
 end
+
+
+"""
+    get_Born_MPS(ρ::MPO)
+
+Construct Born Probability vector P(s)=<s|ρ|s> as an MPS from an MPO representation ρ
+"""
+function get_Born_MPS(ρ::MPO)
+    ξ = firstsiteinds(ρ;plev=0)
+    N = size(ξ, 1)
+    P = MPS(ξ)
+    for i in 1:N
+        Ct = δ(ξ[i], ξ[i]', ξ[i]'')
+        P[i] = ρ[i] * Ct
+        P[i] *= δ(ξ[i], ξ[i]'')
+    end
+    return P
+end
+
+"""
+    get_Born_MPS(ψ::MPS)
+
+Construct Born Probability vector P(s)=|ψ(s)|^2 as an MPS from an MPS representation ψ
+"""
+function get_Born_MPS(ψ::MPS)
+    ξ = siteinds(ψ)
+    N = size(ξ, 1)
+    P = MPS(ξ)
+    for i in 1:N
+        Ct = δ(ξ[i], ξ[i]', ξ[i]'')
+        P[i] = ψ[i] * conj(ψ[i]') * Ct
+        P[i] *= δ(ξ[i], ξ[i]'')
+    end
+    return P
+end
+
+
+ """
+     get_Born(ρ::MPO)
+
+ Construct Born Probability vector P(s) from an MPO representation ρ
+"""
+function get_Born(ρ::MPO)
+    ξ = firstsiteinds(ρ;plev=0)
+    N = size(ξ, 1)
+    P = ρ[1] * δ(ξ[1],ξ[1]',ξ[1]'')
+    P *= δ(ξ[1]'', ξ[1])
+    for i in 2:N
+        C = ρ[i] * delta(ξ[i], ξ[i]', ξ[i]'')
+        C *= delta(ξ[i]'', ξ[i])
+        P *= C
+    end
+    return P
+end
+
+
+"""
+    get_Born(ψ::MPS)
+
+Construct Born Probability vector P(s)=|ψ(s)|^2 from an MPS representation ψ
+"""
+function get_Born(ψ::MPS)
+    ξ = siteinds(ψ )
+    N = size(ξ, 1)
+    C = δ(ξ[1], ξ[1]',ξ[1]'')
+    R = C * ψ[1] * conj(ψ[1]')
+    R *= δ(ξ[1], ξ[1]'')
+    P = R
+    for i in 2:N
+        Ct = δ(ξ[i], ξ[i]', ξ[i]'')
+        Rt = ψ[i] * conj(ψ[i]') * Ct
+        Rt *= δ(ξ[i], ξ[i]'')
+        P *= Rt
+    end
+    return P
+end
+
+"""
+    get_selfXEB(ψ::MPS)
+
+Returns the self-XEB 2^N sum_s |ψ(s)|^4-1
+"""
+function get_selfXEB(ψ::MPS)
+    P0 = get_Born_MPS(ψ)
+    N = length(ψ)
+    return 2^N*real(inner(P0,P0))-1
+end
