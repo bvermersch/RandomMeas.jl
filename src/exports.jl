@@ -57,6 +57,7 @@ get_Born_MPS,
 get_Born,
 get_purity_shadows,
 get_purity_direct,
+get_overlap_direct,
 get_purity,
 get_XEB,
 

@@ -1,80 +1,102 @@
 """
-    get_purity_direct(data::Array{Int}, subsystem::Vector{Int64}=1:N)
+    get_purity_direct(data::MeasurementData, subsystem::Vector{Int} = collect(1:data.N))
 
-Extract the purity from the direct Hamming distance formula:
-    purity = ``\\sum_s (-2)^{-D[s,s']}P(s)P(s')`` [Brydges et al, Science 2019]
+Compute the purity of a quantum state from measurement data by averaging the overlap of measurement results.
 
 # Arguments
-- `data::Array{Int}`: The measurement data of shape (NU, NM, N) where NU is the number of realizations, NM is the number of shots, and N is the number of qubits.
-- `subsystem::Vector{Int64}` (optional): A vector of integers specifying the subsystem of qubits to compute the purity for. Default is `1:N`, meaning all qubits.
+- `data::MeasurementData`: Measurement data containing the results and settings of randomized measurements.
+- `subsystem::Vector{Int}` (optional): A vector of site indices specifying the subsystem to retain. Defaults to the full system.
 
 # Returns
-- The computed purity for the specified subsystem of qubits.
-
-# Example
-```julia
-purity = get_purity_hamming(data, [1, 2])  # Compute purity for qubits 1 and 2
-```
+- The computed purity for the specified subsystem.
 """
 function get_purity_direct(data::MeasurementData, subsystem::Vector{Int} = collect(1:data.N))
-
-    # Ensure subsystem is a valid selection
-    @assert all(x -> x >= 1 && x <= data.N, subsystem)
-    @assert length(unique(subsystem)) == length(subsystem)  # Ensure no duplicates
-
-    return sum(get_purity_direct_single_meas_setting(data.measurement_results[r, :, subsystem]) for r in 1:data.NU) / data.NU
-
+    return get_overlap_direct(data, data, subsystem; apply_bias_correction=true)
 end
 
-
 """
-    get_purity_direct_single_meas_setting(data::Array{Int}) -> Float64
+    get_overlap_direct(
+        data_1::MeasurementData,
+        data_2::MeasurementData,
+        subsystem::Vector{Int} = collect(1:data_1.N);
+        apply_bias_correction::Bool = false
+    )
 
-Compute the purity of a quantum state directly from measurement data using sequential tensor contractions.
-
-This function calculates the purity of a quantum state represented by the given measurement data. It efficiently applies the Hamming tensor to each leg of the Born probability tensor sequentially, avoiding the construction of the full Hamming operator. This approach optimizes both time and memory usage.
+Compute the overlap of two quantum states from measurement data by averaging the overlap of measurement results.
 
 # Arguments
-
-- `data::Array{Int}`: A 2D array of measurement results with dimensions `(NM, N)`, where `NM` is the number of measurements, and `N` is the number of qubits. Each entry should be `1` or `2`, representing the binary outcomes for qubits.
+- `data_1::MeasurementData`: Measurement data for the first state.
+- `data_2::MeasurementData`: Measurement data for the second state.
+- `subsystem::Vector{Int}` (optional): A vector of site indices specifying the subsystem to retain. Defaults to the full system.
+- `apply_bias_correction::Bool` (optional): Whether to apply bias correction for the overlap. Defaults to `false`.
 
 # Returns
-
-- `purity::Float64`: The computed purity of the quantum state.
-
-# Example
-
-```julia
-using ITensors
-
-# Generate random measurement data
-NM = 1000  # Number of measurements
-N = 4      # Number of qubits
-data = rand(1:2, NM, N)
-
-# Compute purity
-purity = get_purity_direct_single_meas_setting(data)
-println("Purity: ", purity)
-```
+- The computed overlap (or purity if `data_1 == data_2` and bias correction is applied).
 """
-function get_purity_direct_single_meas_setting(data::Array{Int})
-    # Extract dimensions: NM is the number of measurements, N is the number of qubits
-    NM, N = size(data)
+function get_overlap_direct(
+    data_1::MeasurementData,
+    data_2::MeasurementData,
+    subsystem::Vector{Int} = collect(1:data_1.N);
+    apply_bias_correction::Bool = false
+)
+    # Ensure subsystem is a valid selection
+    @assert all(x -> x >= 1 && x <= data_1.N, subsystem)
+    @assert length(unique(subsystem)) == length(subsystem)  # Ensure no duplicates
+    @assert data_1.NU == data_2.NU "Number of unitaries (NU) must match between data_1 and data_2."
+    @assert data_1.N == data_2.N "Number of qubits (N) must match between data_1 and data_2."
+
+    # Compute overlap averaged over all random unitaries (measurement settings)
+    overlap = sum(get_overlap_direct_single_meas_setting(
+        data_1.measurement_results[r, :, subsystem],
+        data_2.measurement_results[r, :, subsystem]
+    ) for r in 1:data_1.NU) / data_1.NU
+
+    if apply_bias_correction
+        @assert data_1.NM == data_2.NM "Number of measurements (NM) must match for bias correction."
+        NM = data_1.NM
+        N = length(subsystem)
+        overlap = overlap * NM^2 / (NM * (NM - 1)) - 2.0^N / (NM - 1)
+    end
+
+    return overlap
+end
+
+"""
+    get_overlap_direct_single_meas_setting(
+        data_1::Array{Int},
+        data_2::Array{Int}
+    )
+
+Compute the overlap between two quantum states for a single measurement setting.
+
+# Arguments
+- `data_1::Array{Int}`: Measurement results for the first state, with dimensions `(NM, N)`.
+- `data_2::Array{Int}`: Measurement results for the second state, with dimensions `(NM, N)`.
+
+# Returns
+- The computed overlap for the single measurement setting.
+"""
+function get_overlap_direct_single_meas_setting(data_1::Array{Int}, data_2::Array{Int})
+    # Extract the number of qubits N is the number of qubits
+    N = size(data_1,2)
+    @assert N==size(data_2,2) "Number of qubits must match between data_1 and data_2."
 
     # Generate site indices for qubits
     ξ = siteinds("Qubit", N)
 
-    # Compute the Born probability tensor from measurement data
-    prob = get_Born(data, ξ)
+    # TODO: The construction of the Born probability tensors is not strictly necessary. One could di
+    # directly compute the weighted overlap using the Hamming tensor and the measurement data.
+    # This would be slower but memory efficient. Should we provide this option?
+    # It is similar to "dense" (batch) shadows vs "factorized shadows" in the shadows module.
+
+    # Compute the Born probability tensors from measurement data
+    prob_1 = get_Born(data_1, ξ)
+    prob_2 = data_1 === data_2 || data_1 == data_2 ? prob_1 : get_Born(data_2, ξ)
 
     # Compute the weighted overlap using the Hamming tensor
-    purity = get_weighted_overlap(prob, prob)
+    overlap = get_weighted_overlap(prob_1, prob_2)
 
-    # Correct for the bias
-    purity = purity * NM^2 / (NM * (NM - 1)) - 2.0^N / (NM - 1)
-
-    # Return the computed purity
-    return purity
+    return overlap
 end
 
 

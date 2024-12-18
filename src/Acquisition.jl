@@ -96,7 +96,7 @@ function simulate_local_measurements_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor
     if typeof(ρ)==MPS
         ρu = apply(u,ρ)
     else
-        ρu = apply(u,ρ;apply_dag=true)
+        ρu = apply(u,ρ;apply_dag=true) #ρu = apply(u,ρ;apply_dag=true)
     end
     return get_samples_dense(ρu,NM)
 end
