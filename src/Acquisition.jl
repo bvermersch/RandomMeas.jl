@@ -52,7 +52,7 @@ function simulate_local_measurements(
     measurement_results = Array{Int}(undef, NU, NM, N)
 
     # Loop over measurement settings
-    for r in 1:NU
+    @showprogress for r in 1:NU
         u = local_unitaries[r, :]  # Extract the unitaries for the r-th measurement setting
 
         # Perform NM measurements for the current setting

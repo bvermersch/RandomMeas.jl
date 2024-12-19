@@ -29,6 +29,8 @@ end
 
 compute the reduce density matrix over sites mentionned in part
 """
+#TODO The function defintion is not consistent. compare the the reduce_dm for MPS.
+
 function reduce_dm(ρ::MPO,part::Vector{Int64})
 	N = length(ρ)
 	NA = size(part,1)
@@ -97,7 +99,11 @@ end
 
 compute the reduced density matrix for sites i:j
 
+
 """
+#TODO The function defintion is not consistent. compare the the reduce_dm for MPO.
+
+
 function reduce_dm(ψ::MPS,i::Int64,j::Int64)
 	N = length(ψ)
 	s = siteinds(ψ)
