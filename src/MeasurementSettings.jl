@@ -88,7 +88,7 @@ Create a `LocalUnitaryMeasurementSettings` object by random sampling local unita
 # Returns:
 - A LocalUnitaryMeasurementSettings object.
 """
-function LocalUnitaryMeasurementSettings(
+function sample_local_random_unitaries(
     N::Int, NU::Int;
     site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing,
     ensemble::String = "Haar"

@@ -294,6 +294,7 @@ end
 
  Construct Born Probability vector P(s) from an MPO representation ρ
 """
+#TODO There is a potential memory issue if the MPO is not ordered.
 function get_Born(ρ::MPO)
     ξ = firstsiteinds(ρ;plev=0)
     N = size(ξ, 1)

@@ -150,7 +150,7 @@ function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vec
     # Precompute total evaluations
     total_evaluations = 0
     for k in kth_moments
-        num_permutations = factorial(n_ru) ÷ factorial(n_ru - k)  # Number of row permutations
+        num_permutations = prod(n_ru - i for i in 0:(k - 1))  # Number of row permutations
         num_cartesian_products = n_m^k  # Cartesian product over columns
         total_evaluations += num_permutations * num_cartesian_products
     end

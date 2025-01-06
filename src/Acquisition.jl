@@ -127,7 +127,7 @@ function simulate_local_measurements_TN(ρ::MPO, u::Vector{ITensor}, NM::Int64)
     ρu[1] /= trace(ρu, ξ)
     if N > 1
         for m in 1:NM
-            data[m, :] = ITensors.sample(ρu)
+            data[m, :] = ITensorMPS.sample(ρu)
         end
     else
         s = ξ[1]
@@ -160,7 +160,7 @@ function simulate_local_measurements_TN(ψ::MPS, u::Vector{ITensor},NM::Int64)
     data = zeros(Int,NM,N)
     ψu = apply(reverse(u),ψ) #using reverse allows us to maintain orthocenter(ψ)=1 ;)
     for m in 1:NM
-        data[m, :] = ITensors.sample(ψu)#[1:NA]
+        data[m, :] = ITensorMPS.sample(ψu)#[1:NA]
     end
     return data
 end

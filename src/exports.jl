@@ -4,7 +4,7 @@ using Reexport
 export
 
 #MeasurementSeetings
-LocalUnitaryMeasurementSettings,
+sample_local_random_unitaries,
 reduce_to_subsystem,
 
 #MeasurementData
@@ -15,6 +15,7 @@ export_measurement_data,
 #AbstractShadows
 AbstractShadow,
 get_expect_shadow,
+get_trace_moment,
 get_trace_moments,
 get_trace_product,
 multiply,
@@ -33,6 +34,7 @@ convert_to_dense_shadow,
 
  #Acquisition.jl
 simulate_local_measurements,
+
 
 
 #utils_ITensor.jl
