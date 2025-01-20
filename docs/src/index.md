@@ -30,6 +30,13 @@ Modules = [RandomMeas]
 Pages = ["Shadows.jl"]
 ```
 
+## Routines for Data Structures
+
+```@autodocs
+Modules = [RandomMeas]
+Pages = ["MeasurementData.jl","MeasurementSettings.jl"]
+```
+
 ## Routines for simulating quantum circuits
 
 ```@autodocs
