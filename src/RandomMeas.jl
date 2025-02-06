@@ -5,6 +5,7 @@ include("exports.jl")
 
 include("MeasurementSettings.jl")
 include("MeasurementData.jl")
+include("MeasurementProbabilities.jl")
 
 include("AbstractShadows.jl")
 include("FactorizedShadows.jl")

@@ -239,20 +239,31 @@ function get_moment(spec::ITensor, kth_moment::Int)
     return get_moments(spec, [kth_moment])[1]
 end
 
-"""
-    get_entropy(spec::ITensor)
 
-compute von Neumann entropy from entanglement spectrum
-"""
-function get_entropy(spec::ITensor)
-	S = 0
-	for l=1:dim(spec, 1)
-		x = spec[l,l]^2
-		S -= x*log2(x)
-	end
-	return S
+function get_entropy(spec::ITensor; alpha::Union{Float64, Int} = 1.0)
+    S = 0.0
+
+    # Iterate over the spectrum
+    for l in 1:dim(spec, 1)
+        x = real(spec[l, l])
+        if x > 0
+            if alpha == 1.0
+                # Von Neumann entropy (special case for alpha = 1)
+                S -= x * log2(x)
+            else
+                # Rényi entropy
+                S += x^alpha
+            end
+        end
+    end
+
+    # Final computation for Rényi entropy
+    if alpha != 1.0
+        S = log2(S) / (1 - alpha)
+    end
+
+    return S
 end
-
 
 """
     get_Born_MPS(ρ::MPO)

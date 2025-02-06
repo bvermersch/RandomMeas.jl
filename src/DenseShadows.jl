@@ -147,6 +147,58 @@ end
 
 
 
+# Batch Dense Shadows
+"""
+    get_dense_shadows(measurement_probabilities::MeasurementProbabilities{LocalUnitaryMeasurementSettings};
+                      G::Vector{Float64} = fill(1.0, N),
+                      number_of_ru_batches::Int = NU)
+
+Compute dense shadows for the provided the probabilities of measurement outcomes in batches.
+
+# Arguments
+- `measurement_probabilities::MeasurementProbabilities{LocalUnitaryMeasurementSettings}`: Measurement probabilities object.
+- `G::Vector{Float64}` (optional): Vector of G values for robustness (default: 1.0 for all sites).
+- `number_of_ru_batches::Int` (optional): Number of random unitary batches (default: `NU`).
+
+# Returns
+A 2D array of `DenseShadow` objects.
+"""
+function get_dense_shadows(
+    measurement_probabilities::MeasurementProbabilities{LocalUnitaryMeasurementSettings};
+    G::Vector{Float64} = fill(1.0, measurement_probabilities.N),
+    number_of_ru_batches::Int = measurement_probabilities.measurement_settings.NU,
+)
+    # Extract dimensions
+    NU, N = measurement_probabilities.NU, measurement_probabilities.N
+    ξ = measurement_probabilities.measurement_settings.site_indices
+    u = measurement_probabilities.measurement_settings.local_unitaries
+    probabilities = measurement_probabilities.measurement_probabilities
+
+    # Ensure G length matches the number of qubits
+    @assert length(G) == N "Length of G must match the number of qubits/sites."
+
+    # Create batches for RUs and projective measurements
+    batch_size = div(NU, number_of_ru_batches)
+    ru_batches = [((b - 1) * batch_size + 1):(b == number_of_ru_batches ? NU : b * batch_size) for b in 1:number_of_ru_batches]
+
+    # Initialize array to store dense shadows
+    shadows = Array{DenseShadow}(undef, number_of_ru_batches, 1)
+
+    # Compute shadows for each batch
+    for (batch_idx, ru_batch) in enumerate(ru_batches)
+            batch_shadow = ITensor(vcat(ξ, prime(ξ)))  # Initialize batch shadow tensor
+            for r in ru_batch
+                shadow_temp = DenseShadow(probabilities[r], u[r, :]; G = G).shadow_data  # Compute shadow
+                batch_shadow += shadow_temp
+            end
+            shadows[batch_idx, 1] = DenseShadow(batch_shadow / length(ru_batch) , N, ξ)
+    end
+
+    return shadows
+end
+
+
+
 """
     get_expect_shadow(O::MPO, shadow::DenseShadow)
 

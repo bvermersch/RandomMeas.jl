@@ -9,6 +9,9 @@ export
 sample_local_random_unitaries,
 reduce_to_subsystem,
 
+#MeasurementProbabilities
+MeasurementProbabilities,
+
 #MeasurementData
 MeasurementData,
 import_measurement_data,
@@ -36,7 +39,6 @@ convert_to_dense_shadow,
 
  #Acquisition.jl
 simulate_local_measurements,
-
 
 
 #utils_ITensor.jl
