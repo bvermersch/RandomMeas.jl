@@ -92,16 +92,21 @@ end
 
 Wrapper for computing trace moments from a vector of shadows.
 
+ If an MPO observable `O` is provided (i.e. not `nothing`), the function computes
+`Tr[O * rho^k]` for each moment `k`; otherwise it computes `Tr[rho^k]`.
+
 # Arguments
 - `shadows::Vector{<:AbstractShadow}`: A vector of shadows.
 - `kth_moments::Vector{Int}`: A vector of integers specifying the moments to compute.
+- `O::Union{Nothing, MPO}`: (Optional) An MPO observable. If provided, computes `Tr[O * rho^k]`
+    (default: `nothing`).
 
 # Returns
 A vector of trace moments corresponding to `kth_moments`.
 """
-function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int})
+function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
     # Reshape the vector to a 2D array with a trivial second dimension
-    return get_trace_moments(reshape(shadows, :, 1), kth_moments)
+    return get_trace_moments(reshape(shadows, :, 1), kth_moments; O=O)
 end
 
 """
@@ -109,15 +114,19 @@ end
 
 Wrapper for computing a single trace moment from a vector of shadows.
 
+If an MPO observable `O` is provided (i.e. not `nothing`), the function computes
+`Tr[O * rho^k]` for each moment `k`; otherwise it computes `Tr[rho^k]`.
+
 # Arguments
 - `shadows::Vector{<:AbstractShadow}`: A vector of shadows.
 - `kth_moment::Int`: The moment to compute (e.g., `k=1,2,...`).
-
+- `O::Union{Nothing, MPO}`: (Optional) An MPO observable. If provided, computes `Tr[O * rho^k]`
+    (default: `nothing`).
 # Returns
 The computed trace moment for `kth_moment`.
 """
-function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int)
-    return get_trace_moments(shadows, [kth_moment])[1]
+function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing)
+    return get_trace_moments(shadows, [kth_moment]; O=O)[1]
 end
 
 """
