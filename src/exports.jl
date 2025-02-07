@@ -26,6 +26,7 @@ get_trace_product,
 multiply,
 trace,
 partial_trace,
+partial_transpose,
 
 #DenseShadows
 DenseShadow,

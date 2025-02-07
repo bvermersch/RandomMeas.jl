@@ -288,6 +288,51 @@ function partial_trace(shadows::AbstractArray{<:AbstractShadow}, subsystem::Vect
     return reduced_shadows
 end
 
+"""
+    partial_transpose(shadow::AbstractShadow, subsystem::Vector{Int})
+
+Compute the partial transpose of a shadow object over the specified subsystem(s).
+This operation is analogous to QuTiP's partial transpose method.
+
+# Arguments
+- `shadow::AbstractShadow`: The shadow object for which the partial transpose is computed.
+- `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem(s)
+  over which to perform the transpose.
+
+# Returns
+A new shadow object that is the partial transpose of the input.
+"""
+function partial_transpose(shadow::AbstractShadow, subsystem::Vector{Int})
+    if shadow isa DenseShadow
+        return partial_transpose(shadow::DenseShadow, subsystem)
+    elseif shadow isa FactorizedShadow
+        return partial_transpose(shadow::FactorizedShadow, subsystem)
+    else
+        throw(ArgumentError("Unsupported shadow type: $(typeof(shadow))"))
+    end
+end
+
+"""
+    partial_transpose(shadows::AbstractArray{<:AbstractShadow}, subsystem::Vector{Int})
+
+Compute the partial transpose for each shadow in a collection.
+
+# Arguments
+- `shadows::AbstractArray{<:AbstractShadow}`: A collection (vector or 2D array) of shadow objects.
+- `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem(s)
+  over which the transpose is to be performed.
+
+# Returns
+An array of shadow objects with the partial transpose applied, preserving the input dimensions.
+"""
+function partial_transpose(shadows::AbstractArray{<:AbstractShadow}, subsystem::Vector{Int})
+    transposed_shadows = similar(shadows)
+    for idx in eachindex(shadows)
+        transposed_shadows[idx] = partial_transpose(shadows[idx], subsystem)
+    end
+    return transposed_shadows
+end
+
 # #### Helper functions
 
 

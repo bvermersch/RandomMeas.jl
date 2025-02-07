@@ -254,6 +254,34 @@ end
 
 
 """
+    partial_transpose(shadow::FactorizedShadow, subsystem::Vector{Int})::FactorizedShadow
+
+Compute the partial transpose of a FactorizedShadow over the specified subsystem by swapping, for each site,
+the unprimed and primed indices using the `swapind` function. This function returns views of the underlying ITensors,
+avoiding unnecessary data duplication.
+
+# Arguments
+- `shadow::FactorizedShadow`: The factorized classical shadow.
+- `subsystem::Vector{Int}`: A vector of 1-based site indices on which to perform the partial transpose.
+
+# Returns
+A new FactorizedShadow with the specified sites partially transposed.
+"""
+function partial_transpose(shadow::FactorizedShadow, subsystem::Vector{Int})::FactorizedShadow
+    @assert all(i -> i ≥ 1 && i ≤ shadow.N, subsystem) "Subsystem indices must be between 1 and N."
+    @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."
+
+    # Create a new vector for the ITensor views.
+    new_shadow_data = copy(shadow.shadow_data)
+    for i in subsystem
+        a = shadow.ξ[i]      # unprimed index for site i
+        b = prime(a)         # its primed partner
+        new_shadow_data[i] = swapind(new_shadow_data[i], a, b)
+    end
+    return FactorizedShadow(new_shadow_data, shadow.N, shadow.ξ)
+end
+
+"""
     convert_to_dense_shadow(factorized_shadow::FactorizedShadow)
 
 Convert a `FactorizedShadow` object into a `DenseShadow` object.

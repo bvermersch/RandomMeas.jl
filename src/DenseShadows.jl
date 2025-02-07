@@ -314,6 +314,35 @@ function partial_trace(shadow::DenseShadow, subsystem::Vector{Int})::DenseShadow
     return DenseShadow(reduced_shadow_data, length(subsystem), reduced_ξ)
 end
 
+
+"""
+    partial_transpose(shadow::DenseShadow, subsystem::Vector{Int})::DenseShadow
+
+Compute the partial transpose of a DenseShadow over the specified subsystem by swapping, for each site,
+the unprimed index with its primed partner. This is done using the `swapind` function, which returns a view of
+the underlying ITensor.
+
+# Arguments
+- `shadow::DenseShadow`: The dense classical shadow.
+- `subsystem::Vector{Int}`: A vector of 1-based site indices on which to perform the partial transpose.
+
+# Returns
+A new DenseShadow with the specified sites partially transposed.
+"""
+function partial_transpose(shadow::DenseShadow, subsystem::Vector{Int})::DenseShadow
+    @assert all(i -> i ≥ 1 && i ≤ shadow.N, subsystem) "Subsystem indices must be between 1 and N."
+    @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."
+
+    # Work on a view of the internal ITensor.
+    A = shadow.shadow_data
+    for i in subsystem
+        a = shadow.ξ[i]      # unprimed index for site i
+        b = prime(a)         # its primed partner
+        A = swapind(A, a, b)  # swap the indices; swapind returns a view
+    end
+    return DenseShadow(A, shadow.N, shadow.ξ)
+end
+
 ############
 
 
