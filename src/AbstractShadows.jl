@@ -120,34 +120,33 @@ function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int)
     return get_trace_moments(shadows, [kth_moment])[1]
 end
 
-
 """
-    get_trace_moments(shadows::Array{AbstractShadow, 2}, kth_moments::Vector{Int})
+    get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
 
 Compute trace moments from an array of `AbstractShadow` objects.
+If an MPO observable `O` is provided (i.e. not `nothing`), the function computes
+`Tr[O * rho^k]` for each moment `k`; otherwise it computes `Tr[rho^k]`.
 
 # Arguments
-- `shadows::Array{AbstractShadow, 2}`: An array of shadows with dimensions `(n_ru, n_m)`,
+- `shadows::Array{<:AbstractShadow, 2}`: An array of shadows with dimensions `(n_ru, n_m)`,
   where `n_ru` is the number of random unitaries and `n_m` is the number of measurements.
 - `kth_moments::Vector{Int}`: A vector of integers specifying the moments to compute.
+- `O::Union{Nothing, MPO}`: (Optional) An MPO observable. If provided, computes `Tr[O * rho^k]`
+  (default: `nothing`).
 
 # Returns
 A vector of trace moments corresponding to `kth_moments`.
-
-# Notes
-- Uses all combinations of rows (random unitaries) and Cartesian products of columns (measurements) to compute the moments.
 """
-function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int})
-    #TODO: The trace moment function is invariant under cyclic permutations. We can exploit this to reduce the number of evaluations.
+function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
     n_ru, n_m = size(shadows)
-    p = Float64[]  # Initialize the vector for trace moments
+    p = ComplexF64[]  # Initialize the vector for trace moments
     n_shadows = n_ru * n_m
 
     # Validate kth_moments
     @assert all(kth_moments .>= 1) "Only integer valued moments Tr[ρ^k] with k >= 1 can be computed."
     @assert all(kth_moments .<= n_shadows) "The number of shadows must be >= the largest moment k."
 
-    # Precompute total evaluations
+    # Precompute total evaluations (for a warning only)
     total_evaluations = 0
     for k in kth_moments
         num_permutations = prod(n_ru - i for i in 0:(k - 1))  # Number of row permutations
@@ -155,43 +154,58 @@ function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vec
         total_evaluations += num_permutations * num_cartesian_products
     end
 
-    # Issue warning if total evaluations exceed threshold
-    if total_evaluations>10000
-        @warn "Total number of trace_product function evaluations to estimate all $kth_moments moments equals $total_evaluations."
+    if total_evaluations > 10000
+        @warn "Total number of trace product evaluations to estimate all $kth_moments moments equals $total_evaluations."
     end
 
+    # Loop over each requested moment k
     for k in kth_moments
-        est = []  # Store estimates for this k
-        for r in permutations(1:n_ru, k)  # Permutations over rows
-            for m in CartesianIndices(ntuple(_ -> 1:n_m, k))  # Cartesian product over columns
-                # Compute trace product of shadows for this permutation and Cartesian indices
-                trace_prod = get_trace_product((shadows[r[i], m[i]] for i in 1:k)...)
-                push!(est, trace_prod)
+        est = ComplexF64[]  # Store estimates for this k
+        # Loop over all combinations: permutations over rows and Cartesian product over columns
+        for r in permutations(1:n_ru, k)
+            for m in CartesianIndices(ntuple(_ -> 1:n_m, k))
+                trace_prod = get_trace_product((shadows[r[i], m[i]] for i in 1:k)...; O=O)
+                push!(est, real(trace_prod))
             end
         end
-        push!(p, real(mean(est)))  # Average over all combinations
+        push!(p, mean(est))  # Average over all combinations and take the real part
     end
 
     return p
 end
 
-"""
-    get_trace_product(shadows...)
 
-Compute the trace of the product of multiple shadows.
+"""
+    get_trace_product(shadows...; O::Union{Nothing, MPO}=nothing)
+
+Compute the product of multiple shadow objects. By default (when `O` is `nothing`),
+this function returns the trace of the product:
+
+    trace(shadow₁ * shadow₂ * ... * shadowₙ).
+
+If an MPO observable `O` is provided, instead of computing the trace, the function
+returns the expectation value computed by
+
+    get_expect_shadow(O, shadow₁ * shadow₂ * ... * shadowₙ).
 
 # Arguments
 - `shadows...`: A variable number of `AbstractShadow` objects to multiply.
+- `O::Union{Nothing, MPO}` (optional): An MPO observable. If provided, the expectation
+  value is computed using `get_expect_shadow(O, result)` (default: `nothing`).
 
 # Returns
-The trace of the product.
+The trace of the product if `O` is `nothing`, or the expectation value if `O` is provided.
 """
-function get_trace_product(shadows::AbstractShadow...)
+function get_trace_product(shadows::AbstractShadow...; O::Union{Nothing, MPO}=nothing)
     result = shadows[1]
     for shadow in shadows[2:end]
         result = multiply(result, shadow)
     end
-    return trace(result)
+    if O === nothing
+        return trace(result)
+    else
+        return get_expect_shadow(O, result)
+    end
 end
 
 
