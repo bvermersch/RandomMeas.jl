@@ -55,11 +55,10 @@ function MeasurementProbabilities(data::MeasurementData{T}) where {T <: Abstract
     N = data.N
     NU = data.NU
     ξ = data.measurement_settings.site_indices
-    measurement_probabilities = Array{MPS}(undef, NU)
+    measurement_probabilities = Array{ITensor}(undef, NU)
 
     for r in 1:NU
-        P = get_Born(data.measurement_results[r, :, :], ξ) # Compute Born probabilities  #TODO: Check whether this is okay and gives a Probability MPS
-        measurement_probabilities[r] = P
+        measurement_probabilities[r] = get_Born(data.measurement_results[r, :, :], ξ) # Compute Born probabilities  #TODO: Check whether this is okay and gives a Probability MPS
     end
 
     return MeasurementProbabilities(N, NU, measurement_probabilities, data.measurement_settings)
