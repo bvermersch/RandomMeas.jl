@@ -95,3 +95,7 @@ pkg> add RandomMeas
 13) [Noisy circuit simulations with tensor networks](examples/CircuitNoiseSimulations.ipynb)
 
 14) [Estimating statistical error bars via Jackknife resampling](examples/ErrorBars.ipynb)
+
+15) [Executing randomized measurements on IBM's quantum computers](examples/RandomizedMeasurementsQiskit.ipynb)
+
+16) [Postprocessing randomized measurements from IBM's quantum computers](examples/RandomizedMeasurementsQiskitPostprocessing.ipynb)
