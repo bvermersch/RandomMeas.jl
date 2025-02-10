@@ -217,3 +217,22 @@ function trace(shadow::ITensor, ξ::Vector{Index{Int64}})
     end
     return Y[]
 end
+
+
+"""
+    get_purity_shadows(data::Array{Int},ξ::Vector{Index{Int64}})
+
+Extract the purity from classical shadows
+"""
+function get_purity_shadows(data::Array{Int},u::Vector{Vector{ITensor}},ξ::Vector{Index{Int64}};G::Union{Vector{Float64},Nothing}=nothing)
+    nu,NM,NA = size(data)
+    shadow = ITensor(vcat(ξ,ξ'))
+    shadow2 = ITensor(vcat(ξ,ξ'))
+    for r in 1:nu
+        P = get_Born(data[r,:,:],ξ)
+        shadow_temp = get_shadow(P,ξ,u[r];G=G)
+        shadow += shadow_temp
+        shadow2 += power(shadow_temp,2)
+    end
+    return real(trace(power(shadow,2),ξ)-trace(shadow2,ξ))/(nu*(nu-1))
+end

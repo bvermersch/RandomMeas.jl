@@ -1,115 +1,125 @@
 """
-    get_rotations(ξ::Vector{Index{Int64}}, ensemble::String="Haar")
+    simulate_local_measurements(
+        state::Union{MPO, MPS},
+        NM::Int64;
+        mode::String = "MPS/MPO",
+        measurement_settings::Union{LocalUnitaryMeasurementSettings, Nothing} = nothing
+    )::MeasurementData{LocalUnitaryMeasurementSettings}
 
-Generate a list of N  single qubit unitaries with indices (ξ'[i],ξ[i]) (i=1,...,N) sampled randomly from the ensemble:
-    "Haar" (default): Haar random single qubit unitary
-    "Pauli": Random Pauli rotation sampled uniformly from {RX, RY, RZ}
-    "Identity": (fixed) Identity matrix
+Simulate local randomized measurements on a quantum state represented as an `MPO` or `MPS`.
+
+# Arguments
+- `state::Union{MPO, MPS}`: The quantum state to be measured, represented as a matrix product operator (MPO) or matrix product state (MPS).
+- `NM::Int64`: The number of measurement shots to simulate for each unitary setting.
+- `mode::String` (optional): Specifies the simulation method.
+  - `"dense"`: Simulates measurements using the dense representation of the state.
+  - `"MPS/MPO"` (default): Simulates measurements using tensor network (TN) methods for memory efficiency.
+  - Any other value will result in an error.
+- `measurement_settings::Union{LocalUnitaryMeasurementSettings, Nothing}` (optional): Specifies the local unitary settings for the measurements.
+  - If `nothing`, defaults to computational basis measurements.
+
+# Returns
+A `MeasurementData{LocalUnitaryMeasurementSettings}` object containing the simulated measurement results.
+
+# Notes
+- If no `measurement_settings` are provided, the function generates default computational basis measurements.
+- The `mode` parameter determines whether to use dense or tensor network methods for the simulation:
+  - `"dense"`: Directly computes measurements from the full probability distribution of the state.
+  - `"MPS/MPO"`: Uses the tensor network structure of the state to simulate measurements more efficiently.
 """
-function get_rotations(ξ::Vector{Index{Int64}}, ensemble::String="Haar")
-    u = Vector{ITensor}()
-    N = length(ξ)
-    for i in 1:N
-        push!(u, get_rotation(ξ[i], ensemble))
+function simulate_local_measurements(
+    state::Union{MPO, MPS},
+    NM::Int64;
+    mode::String = "MPS/MPO",
+    measurement_settings::Union{LocalUnitaryMeasurementSettings, Nothing} = nothing,
+)::MeasurementData{LocalUnitaryMeasurementSettings}
+
+    #TODO Index compability check state and settings
+    #TODO  simulate_RandomMeas_dense, ..., require local unitaries to be passed. Thus, we generate a trivial measurement setting object for computational basis measurements. Maybe we should change this.
+
+    N = length(state)
+    ξ = [ siteind(state,j; plev=0) for j in 1:N ]  # Extract the site indices of the state
+
+    if measurement_settings == nothing
+        measurement_settings = LocalUnitaryMeasurementSettings(N,1;site_indices=ξ,ensemble="CompBasis") # Default to computational basis measurements
     end
-    return u
-end
 
-"""
-    get_rotation(ξ::Index{Int64}, ensemble::String = "Haar")
+    NU = measurement_settings.NU
+    local_unitaries = measurement_settings.local_unitaries
+    @assert N == measurement_settings.N "Incompatible number of sites"
 
-Generate a single qubit unitary with indices (ξ',ξ)
-sampled from the ensemble:
-    "Haar" (default): Haar random single qubit unitary
-    "Pauli": Random Pauli rotation sampled uniformly from {RX, RY, RZ}
-    "Identity": (fixed) Identity matrix
-"""
-function get_rotation(ξ::Index{Int64}, ensemble::String = "Haar")
-    r_matrix = zeros(ComplexF64, (2, 2))
-    if ensemble == "Haar"
-        return op("RandomUnitary", ξ)
-    elseif ensemble == "Pauli"
-        b = rand(1:3)
-        #println("basis B", b)
-        if b == 1
-            r_matrix[1, 1] = 1
-            r_matrix[2, 2] = 1
-        elseif b == 2
-            r_matrix[1, 1] = 1 / sqrt(2)
-            r_matrix[2, 1] = 1 / sqrt(2)
-            r_matrix[1, 2] = 1 / sqrt(2)
-            r_matrix[2, 2] = -1 / sqrt(2)
+    # Allocate memory for the measurement results: NU x NM x N
+    measurement_results = Array{Int}(undef, NU, NM, N)
+
+    # Loop over measurement settings
+    @showprogress for r in 1:NU
+        u = local_unitaries[r, :]  # Extract the unitaries for the r-th measurement setting
+
+        # Perform NM measurements for the current setting
+        if mode == "dense"
+            measurement_results[r, :, :] .= simulate_local_measurements_dense(state, u, NM)
+        elseif mode == "MPS/MPO"
+            measurement_results[r, :, :] .= simulate_local_measurements_TN(state, u, NM)
         else
-            r_matrix[1, 1] = 1 / sqrt(2)
-            r_matrix[2, 2] = 1 / sqrt(2)
-            r_matrix[1, 2] = -1im / sqrt(2)
-            r_matrix[2, 1] = -1im / sqrt(2)
+            throw(ArgumentError("Invalid mode: $mode"))
         end
-        r_tensor = itensor(r_matrix, ξ', ξ)
-        return r_tensor
-    elseif ensemble == "Identity"
-        b = rand(1:2)
-        r_matrix[1, 1] = 1
-        r_matrix[2, 2] = 1
-        r_tensor = itensor(r_matrix, ξ', ξ)
-        return r_tensor
-    end
-end
 
-function get_RandomMeas(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64, mode::String)
-
-    @assert mode in ["dense", "MPS", "MPO"] "Invalid mode"
-
-    if mode == "dense"
-        return get_RandomMeas_dense(ρ, u, NM)
-    elseif mode == "MPS"
-        return get_RandomMeas_MPS(ρ, u, NM)
-    elseif mode == "MPO"
-        return get_RandomMeas_MPO(ρ, u, NM)
     end
 
+    # Return the results as a MeasurementData object
+    return MeasurementData(
+        measurement_results;
+        measurement_settings=measurement_settings
+    )
 end
 
 
 """
-    get_RandomMeas_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
+    simulate_local_measurements_dense(
+        ρ::Union{MPO, MPS},
+        u::Vector{ITensor},
+        NM::Int64
+    )
 
-Sample randomized measurements from a MPS/MPO representation ρ
+Simulate local measurements using the dense representation of the quantum state.
+
+# Arguments
+- `ρ::Union{MPO, MPS}`: The quantum state to be measured, represented as an MPO (mixed state) or MPS (pure state).
+- `u::Vector{ITensor}`: A vector of local unitary transformations to apply before measurement.
+- `NM::Int64`: The number of measurement shots to simulate.
+
+# Returns
+A 2D array of measurement results with dimensions `(NM, N)`, where `N` is the number of qubits/sites.
+
 """
-function get_RandomMeas_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
+function simulate_local_measurements_dense(ρ::Union{MPO,MPS}, u::Vector{ITensor}, NM::Int64)
     if typeof(ρ)==MPS
         ρu = apply(u,ρ)
     else
-        ρu = apply(u,ρ;apply_dag=true)
+        ρu = apply(u,ρ;apply_dag=true) #ρu = apply(u,ρ;apply_dag=true)
     end
-    return get_samples_flat(ρu,NM)
+    return get_samples_dense(ρu,NM)
 end
 
 """
-    get_samples_flat(state::Union{MPO,MPS},NM::Int64)
+    simulate_local_measurements_TN(
+        ψ::MPS,
+        u::Vector{ITensor},
+        NM::Int64
+    )
 
-Sample randomized measurements from a MPS/MPO representation ρ
-"""
-function get_samples_flat(state::Union{MPO,MPS},NM::Int64)
-    N = length(state)
-    data_s = zeros(Int,NM,N)
-    #Note: This is borrowed from PastaQ
-    Prob = get_Born(state)
-    prob = real(array(Prob))
-    prob = reshape(prob, 2^N)
-    for m in 1:NM
-        data = StatsBase.sample(0:(1<<N-1), StatsBase.Weights(prob), 1)
-        data_s[m, :] = 1 .+ digits(data[1], base=2, pad=N)
-    end
-    return data_s
-end
+Simulate local measurements on a pure state using tensor network methods.
+
+# Arguments
+- `ψ::MPS`: The quantum state to be measured, represented as an MPS.
+- `u::Vector{ITensor}`: A vector of local unitary transformations to apply before measurement.
+- `NM::Int64`: The number of measurement shots to simulate.
+
+# Returns
+A 2D array of measurement results with dimensions `(NM, N)`, where `N` is the number of qubits/sites.
 
 """
-    get_RandomMeas_MPO
-
-Sample randomized measurements from an MPO representation ρ. The sampling is based from the MPO directly, i.e., is memory-efficient
-"""
-function get_RandomMeas_MPO(ρ::MPO, u::Vector{ITensor}, NM::Int64)
+function simulate_local_measurements_TN(ρ::MPO, u::Vector{ITensor}, NM::Int64)
     ξ = firstsiteinds(ρ;plev=0)
     ρu = apply(u,ρ;apply_dag=true)
     N= length(u)
@@ -117,7 +127,7 @@ function get_RandomMeas_MPO(ρ::MPO, u::Vector{ITensor}, NM::Int64)
     ρu[1] /= trace(ρu, ξ)
     if N > 1
         for m in 1:NM
-            data[m, :] = ITensors.sample(ρu)
+            data[m, :] = ITensorMPS.sample(ρu)
         end
     else
         s = ξ[1]
@@ -128,126 +138,50 @@ function get_RandomMeas_MPO(ρ::MPO, u::Vector{ITensor}, NM::Int64)
 end
 
 
-"""
-    get_RandomMeas_MPS(ψ::MPS, u::Vector{ITensor},NM::Int64)
 
-Sample randomized measurements from an MPS representation ψ. The sampling is based from the MPS directly, i.e is memory-efficient
 """
-function get_RandomMeas_MPS(ψ::MPS, u::Vector{ITensor},NM::Int64)
+    get_samples_dense(
+        state::Union{MPO, MPS},
+        NM::Int64
+    )
+
+Sample randomized measurements using the dense representation of the quantum state.
+
+# Arguments
+- `state::Union{MPO, MPS}`: The quantum state to be measured, represented as an MPO or MPS.
+- `NM::Int64`: The number of measurement shots to simulate.
+
+# Returns
+A 2D array of measurement results with dimensions `(NM, N)`, where `N` is the number of qubits/sites.
+
+"""
+function simulate_local_measurements_TN(ψ::MPS, u::Vector{ITensor},NM::Int64)
     N = length(ψ)
     data = zeros(Int,NM,N)
     ψu = apply(reverse(u),ψ) #using reverse allows us to maintain orthocenter(ψ)=1 ;)
     for m in 1:NM
-        data[m, :] = ITensors.sample(ψu)#[1:NA]
+        data[m, :] = ITensorMPS.sample(ψu)#[1:NA]
     end
     return data
 end
 
 
 """
-    get_Born_MPS(ρ::MPO)
+    get_samples_dense(state::Union{MPO,MPS},NM::Int64)
 
-Construct Born Probability vector P(s)=<s|ρ|s> as an MPS from an MPO representation ρ
+Sample randomized measurements a 2^N probability vector generated from an MPS (pure state) or MPO (mixed state)
 """
-function get_Born_MPS(ρ::MPO)
-    ξ = firstsiteinds(ρ;plev=0)
-    N = size(ξ, 1)
-    P = MPS(ξ)
-    for i in 1:N
-        Ct = δ(ξ[i], ξ[i]', ξ[i]'')
-        P[i] = ρ[i] * Ct
-        P[i] *= δ(ξ[i], ξ[i]'')
-    end
-    return P
-end
-
-"""
-    get_Born_MPS(ψ::MPS)
-
-Construct Born Probability vector P(s)=|ψ(s)|^2 as an MPS from an MPS representation ψ
-"""
-function get_Born_MPS(ψ::MPS)
-    ξ = siteinds(ψ)
-    N = size(ξ, 1)
-    P = MPS(ξ)
-    for i in 1:N
-        Ct = δ(ξ[i], ξ[i]', ξ[i]'')
-        P[i] = ψ[i] * conj(ψ[i]') * Ct
-        P[i] *= δ(ξ[i], ξ[i]'')
-    end
-    return P
-end
-
-
- """
-     get_Born(ρ::MPO)
-
- Construct Born Probability vector P(s) from an MPO representation ρ
-"""
-function get_Born(ρ::MPO)
-    ξ = firstsiteinds(ρ;plev=0)
-    N = size(ξ, 1)
-    P = ρ[1] * δ(ξ[1],ξ[1]',ξ[1]'')
-    P *= δ(ξ[1]'', ξ[1])
-    for i in 2:N
-        C = ρ[i] * delta(ξ[i], ξ[i]', ξ[i]'')
-        C *= delta(ξ[i]'', ξ[i])
-        P *= C
-    end
-    return P
-end
-
-
-"""
-    get_Born(ψ::MPS)
-
-Construct Born Probability vector P(s)=|ψ(s)|^2 from an MPS representation ψ
-"""
-function get_Born(ψ::MPS)
-    ξ = siteinds(ψ )
-    N = size(ξ, 1)
-    C = δ(ξ[1], ξ[1]',ξ[1]'')
-    R = C * ψ[1] * conj(ψ[1]')
-    R *= δ(ξ[1], ξ[1]'')
-    P = R
-    for i in 2:N
-        Ct = δ(ξ[i], ξ[i]', ξ[i]'')
-        Rt = ψ[i] * conj(ψ[i]') * Ct
-        Rt *= δ(ξ[i], ξ[i]'')
-        P *= Rt
-    end
-    return P
-end
-
-"""
-    get_XEB(ψ::MPS,ρ::MPO,NM::Int64)
-
-Return the linear cross-entropy for NM samples of the mixed state, with respect to a
-theory state ψ
-"""
-function get_XEB(ψ::MPS,ρ::MPO,NM::Int64)
-    ξ = siteinds(ψ )
-    data = get_samples_flat(ρ,NM)
-    P0 = get_Born_MPS(ψ)
-    XEB = 0.
-    N = length(ψ)
+function get_samples_dense(state::Union{MPO,MPS},NM::Int64)
+    N = length(state)
+    data_s = zeros(Int,NM,N)
+    #Note: This is borrowed from PastaQ
+    Prob = get_Born(state)
+    prob = real(array(Prob))
+    prob = reshape(prob, 2^N)
     for m in 1:NM
-        V = ITensor(1.)
-        for j=1:N
-              V *= (P0[j]*state(ξ[j],data[m,j]))
-        end
-        XEB += 2^N/NM*real(V[])-1/NM
+        data = StatsBase.sample(0:(1<<N-1), StatsBase.Weights(prob), 1)
+        data_s[m, :] = 1 .+ digits(data[1], base=2, pad=N)
     end
-    return XEB
-end
 
-"""
-    get_selfXEB(ψ::MPS)
-
-Returns the self-XEB 2^N sum_s |ψ(s)|^4-1
-"""
-function get_selfXEB(ψ::MPS)
-    P0 = get_Born_MPS(ψ)
-    N = length(ψ)
-    return 2^N*real(inner(P0,P0))-1
+    return data_s
 end

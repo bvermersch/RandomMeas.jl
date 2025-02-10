@@ -1,18 +1,46 @@
+using Reexport
+@reexport using ITensors,ITensorMPS
+
 export
 
- #Acquisition.jl
-get_rotation,
-get_rotations,
-get_RandomMeas,
-get_expect_shadow,
-get_XEB,
-get_selfXEB,
+#TODO: Update the export list
 
-#Shadows.jl
-get_shadow,
-get_shadow_factorized,
-get_batch_shadows,
-get_moments,
+#MeasurementSeetings
+sample_local_random_unitaries,
+reduce_to_subsystem,
+
+#MeasurementProbabilities
+MeasurementProbabilities,
+
+#MeasurementData
+MeasurementData,
+import_measurement_data,
+export_measurement_data,
+
+#AbstractShadows
+AbstractShadow,
+get_expect_shadow,
+get_trace_moment,
+get_trace_moments,
+get_trace_product,
+multiply,
+trace,
+partial_trace,
+partial_transpose,
+
+#DenseShadows
+DenseShadow,
+get_dense_shadows,
+get_purity_dense_shadows,
+
+#FactorizedShadows
+FactorizedShadow,
+get_factorized_shadows,
+convert_to_dense_shadow,
+
+ #Acquisition.jl
+simulate_local_measurements,
+
 
 #utils_ITensor.jl
 flatten,
@@ -26,16 +54,20 @@ get_spectrum,
 multiply,
 square,
 trace,
+get_selfXEB,
+
 
 #Postprocessing.jl
 get_h_tensor,
 get_overlap,
 get_Born_MPS,
 get_Born,
-get_purity_estimate,
 get_purity_shadows,
-get_purity_hamming,
+get_purity_direct,
+get_overlap_direct,
 get_purity,
+get_XEB,
+
 
 #Circuits.jl
 apply_depo_channel,
