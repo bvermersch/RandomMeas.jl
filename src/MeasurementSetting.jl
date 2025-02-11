@@ -65,7 +65,7 @@ function LocalUnitaryMeasurementSetting(local_unitary_array::Array{ComplexF64, 3
     for n in 1:N
             local_unitary[n] = ITensor(local_unitary_array[n, :, :], site_indices[n]', site_indices[n])
     end
-    
+
 
     # Call the main constructor
     return LocalUnitaryMeasurementSetting(N, local_unitary, site_indices)
@@ -133,10 +133,12 @@ function get_rotation(site_index::Index{Int64}, ensemble::String = "Haar")
             r_matrix[2, 1] = -1im / sqrt(2)
         end
         return ITensor(r_matrix, site_index', site_index)
-    elseif ensemble == "CompBasis"
+    elseif ensemble == "Identity"
         r_matrix[1, 1] = 1
         r_matrix[2, 2] = 1
         return ITensor(r_matrix, site_index', site_index)
+    else
+        throw(ArgumentError("Invalid ensemble: $ensemble"))
     end
 end
 
