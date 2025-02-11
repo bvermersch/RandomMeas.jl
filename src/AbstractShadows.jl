@@ -69,118 +69,86 @@ function get_expect_shadow(O::MPO, shadow::AbstractShadow)
     end
 end
 
-
 """
-    get_trace_moment(shadows::Array{AbstractShadow, 2}, kth_moment::Int)
+    get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing)
 
 Compute a single trace moment from an array of `AbstractShadow` objects.
 
 # Arguments
-- `shadows::Array{AbstractShadow, 2}`: An array of shadows with dimensions `(n_ru, n_m)`,
+- `shadows::Array{<:AbstractShadow, 2}`: An array of shadows with dimensions `(n_ru, n_m)`,
   where `n_ru` is the number of random unitaries and `n_m` is the number of measurements.
-- `kth_moment::Int`: The moment `k` to compute (e.g., `k=1,2,...`).
+- `kth_moment::Int`: The moment `k` to compute (e.g., `k = 1, 2, ...`).
+- `O::Union{Nothing, MPO}` (optional): If provided, computes `Tr[O * rho^k]`; otherwise, computes `Tr[rho^k]`
+  (default: `nothing`).
 
 # Returns
-The computed trace moment for `kth_moment`.
+The computed trace moment (averaged over all permutations and Cartesian products) as a scalar.
 """
-function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int)
-    return get_trace_moments(shadows, [kth_moment])[1]
+function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing)
+    n_ru, n_m = size(shadows)
+    n_shadows = n_ru * n_m
+
+    # Validate kth_moment
+    @assert kth_moment >= 1 "Only integer valued moments Tr[ρ^k] with k >= 1 can be computed."
+    @assert kth_moment <= n_shadows "The number of shadows must be >= the largest moment k."
+
+    # Precompute total evaluations (for a warning only)
+    num_permutations = prod(n_ru - i for i in 0:(kth_moment - 1))
+    num_cartesian_products = n_m^kth_moment
+    total_evaluations = num_permutations * num_cartesian_products
+
+    if total_evaluations > 10000
+        @warn "Total number of trace product evaluations to estimate moment $kth_moment equals $total_evaluations."
+    end
+
+    # Loop over all combinations: permutations over rows and Cartesian product over columns
+    est = ComplexF64[]
+    for r in permutations(1:n_ru, kth_moment)
+        for m in CartesianIndices(ntuple(_ -> 1:n_m, kth_moment))
+            trace_prod = get_trace_product((shadows[r[i], m[i]] for i in 1:kth_moment)...; O=O)
+            push!(est, real(trace_prod))
+        end
+    end
+
+    return mean(est)
 end
 
 """
-    get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int})
+    get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
 
-Wrapper for computing trace moments from a vector of shadows.
-
- If an MPO observable `O` is provided (i.e. not `nothing`), the function computes
-`Tr[O * rho^k]` for each moment `k`; otherwise it computes `Tr[rho^k]`.
-
-# Arguments
-- `shadows::Vector{<:AbstractShadow}`: A vector of shadows.
-- `kth_moments::Vector{Int}`: A vector of integers specifying the moments to compute.
-- `O::Union{Nothing, MPO}`: (Optional) An MPO observable. If provided, computes `Tr[O * rho^k]`
-    (default: `nothing`).
-
-# Returns
-A vector of trace moments corresponding to `kth_moments`.
+Wrapper for computing trace moments from a vector of shadows. Reshapes the vector into a 2D array
+and then calls the main `get_trace_moment` function.
 """
-function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
-    # Reshape the vector to a 2D array with a trivial second dimension
-    return get_trace_moments(reshape(shadows, :, 1), kth_moments; O=O)
-end
-
-"""
-    get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int)
-
-Wrapper for computing a single trace moment from a vector of shadows.
-
-If an MPO observable `O` is provided (i.e. not `nothing`), the function computes
-`Tr[O * rho^k]` for each moment `k`; otherwise it computes `Tr[rho^k]`.
-
-# Arguments
-- `shadows::Vector{<:AbstractShadow}`: A vector of shadows.
-- `kth_moment::Int`: The moment to compute (e.g., `k=1,2,...`).
-- `O::Union{Nothing, MPO}`: (Optional) An MPO observable. If provided, computes `Tr[O * rho^k]`
-    (default: `nothing`).
-# Returns
-The computed trace moment for `kth_moment`.
-"""
-function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing)
-    return get_trace_moments(shadows, [kth_moment]; O=O)[1]
+function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing)
+    return get_trace_moments(reshape(shadows, :, 1), kth_moment; O=O)
 end
 
 """
     get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
 
-Compute trace moments from an array of `AbstractShadow` objects.
-If an MPO observable `O` is provided (i.e. not `nothing`), the function computes
-`Tr[O * rho^k]` for each moment `k`; otherwise it computes `Tr[rho^k]`.
+Compute multiple trace moments by calling `get_trace_moment` for each requested moment.
 
 # Arguments
-- `shadows::Array{<:AbstractShadow, 2}`: An array of shadows with dimensions `(n_ru, n_m)`,
-  where `n_ru` is the number of random unitaries and `n_m` is the number of measurements.
-- `kth_moments::Vector{Int}`: A vector of integers specifying the moments to compute.
-- `O::Union{Nothing, MPO}`: (Optional) An MPO observable. If provided, computes `Tr[O * rho^k]`
-  (default: `nothing`).
+- `shadows::Array{<:AbstractShadow, 2}`: An array of shadows with dimensions `(n_ru, n_m)`.
+- `kth_moments::Vector{Int}`: A vector of integers specifying which moments to compute.
+- `O::Union{Nothing, MPO}` (optional): An MPO observable. If provided, computes `Tr[O * rho^k]`
+  for each moment (default: `nothing`).
 
 # Returns
-A vector of trace moments corresponding to `kth_moments`.
+A vector of trace moments corresponding to each moment in `kth_moments`.
 """
 function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
-    n_ru, n_m = size(shadows)
-    p = ComplexF64[]  # Initialize the vector for trace moments
-    n_shadows = n_ru * n_m
+    return [get_trace_moment(shadows, k; O=O) for k in kth_moments]
+end
 
-    # Validate kth_moments
-    @assert all(kth_moments .>= 1) "Only integer valued moments Tr[ρ^k] with k >= 1 can be computed."
-    @assert all(kth_moments .<= n_shadows) "The number of shadows must be >= the largest moment k."
+"""
+    get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
 
-    # Precompute total evaluations (for a warning only)
-    total_evaluations = 0
-    for k in kth_moments
-        num_permutations = prod(n_ru - i for i in 0:(k - 1))  # Number of row permutations
-        num_cartesian_products = n_m^k  # Cartesian product over columns
-        total_evaluations += num_permutations * num_cartesian_products
-    end
-
-    if total_evaluations > 10000
-        @warn "Total number of trace product evaluations to estimate all $kth_moments moments equals $total_evaluations."
-    end
-
-    # Loop over each requested moment k
-    for k in kth_moments
-        est = ComplexF64[]  # Store estimates for this k
-        # Loop over all combinations: permutations over rows and Cartesian product over columns
-        for r in permutations(1:n_ru, k)
-            for m in CartesianIndices(ntuple(_ -> 1:n_m, k))
-                trace_prod = get_trace_product((shadows[r[i], m[i]] for i in 1:k)...; O=O)
-                push!(est, real(trace_prod))
-            end
-        end
-        push!(p, mean(est))  # Average over all combinations and take the real part
-    end
-
-    return p
+Wrapper for computing trace moments from a vector of shadows. Reshapes the vector into a 2D array
+and then calls the main `get_trace_moments` function.
+"""
+function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
+    return get_trace_moments(reshape(shadows, :, 1), kth_moments; O=O)
 end
 
 
@@ -355,44 +323,3 @@ function partial_transpose(shadows::AbstractArray{<:AbstractShadow}, subsystem::
     end
     return transposed_shadows
 end
-
-# #### Helper functions
-
-
-# """
-#     square(shadow::ITensor)
-# """
-# function square(shadow::ITensor)
-#     Y = multiply(shadow, shadow)
-#     return Y
-# end
-
-# """
-#     multiply(shadow::ITensor, shadow2::ITensor)
-# """
-# function multiply(shadow::ITensor, shadow2::ITensor)
-#     return mapprime(shadow * prime(shadow2), 2, 1)
-# end
-
-# """
-#     power(shadow::ITensor, n::Int64)
-# """
-# function power(shadow::ITensor, n::Int64)
-#     Y = deepcopy(shadow)
-#     for m in 1:n-1
-#         Y = multiply(Y, shadow)
-#     end
-#     return Y
-# end
-
-# """
-#     trace(shadow::ITensor, ξ::Vector{Index{Int64}})
-# """
-# function trace(shadow::ITensor, ξ::Vector{Index{Int64}})
-#     NA = size(ξ, 1)
-#     Y = copy(shadow)
-#     for i in 1:NA
-#         Y *= δ(ξ[i],ξ[i]')
-#     end
-#     return Y[]
-# end
