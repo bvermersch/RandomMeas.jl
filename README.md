@@ -18,6 +18,9 @@ In a Julia terminal, install the package RandomMeas
 julia> ]
 pkg> add RandomMeas
 ```
+## Structure
+
+![Image](StructureRandomMeas.drawio.svg)
 
 ## Documentation
 

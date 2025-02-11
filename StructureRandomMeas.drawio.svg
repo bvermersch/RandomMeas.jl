@@ -1,0 +1,348 @@
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="896px" height="824px" viewBox="-0.5 -0.5 896 824" content="&lt;mxfile&gt;&lt;diagram id=&quot;C5RBs43oDa-KdzZeNtuy&quot; name=&quot;Page-1&quot;&gt;7Vpbc+o2EP41zMADHbC55ZFLkpO2yUkP7clMXxhhK7aCbTmSHEh/fVdINrYRhNBAk5AXkD/JK2n329XKUsUehotLhmL/mro4qFgNd1GxRxXL6rQ78CuB5xSwFeAx4iqouQLG5B+swYZGE+JiXmgoKA0EiYugQ6MIO6KAIcbovNjsngbFXmPk4TVg7KBgHb0jrvAV2rO6K/wbJp6f9tzsnKmaEKWN9Uy4j1w6z0H2ecUeMkqFKoWLIQ6k7lK93F093wW/zzqXv/7BH9Ffg9/+vPlZV8IuXvNKNgWGI7G3aP+h59rfHyL/avZw4z2d/Qiv/9avNJ5QkGh9VaxOAJ0M/KacsnjWeuw8JnKegxAxj0R1QeOK3YcWjRiIMljVQ8mT/9cY8YThEEY8QgKlUmF4UrBqk4JxCvQZQ88Vawhyb67Vf07OGAtBIi8nKt4oqdR99ZYTkLcurLaTtBSYsjLyJq9ZBU1bAi+WBhBhAEATinOfCDyOkSNbzMFNAaNPmN0HSz76xHVxBBijSeRiae9GJvhF1mh2gTjoOOczmkWXmIZYMDBLQ9faXc2aNCKkrj5f+ZfV0Zif962WBpH2aS+TveItFDR1X0Hj5hFovE6/3ZjMwXYTErnEgTD4Su7qPqs3S1Hp4L4hxFZPXxT+7xRu9QwUbpsobB+KwtYRKHzL6BRNSUDE81FpnOu3WorMu7F3g6xXRvUPTtJuy0DSs6OS1D4USVMxPEaRUdAUOTNvqfe6QwPKlDjBUMRTzQ+WWWRWF0iF1F3EZlXmTasNReP0r6b+ZY3VbquHfKFWM45zhCOOxyoRXHFMjXotPq471ifVEmTlkajzZe4vhTYtPQFVMdfclFURZSEKjLN7OdjsrGeXPBksti325N4wCNm6DG5/dUP/hVD8Qgg7yth+wuYLSNEtULwL3BpGSTiZIuH4mB9lVB4Wqr+J2nHxvN5+YJ4Egh9+WB9sseievZzR2KaMJtvevvli0Tn1xeICSZeCqOh+rRgfaMUom628bPx/8fpkole3YYhePVOq2zlU9OqeevQ654KECDyB//IQfIWuNw5dMsmJEwbp38QlDHIvQ5JT2+rv+4S2XK98LbaVez1GJPu8xpXBNEDxZus2i+uIRq3ayyY+ZdXu4xK76esDqNDEM7yIgV9IEBpV+1MOY3BEmm4Ov+/HpmN4/idQd7ZlLukdds3LjfOhtf/e9VWvQwmFMrXU44YxVJlPobCnbj6gFg4Xsd77zMv+YvyM83ZE2PNTk/RcPAmpHNY2l7aGM3UKt5vozeRvn8/KDvAOdowntNnsFTebvfb6ZrPVNWw2swOZtz+/PsY9jMznvvZs++WeN4mSmwWJ8ochGSVevz/LTiivwpgyAW3OF6rQuEgiR4bO3U5ct3rsyZ/xn5m+KRmvqRzs+LS5fsjfdx4Twok08iYNw0JEZ3ioXGIU0QiqB/ckCEpQzhKS1foqntVKn7VgWS+1SBwU9MG7wCKjEEwjKwdIAw4YA7MjWqdluETUbBisc7g7ROuH27eUi5hRB3O+vPlzQvbpNUv2MXiP6YPsHuaBx9UlymVd7iaqff4v&lt;/diagram&gt;&lt;/mxfile&gt;">
+    <defs/>
+    <g>
+        <rect x="15" y="210" width="260" height="140" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe flex-start; justify-content: unsafe flex-start; width: 258px; height: 1px; padding-top: 217px; margin-left: 17px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: left; max-height: 136px; overflow: hidden;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
+                                <h1 style="margin-top: 0px;">
+                                    MeasurementData
+                                </h1>
+                                <p>
+                                    Array, NM, MeasurementSetting
+                                </p>
+                                <p>
+                                    MeasurementData(Psi,MeasurementSetting)
+                                </p>
+                                <p>
+                                    <br/>
+                                </p>
+                                <p>
+                                    <br/>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="17" y="229" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px">
+                    MeasurementData...
+                </text>
+            </switch>
+        </g>
+        <rect x="15" y="80" width="250" height="130" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe flex-start; justify-content: unsafe flex-start; width: 248px; height: 1px; padding-top: 87px; margin-left: 17px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: left; max-height: 126px; overflow: hidden;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
+                                <h1 style="margin-top: 0px;">
+                                    MeasurementSetting
+                                </h1>
+                                <p>
+                                    Array, site_indices
+                                </p>
+                                <p>
+                                    MeasurementSetting(N,"Haar")
+                                </p>
+                                <p>
+                                    <br/>
+                                </p>
+                                <p>
+                                    <br/>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="17" y="99" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px">
+                    MeasurementSetting...
+                </text>
+            </switch>
+        </g>
+        <rect x="15" y="340" width="290" height="130" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe flex-start; justify-content: unsafe flex-start; width: 288px; height: 1px; padding-top: 347px; margin-left: 17px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: left; max-height: 126px; overflow: hidden;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
+                                <h1 style="margin-top: 0px;">
+                                    MeasurementProbability
+                                </h1>
+                                <p>
+                                    Array, site_indices
+                                </p>
+                                <p>
+                                    MeasurementProbability(MeasurementData)
+                                </p>
+                                <p>
+                                    MeasurementProbability(Psi,MeasurementSetting)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="17" y="359" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px">
+                    MeasurementProbability...
+                </text>
+            </switch>
+        </g>
+        <rect x="435" y="80" width="350" height="220" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe flex-start; justify-content: unsafe flex-start; width: 348px; height: 1px; padding-top: 87px; margin-left: 437px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: left; max-height: 216px; overflow: hidden;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
+                                <h1 style="margin-top: 0px;">
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">
+                                        DenseShadow
+                                    </span>
+                                </h1>
+                                <h1 style="margin-top: 0px;">
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-size: 12px; font-weight: normal;">
+                                        Array, site_indices
+                                    </span>
+                                </h1>
+                                <div>
+                                    DenseShadow(MeasurementData)
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                                <div>
+                                    DenseShadow(MeasurementProbability,MeasurementSetting)
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                                <div>
+                                    DenseShadow(Vector{DenseShadow},num_batches)
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                                <div>
+                                    get_batch_shadows(MeasurementResults,num_batches)
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="437" y="99" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px">
+                    DenseShadow...
+                </text>
+            </switch>
+        </g>
+        <rect x="435" y="300" width="380" height="160" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe flex-start; justify-content: unsafe flex-start; width: 378px; height: 1px; padding-top: 307px; margin-left: 437px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: left; max-height: 156px; overflow: hidden;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
+                                <h1 style="margin-top: 0px;">
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">
+                                        FactorizedShadow
+                                    </span>
+                                </h1>
+                                <h1 style="margin-top: 0px;">
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-size: 12px; font-weight: normal;">
+                                        Array, site_indices
+                                    </span>
+                                </h1>
+                                <div>
+                                    FactorizedShadow(MeasurementData,MeasurementSetting)
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="437" y="319" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px">
+                    FactorizedShadow...
+                </text>
+            </switch>
+        </g>
+        <rect x="425" y="450" width="470" height="370" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe flex-start; justify-content: unsafe flex-start; width: 468px; height: 1px; padding-top: 457px; margin-left: 427px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: left; max-height: 366px; overflow: hidden;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
+                                <h1 style="margin-top: 0px;">
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">
+                                        Estimators.jl
+                                    </span>
+                                </h1>
+                                <h1 style="margin-top: 0px;">
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-size: 12px; font-weight: normal;">
+                                        get_purity_direct(MeasurementResults)
+                                        <br/>
+                                    </span>
+                                </h1>
+                                <div>
+                                    get_purity_shadow(MeasurementResults)
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                                <div>
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-size: 12px; font-weight: normal;">
+                                        get_overlap_direct(MeasurementResults1,MeasurementResults2)
+                                    </span>
+                                </div>
+                                <div>
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-size: 12px; font-weight: normal;">
+                                        <br/>
+                                    </span>
+                                </div>
+                                <div>
+                                    <div>
+                                        <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">
+                                            get_expectation(AbstractShadow,O)
+                                        </span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                                <div>
+                                    <div>
+                                        <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">
+                                            get_expectation(Vector{AbstractShadow}},O)
+                                        </span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">
+                                        --&gt; tr(rho O)
+                                    </span>
+                                </div>
+                                <div>
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">
+                                        <br/>
+                                    </span>
+                                </div>
+                                <div>
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">
+                                        get_expectation(MeasurementResults,O)
+                                    </span>
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                                <div>
+                                    get_trace_moment(Vector{AbstractShadow},k,
+                                </div>
+                                <div>
+                                    --&gt; tr(rho^k O)
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                                <div>
+                                    <br/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="427" y="469" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px">
+                    Estimators.jl...
+                </text>
+            </switch>
+        </g>
+        <rect x="15" y="500" width="360" height="130" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe flex-start; justify-content: unsafe flex-start; width: 358px; height: 1px; padding-top: 507px; margin-left: 17px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: left; max-height: 126px; overflow: hidden;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
+                                <h1 style="margin-top: 0px;">
+                                    MeasurementResults
+                                </h1>
+                                <h1 style="margin-top: 0px;">
+                                    <span style="background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-size: 12px; font-weight: normal;">
+                                        Nu, Vector{MeasurementData}
+                                    </span>
+                                </h1>
+                                <p>
+                                    Import/Export Functions
+                                </p>
+                                <p>
+                                    <br/>
+                                </p>
+                                <p>
+                                    <br/>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="17" y="519" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px">
+                    MeasurementResults...
+                </text>
+            </switch>
+        </g>
+        <rect x="15" y="10" width="100" height="40" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 1px; height: 1px; padding-top: 30px; margin-left: 65px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 24px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; font-weight: bold; white-space: nowrap;">
+                                Acquisition
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="65" y="37" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="24px" text-anchor="middle" font-weight="bold">
+                    Acquisit...
+                </text>
+            </switch>
+        </g>
+        <rect x="455" y="0" width="80" height="40" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 1px; height: 1px; padding-top: 20px; margin-left: 495px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 24px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; font-weight: bold; white-space: nowrap;">
+                                Postprocessing
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="495" y="27" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="24px" text-anchor="middle" font-weight="bold">
+                    Postpro...
+                </text>
+            </switch>
+        </g>
+    </g>
+    <switch>
+        <g requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"/>
+        <a transform="translate(0,-5)" xlink:href="https://www.diagrams.net/doc/faq/svg-export-text-problems" target="_blank">
+            <text text-anchor="middle" font-size="10px" x="50%" y="100%">
+                Text is not SVG - cannot display
+            </text>
+        </a>
+    </switch>
+</svg>
