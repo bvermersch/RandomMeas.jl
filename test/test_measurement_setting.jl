@@ -2,100 +2,83 @@ using Test
 using ITensors
 using NPZ
 
-# Include the MeasurementSettings module
+# Include the MeasurementSetting module (adjust the relative path if needed)
 include("../src/MeasurementSetting.jl")
 
 @testset "MeasurementSetting Tests" begin
+    # Define the number of sites (qubits)
+    N = 4
 
-    N = 4   # Number of sites
-
-    # Generate measurement settings with Haar unitaries
-    measurement_setting = LocalUnitaryMeasurementSetting(N)
-
-    @testset "Test 1: Creating Measurement Setting" begin
-        @test measurement_setting.N == N
-        @test length(measurement_setting.site_indices) == N
-
-        # Validate dimensions of local unitaries
-        @test size(measurement_setting.local_unitary, 1) == N
+    # Test 1: Creating a Measurement Setting with the default ("Haar") ensemble
+    @testset "Test 1: Create LocalUnitaryMeasurementSetting (Haar)" begin
+        setting = LocalUnitaryMeasurementSetting(N)
+        @test setting.N == N
+        @test length(setting.site_indices) == N
+        @test length(setting.local_unitary) == N
+        for j in 1:N
+            @test isa(setting.local_unitary[j], ITensor)
+            # Ensure each ITensor has two indices (the bra and ket for that site)
+            inds_j = inds(setting.local_unitary[j])
+            @test length(inds_j) == 2
+        end
     end
 
-    # @testset "Test 2: Exporting and Importing Unitaries" begin
-    #     export_filepath = "test_unitaries.npy"
-
-    #     # Export unitaries
-    #     export_unitaries(measurement_settings, export_filepath)
-    #     @test isfile(export_filepath)
-
-    #     # Import unitaries
-    #     imported_settings = import_unitaries(export_filepath)
-    #     @test imported_settings.N == measurement_settings.N
-    #     @test imported_settings.NU == measurement_settings.NU
-
-    #     # Validate individual unitaries
-    #     for r in 1:NU
-    #         for n in 1:N
-    #             original_unitary = Array(measurement_settings.local_unitaries[r, n], measurement_settings.site_indices[n]', measurement_settings.site_indices[n])
-    #             imported_unitary = Array(imported_settings.local_unitaries[r, n], imported_settings.site_indices[n]', imported_settings.site_indices[n])
-    #             @test isapprox(original_unitary, imported_unitary, atol=1e-10)
-    #         end
-    #     end
-
-    #     # Cleanup
-    #     rm(export_filepath, force=true)
-    # end
-
-    # @testset "Test 3: Importing Unitaries with Predefined Indices" begin
-    #     # Export unitaries
-    #     export_filepath = "test_unitaries.npy"
-    #     export_unitaries(measurement_settings, export_filepath)
-
-    #     # Define custom site indices
-    #     custom_site_indices = siteinds("Qubit", N)
-
-    #     # Import unitaries with predefined indices
-    #     imported_with_indices = import_unitaries(export_filepath, site_indices=custom_site_indices)
-    #     @test imported_with_indices.site_indices == custom_site_indices
-
-    #     # Validate individual unitaries
-    #     for r in 1:NU
-    #         for n in 1:N
-    #             original_unitary = Array(measurement_settings.local_unitaries[r, n], measurement_settings.site_indices[n]', measurement_settings.site_indices[n])
-    #             imported_unitary = Array(imported_with_indices.local_unitaries[r, n], custom_site_indices[n]', custom_site_indices[n])
-    #             @test isapprox(original_unitary, imported_unitary, atol=1e-10)
-    #         end
-    #     end
-
-    #     # Cleanup
-    #     rm(export_filepath, force=true)
-    # end
-
-    # @testset "Test 4: Edge Cases" begin
-    #     # Recreate the required `measurement_settings` for this test
-    #     #measurement_settings = LocalUnitaryMeasurementSettings(N, NU, ensemble="Haar")
-
-    #     @test_throws AssertionError begin
-    #         invalid_unitaries = Array{ITensor, 2}(undef, NU, N + 1)  # Invalid size
-    #         LocalUnitaryMeasurementSettings(N, NU, invalid_unitaries, measurement_settings.site_indices)
-    #     end
-
-    #     # Test missing site indices (valid case)
-    #     export_filepath = "test_unitaries.npy"
-    #     export_unitaries(measurement_settings, export_filepath)
-    #     imported_with_generated_indices = import_unitaries(export_filepath, site_indices=nothing)
-    #     @test length(imported_with_generated_indices.site_indices) == N
-    #     rm(export_filepath, force=true)
-    # end
-
-    @testset "Test 5: Different Ensembles" begin
+    # Test 2: Creating settings with different ensembles ("Haar", "Pauli", "Identity")
+    @testset "Test 2: Different Ensembles" begin
         ensembles = ["Haar", "Pauli", "Identity"]
         for ensemble in ensembles
             setting = LocalUnitaryMeasurementSetting(N; ensemble=ensemble)
             @test setting.N == N
             @test length(setting.site_indices) == N
+            @test length(setting.local_unitary) == N
+            for j in 1:N
+                @test isa(setting.local_unitary[j], ITensor)
+            end
         end
     end
 
+    # Test 3: Error Handling with Invalid Site Indices Length
+    @testset "Test 3: Error Handling for Invalid Site Indices" begin
+        # Create a valid setting first
+        valid_setting = LocalUnitaryMeasurementSetting(N)
+        # Remove one site index (simulate invalid input)
+        bad_site_indices = valid_setting.site_indices[1:end-1]
+        @test_throws AssertionError begin
+            LocalUnitaryMeasurementSetting(N, valid_setting.local_unitary, bad_site_indices)
+        end
+    end
+
+    # Test 4: Reducing a Measurement Setting to a Subsystem
+    @testset "Test 4: Reduce to Subsystem" begin
+        setting = LocalUnitaryMeasurementSetting(N)
+        # Choose a subsystem (e.g., the first two sites)
+        subsystem = [1, 2]
+        reduced_setting = reduce_to_subsystem(setting, subsystem)
+        @test reduced_setting.N == length(subsystem)
+        @test length(reduced_setting.site_indices) == length(subsystem)
+        @test length(reduced_setting.local_unitary) == length(subsystem)
+    end
+
+    # Test 5: Constructing a Setting from a Unitary Array
+    @testset "Test 5: Create from Unitary Array" begin
+        # Create an N×2×2 array where each 2×2 slice is the identity matrix.
+        unitary_array = zeros(ComplexF64, N, 2, 2)
+        for n in 1:N
+            unitary_array[n, :, :] = [1 0; 0 1]
+        end
+        # Let the constructor generate site indices automatically
+        setting_from_array = LocalUnitaryMeasurementSetting(unitary_array; site_indices=nothing)
+        @test setting_from_array.N == N
+        @test length(setting_from_array.site_indices) == N
+        @test length(setting_from_array.local_unitary) == N
+        # Optionally check that each ITensor matches the identity matrix (within numerical precision)
+        for n in 1:N
+            # Convert the ITensor to an Array; note that the indices might appear in a different order,
+            # so we use isapprox with a tolerance.
+            A = Array(setting_from_array.local_unitary[n], setting_from_array.site_indices[n]', setting_from_array.site_indices[n])
+            @test isapprox(A, [1 0; 0 1], atol=1e-10)
+        end
+    end
 end
 
-println("All tests completed successfully!")
+println("All MeasurementSetting tests completed successfully!")
