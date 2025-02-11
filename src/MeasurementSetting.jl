@@ -13,12 +13,12 @@ A struct representing local unitary measurement settings for quantum systems.
 
 # Fields:
 - `N::Int`: Number of sites (qubits).
-- `local_unitary::Array{ITensor, 1}`: A local unitary represented by N 2x2 ITensors.
+- `local_unitary::Vector{ITensor}`: A local unitary represented by N 2x2 ITensors.
 - `site_indices::Vector{Index{Int64}}`: Vector of site indices of length N.
 """
 struct LocalUnitaryMeasurementSetting <: AbstractMeasurementSetting
     N::Int                              # Number of sites
-    local_unitary::Array{ITensor, 1}  # local unitary represented by a array of N 2x2 unitary
+    local_unitary::Vector{ITensor}  # local unitary represented by a vector of N 2x2 unitary
     site_indices::Vector{Index{Int64}}  # Vector of site indices (length N)
 
     """
@@ -26,16 +26,16 @@ struct LocalUnitaryMeasurementSetting <: AbstractMeasurementSetting
 
     # Arguments:
     - `N::Int`: Number of sites.
-    - `local_unitary::Array{ITensor, 1}`: Array of local unitary with dimensions N.
-    - `site_indices::Vector{Index{Int64}}`: Vector of site indices.
+    - `local_unitary::Vector{ITensor}`: Vector of local unitary of length N.
+    - `site_indices::Vector{Index{Int64}}`: Vector of site indices of length N.
 
     # Throws:
     - `AssertionError` if dimensions of `local_unitary` or `site_indices` do not match `N`.
     """
     function LocalUnitaryMeasurementSetting(
-        N::Int, local_unitary::Array{ITensor, 1}, site_indices::Vector{Index{Int64}}
+        N::Int, local_unitary::Vector{ITensor}, site_indices::Vector{Index{Int64}}
     )
-        @assert size(local_unitary, 1) == N "Mismatch in number of sites (N)."
+        @assert length(local_unitary) == N "Mismatch in number of sites (N)."
         @assert length(site_indices) == N "Length of site_indices must match N."
         return new(N, local_unitary, site_indices)
     end
@@ -61,11 +61,10 @@ function LocalUnitaryMeasurementSetting(local_unitary_array::Array{ComplexF64, 3
     @assert length(site_indices) == N "Length of site_indices must match N."
 
     # Convert the array into ITensors
-    local_unitary = Array{ITensor, 2}(undef, N)
+    local_unitary = Vector{ITensor}(undef, N)
     for n in 1:N
             local_unitary[n] = ITensor(local_unitary_array[n, :, :], site_indices[n]', site_indices[n])
     end
-
 
     # Call the main constructor
     return LocalUnitaryMeasurementSetting(N, local_unitary, site_indices)
