@@ -1,0 +1,37 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
+  <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
+    <mxGraphModel dx="1245" dy="826" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="hj8d3OjnhIkjNgv9RmMZ-0" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;MeasurementData&lt;/h1&gt;&lt;p&gt;Array, NM&lt;/p&gt;&lt;p&gt;MeasurementData(Psi,MeasurementSetting)&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="370" y="610" width="260" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="hj8d3OjnhIkjNgv9RmMZ-1" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;MeasurementSetting&lt;/h1&gt;&lt;p&gt;Array, site_indices&lt;/p&gt;&lt;p&gt;MeasurementSetting(N,&quot;Haar&quot;)&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="370" y="480" width="250" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="hj8d3OjnhIkjNgv9RmMZ-2" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;MeasurementProbability&lt;/h1&gt;&lt;p&gt;Array, site_indices&lt;/p&gt;&lt;p&gt;MeasurementProbability(MeasurementData)&lt;/p&gt;&lt;p&gt;MeasurementProbability(Psi,MeasurementSetting)&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="370" y="740" width="290" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="hj8d3OjnhIkjNgv9RmMZ-3" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;DenseShadow&lt;/span&gt;&lt;/h1&gt;&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-size: 12px; font-weight: normal;&quot;&gt;Array, site_indices&lt;/span&gt;&lt;/h1&gt;&lt;div&gt;DenseShadow(MeasurementData,MeasurementSetting)&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;DenseShadow(MeasurementProbability,MeasurementSetting)&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;DenseShadow(Vector{DenseShadow},num_batches)&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="790" y="480" width="350" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="hj8d3OjnhIkjNgv9RmMZ-6" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;FactorizedShadow&lt;/span&gt;&lt;/h1&gt;&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-size: 12px; font-weight: normal;&quot;&gt;Array, site_indices&lt;/span&gt;&lt;/h1&gt;&lt;div&gt;FactorizedShadow(MeasurementData,MeasurementSetting)&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="790" y="700" width="380" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="hj8d3OjnhIkjNgv9RmMZ-7" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Estimators.jl&lt;/span&gt;&lt;/h1&gt;&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-size: 12px; font-weight: normal;&quot;&gt;get_purity_direct(MeasurementData)&lt;br&gt;&lt;/span&gt;&lt;/h1&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-size: 12px; font-weight: normal;&quot;&gt;get_overlap_direct(MeasurementData1,MeasurementData2)&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); font-size: 12px; font-weight: normal;&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;get_trace_moments(Vector{DenseShadow})&lt;/span&gt;&lt;br&gt;&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;get_expect(FactorizedShadow)&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="790" y="850" width="380" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="hj8d3OjnhIkjNgv9RmMZ-10" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;MeasurementResults&lt;/h1&gt;&lt;p&gt;Nu, Vector{MeasurementData}, Vector{MeasurementSetting}&lt;/p&gt;&lt;p&gt;Import/Export Functions&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="370" y="900" width="360" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="hj8d3OjnhIkjNgv9RmMZ-12" value="Acquisition" style="text;strokeColor=none;fillColor=none;html=1;fontSize=24;fontStyle=1;verticalAlign=middle;align=center;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="364" y="400" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hj8d3OjnhIkjNgv9RmMZ-13" value="Postprocessing" style="text;strokeColor=none;fillColor=none;html=1;fontSize=24;fontStyle=1;verticalAlign=middle;align=center;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="810" y="400" width="80" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

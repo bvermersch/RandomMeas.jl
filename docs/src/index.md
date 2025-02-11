@@ -14,20 +14,20 @@ Depth = 2:3
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["Acquisition.jl"]
+Pages = ["Acquisition.jl","MeasurementSettings.jl"]
 ```
 
 ## Postprocessing routines
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["Postprocessing.jl"]
+Pages = ["Postprocessing.jl","MeasurementData.jl","MeasurementProbabilities.jl"]
 ```
 ## Postprocessing routines for classical shadows
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["Shadows.jl"]
+Pages = ["Shadows.jl","FactorizedShadows.jl", "DenseShadows.jl"]
 ```
 
 ## Routines for simulating quantum circuits

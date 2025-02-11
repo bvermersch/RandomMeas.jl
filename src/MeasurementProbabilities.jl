@@ -58,7 +58,19 @@ function MeasurementProbabilities(data::MeasurementData{T}) where {T <: Abstract
     measurement_probabilities = Array{ITensor}(undef, NU)
 
     for r in 1:NU
-        measurement_probabilities[r] = get_Born(data.measurement_results[r, :, :], ξ) # Compute Born probabilities  #TODO: Check whether this is okay and gives a Probability MPS
+        #measurement_probabilities[r] = get_Born(data.measurement_results[r, :, :], ξ)
+        probf = StatsBase.countmap(eachrow(data.measurement_results[r,:,:]))  # Dictionary: {state => count}
+
+        # Initialize a dense tensor to store probabilities
+        prob = zeros(Int64, (2 * ones(Int, N))...)
+    
+        # Populate the tensor with counts from the dictionary
+        for (state, val) in probf
+            prob[state...] = val
+        end
+    
+        # Normalize the tensor by the total number of measurements
+        measurement_probabilities[r]= ITensor(prob, ξ) / NM # Compute Born probabilities  #TODO: Check whether this is okay and gives a Probability MPS
     end
 
     return MeasurementProbabilities(N, NU, measurement_probabilities, data.measurement_settings)
