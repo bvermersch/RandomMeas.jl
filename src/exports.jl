@@ -5,17 +5,17 @@ export
 
 #TODO: Update the export list
 
-#MeasurementSeetings
-sample_local_random_unitaries,
+#MeasurementSetting
+sample_local_random_unitary,
 reduce_to_subsystem,
 
-#MeasurementProbabilities
-MeasurementProbabilities,
+#MeasurementProbability
+MeasurementProbability,
 
 #MeasurementData
 MeasurementData,
-import_measurement_data,
-export_measurement_data,
+#import_measurement_data,
+#export_measurement_data,
 
 #AbstractShadows
 AbstractShadow,
