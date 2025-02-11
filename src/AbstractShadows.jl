@@ -233,6 +233,22 @@ function trace(shadow::AbstractShadow)
 end
 
 """
+    trace(shadows::AbstractArray{<:AbstractShadow})
+
+Compute the trace for each shadow in a collection of shadow objects.
+
+# Arguments:
+- `shadows::AbstractArray{<:AbstractShadow}`: A collection (vector, matrix, etc.) of shadow objects.
+
+# Returns:
+An array of trace values corresponding to each shadow, with the same dimensions as the input array.
+"""
+function trace(shadows::AbstractArray{<:AbstractShadow})
+    return [trace(shadow) for shadow in shadows]
+end
+
+
+"""
     partial_trace(shadow::AbstractShadow, subsystem::Vector{Int})
 
 Compute the partial trace of a shadow object over the complement of the specified subsystem.
