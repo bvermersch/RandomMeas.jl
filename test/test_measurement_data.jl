@@ -1,8 +1,13 @@
 using Test
 using ITensors
+using ITensorMPS
 using NPZ
+using StatsBase
 include("../src/MeasurementSetting.jl")
+include("../src/MeasurementProbability.jl")
 include("../src/MeasurementData.jl")
+include("../src/utils_ITensor.jl")
+
 
 # Test file for MeasurementData.jl
 @testset "MeasurementData Tests" begin
@@ -12,7 +17,6 @@ include("../src/MeasurementData.jl")
 
     # Generate random binary measurement results
     measurement_results = rand(1:2, NM, N)
-
     # Mock measurement setting
     measurement_setting = LocalUnitaryMeasurementSetting(N, ensemble="Haar")
 
@@ -35,6 +39,46 @@ include("../src/MeasurementData.jl")
         @test data_without_setting.measurement_results == measurement_results
         @test data_without_setting.measurement_setting === nothing
     end
+
+    # Test 3: Sampling MeasurementData from a pure theory state ψ
+    @testset "Sampling MeasurementData from a pure theory state ψ " begin
+        ξ = measurement_setting.site_indices
+        ψ = random_mps(ξ)
+
+        #dense mode
+        data = MeasurementData(ψ,NM,mode="dense",measurement_setting=measurement_setting)
+        @test data.N == N
+        @test data.NM == NM
+        @test data.measurement_setting === measurement_setting
+
+        #mps mode
+        data = MeasurementData(ψ,NM;mode="MPS/MPO",measurement_setting=measurement_setting)
+        @test data.N == N
+        @test data.NM == NM
+        @test data.measurement_setting === measurement_setting
+    end
+
+    # Test 4: Sampling MeasurementData from a mixed state ρ
+    @testset "Sampling MeasurementData from a mixed state ρ " begin
+        ξ = measurement_setting.site_indices
+        ψ = random_mps(ξ)
+        ρ = outer(ψ',ψ)
+
+        #dense mode
+        data = MeasurementData(ρ,NM;mode="dense",measurement_setting=measurement_setting)
+        @test data.N == N
+        @test data.NM == NM
+        @test data.measurement_setting === measurement_setting
+
+        #mps mode
+        data = MeasurementData(ρ,NM;mode="MPS/MPO",measurement_setting=measurement_setting)
+        @test data.N == N
+        @test data.NM == NM
+        @test data.measurement_setting === measurement_setting
+    end
+
+
+    
 
     # # Test 3: Importing MeasurementData with unitaries
     # @testset "Importing MeasurementData with Unitaries" begin

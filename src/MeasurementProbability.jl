@@ -74,7 +74,7 @@ function MeasurementProbability(data::MeasurementData{T}) where {T <: AbstractMe
 end
 
 """
-MeasurementProbability(ψ::Union{MPS, MPO}, settings::LocalUnitaryMeasurementSettings)
+MeasurementProbability(ψ::Union{MPS, MPO}, setting::LocalUnitaryMeasurementSetting)
 
 Construct a MeasurementProbability object from a quantum state (MPS/MPO) and measurement settings.
 
@@ -113,6 +113,7 @@ function MeasurementProbability(ψ::Union{MPS, MPO}, setting::LocalUnitaryMeasur
     local_unitary = setting.local_unitary
     ξ = setting.site_indices
     #measurement_Probability = Array{ITensor}(undef, NU)
+
     if typeof(ψ) == MPS
         #P = get_Born(apply(local_unitary, ψ))  # Apply unitaries to MPS and compute Probability
         ψu = apply(local_unitary, ψ) 
@@ -137,6 +138,6 @@ function MeasurementProbability(ψ::Union{MPS, MPO}, setting::LocalUnitaryMeasur
             P *= C
         end
     end
-    measurement_Probability = P
-    return MeasurementProbability(N, measurement_Probability, setting)
+    measurement_probability = P
+    return MeasurementProbability(N, measurement_probability, setting)
 end

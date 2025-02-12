@@ -68,6 +68,89 @@ function MeasurementData(
     return MeasurementData(N, NM, measurement_results, measurement_setting)
 end
 
+"""
+    MeasurementData(measurement_probability::MeasurementData{T},NM::Int) where {T <: AbstractMeasurementSetting}
+
+Returns a Measurement Data Object by sampling NM projective measurements from the array measurement_probability
+
+# Arguments
+- `measurement_probability::MeasurementProbability`.
+- `NM::Int' number of projective measurements
+
+# Returns
+A `MeasurementData` object with inferred dimensions and validated setting.
+"""
+function MeasurementData(probability::MeasurementProbability{T},NM::Int) where {T <: AbstractMeasurementSetting}
+    N = probability.N
+    Prob = probability.measurement_probability
+    prob = real(array(Prob))
+    prob = reshape(prob, 2^N)
+    measurement_results = zeros(Int,NM,N)
+    measurement_setting = probability.measurement_setting
+    for m in 1:NM
+        data = StatsBase.sample(0:(1<<N-1), StatsBase.Weights(prob), 1)
+        measurement_results[m, :] = 1 .+ digits(data[1], base=2, pad=N)
+    end
+    return MeasurementData(N,NM,measurement_results,measurement_setting)
+end
+
+"""
+    MeasurementData(
+    ψ::Union{MPO, MPS},
+    NM::Int;
+    mode::String = "MPS/MPO",
+    measurement_settings::Union{LocalUnitaryMeasurementSettings, Nothing} = nothing,
+)::MeasurementData{LocalUnitaryMeasurementSettings}
+Returns a Measurement Data Object by sampling NM projective measurements from a quantum state
+
+# Arguments
+- `state::Union{MPO, MPS}`: The quantum state to be measured, represented as a matrix product operator (MPO) or matrix product state (MPS).
+- `NM::Int64`: The number of measurement shots to simulate for each unitary setting.
+- `mode::String` (optional): Specifies the simulation method.
+  - `"dense"`: Simulates measurements using the dense representation of the state.
+  - `"MPS/MPO"` (default): Simulates measurements using tensor network (TN) methods for memory efficiency.
+  - Any other value will result in an error.
+- `measurement_settings::Union{LocalUnitaryMeasurementSettings, Nothing}` (optional): Specifies the local unitary settings for the measurements.
+  - If `nothing`, defaults to computational basis measurements.
+# Returns
+A `MeasurementData` object
+"""
+function MeasurementData(
+    ψ::Union{MPO, MPS},
+    NM::Int;
+    mode::String = "MPS/MPO",
+    measurement_setting::Union{LocalUnitaryMeasurementSetting, Nothing} = nothing,
+)::MeasurementData{LocalUnitaryMeasurementSetting}
+    if mode=="dense"
+        measurement_probability = MeasurementProbability(ψ,measurement_setting)
+        return MeasurementData(measurement_probability,NM)
+    else
+        N = measurement_setting.N
+        data = zeros(Int,NM,N)
+        ξ = measurement_setting.site_indices
+        u = measurement_setting.local_unitary
+        if isa(ψ,MPS)
+            ψu = apply(reverse(u),ψ) #using reverse allows us to maintain orthocenter(ψ)=1 ;)
+            for m in 1:NM
+                data[m, :] = ITensorMPS.sample(ψu)
+            end
+        else
+            ρu = apply(u,ψ;apply_dag=true)
+            ρu[1] /= trace(ρu, ξ)
+            if N > 1
+                for m in 1:NM
+                    data[m, :] = ITensorMPS.sample(ρu)
+                end
+            else
+                s = ξ[1]
+                prob = [real(ρu[1][s=>1, s'=>1][]), real(ρu[1][s=>2, s'=>2][])]
+                data[:, 1] = StatsBase.sample(1:2, StatsBase.Weights(prob), NM)
+            end
+        end
+        return MeasurementData(N,NM,data,measurement_setting)
+    end
+end
+
 
 # ### **Import Functions**
 # """
