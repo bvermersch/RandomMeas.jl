@@ -63,3 +63,36 @@ function MeasurementGroup(
     # Delegate to the struct constructor
     return MeasurementGroup(N, NU, NM, measurements)
 end
+
+"""
+    reduce_to_subsystem(
+    group::MeasurementGroup{LocalUnitaryMeasurementSetting},
+    subsystem::Vector{Int}
+)::MeasurementGroup{LocalUnitaryMeasurementSetting}
+
+Reduce a `MeasurementGroup object (with `LocalUnitaryMeasurementSetting`) to a specified subsystem.
+
+# Arguments
+- `group::MeasurementGroup{LocalUnitaryMeasurementSetting}`: The original measurement data object.
+- `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
+
+# Returns
+A new `MeasurementGroup` object corresponding to the specified subsystem.
+"""
+function reduce_to_subsystem(
+    group::MeasurementGroup{LocalUnitaryMeasurementSetting},
+    subsystem::Vector{Int}
+)::MeasurementGroup{LocalUnitaryMeasurementSetting}
+    # Validate the subsystem
+    @assert all(x -> x >= 1 && x <= group.N, subsystem) "Subsystem indices must be between 1 and N."
+    @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."
+
+    # Reduce the measurement setting
+    NU = group.NU
+    reduced_measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}
+    for r in 1:NU
+        reduced_measurements[r] = reduce_to_subsystem(group.measurements[r],subsystem)
+    end
+    # Create and return the new MeasurementData object
+    return MeasurementGroup(reduced_measurements)
+end

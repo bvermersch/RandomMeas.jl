@@ -36,7 +36,7 @@ end
 
 # Constructor with a precomputed probability tensor `P`
 """
-    DenseShadow(measurement_probability::Measurement_Probability; G::Vector{Float64} = fill(1.0, length(u)))
+    DenseShadow(measurement_probability::MeasurementProbability; G::Vector{Float64} = fill(1.0, length(u)))
 
 Construct a `DenseShadow` object from a precomputed probability tensor.
 
@@ -48,11 +48,11 @@ Construct a `DenseShadow` object from a precomputed probability tensor.
 # Returns
 A `DenseShadow` object.
 """
-function DenseShadow(Probability::Measurement_Probability{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, length(u)))
-    N = length(u)  # Number of qubits/sites
-    N = Probability.NM
+function DenseShadow(Probability::MeasurementProbability{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, length(u)))
+    N = Probability.N  # Number of qubits/sites
     setting  = Probability.measurement_setting
     ξ = setting.site_indices
+    u = setting.local_unitary
     P = Probability.measurement_probability
     rho = 2^N * deepcopy(P)  # Scale the probability tensor
 
@@ -342,11 +342,11 @@ end
 
 
 """
-    get_purity_dense_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSettings})
+    get_purity_dense_shadows(measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}, subsystem::Vector{Int} = collect(1:data.N))
 
 Compute the purity (second trace moment) using dense shadows.
 # Arguments:
-- `measurement_data::MeasurementData{LocalUnitaryMeasurementSettings}`: The measurement data object containing results, settings, and site indices.
+- `measurement_data::MeasurementGroup{LocalUnitaryMeasurementSettings}`: The measurement data object containing results, settings, and site indices.
 
 # Returns:
 The purity (second trace moment) as a `Float64`.
@@ -357,13 +357,13 @@ This function is specifically optimized fork = 2, providing significant speed-up
 - **No Batching:** All measurement results are processed without dividing into batches, ensuring smallest statistical errors.
 
 """
-function get_purity_dense_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSettings}, subsystem::Vector{Int} = collect(1:data.N))
+function get_purity_dense_shadows(measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}, subsystem::Vector{Int} = collect(1:data.N))
 
     #TODO  "This function is not yet optimized for k=2. Instead, it use standard dense batch shadows to compute the purity."
 
-    measurement_data = reduce_to_subsystem(measurement_data, subsystem)
+    reduced_group = reduce_to_subsystem(measurement_group, subsystem)
 
-    dense_shadows = get_dense_shadows(measurement_data,number_of_ru_batches=2)
+    dense_shadows = get_dense_shadows(reduced_group,number_of_ru_batches=2)
 
     return get_trace_moment(dense_shadows,2)
 

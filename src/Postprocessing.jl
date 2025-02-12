@@ -234,7 +234,7 @@ end
 
 
 """
-    get_XEB(ψ::MPS, measurement_data::MeasurementData{LocalUnitaryMeasurementSettings})
+    get_XEB(ψ::MPS, measurement_data::MeasurementData{LocalUnitaryMeasurementSetting})
 
 Return the linear cross-entropy for the measurement results in `measurement_data`, with respect to a theory state `ψ`.
 
@@ -245,12 +245,11 @@ Return the linear cross-entropy for the measurement results in `measurement_data
 # Returns:
 The linear cross-entropy as a `Float64`.
 """
-function get_XEB(ψ::MPS, measurement_data::MeasurementData{LocalUnitaryMeasurementSettings})
+function get_XEB(ψ::MPS, measurement_data::MeasurementData{LocalUnitaryMeasurementSetting})
     # Extract site indices and measurement results
     ξ = siteinds(ψ)
-    data = measurement_data.measurement_results
-    NU, NM, N = measurement_data.NU, measurement_data.NM, measurement_data.N  # Extract number of measurement settings (NU), measurements per settings (NM) and qubits/sites (N)
-    @assert NU == 1 "Only one computational basis measurements are supported for XEB."
+    data = measurement_data.measurements_results
+    NM, N = measurement_data.NM, measurement_data.N  # Extract number of measurement settings (NU), measurements per settings (NM) and qubits/sites (N)
 
     P0 = get_Born_MPS(ψ)  # Compute theoretical Born probabilities
 
@@ -261,7 +260,7 @@ function get_XEB(ψ::MPS, measurement_data::MeasurementData{LocalUnitaryMeasurem
     for m in 1:NM
         V = ITensor(1.0)
         for j in 1:N
-            V *= (P0[j] * state(ξ[j], data[1, m, j]))
+            V *= (P0[j] * state(ξ[j], data[m, j]))
         end
         XEB += 2^N / NM * real(V[]) - 1 / NM
     end
