@@ -5,11 +5,11 @@ A container for measurement Probability and setting used in quantum experiments.
 
 # Fields
 - `N::Int`: Number of sites (qubits).
-- `measurement_Probability::ITensor representing of Born Probability.
-- `measurement_settings::T`: Measurement settings of type `T` or `nothing` if not provided.
+- `measurement_probability::ITensor representing of Born Probability.
+- `measurement_setting::T`: Measurement setting of type `T` or `nothing` if not provided.
 
 # Type Parameter
-- `T`: The type of `measurement_settings`. This can be any subtype of `AbstractMeasurementSetting` or `Nothing` if no settings are provided.
+- `T`: The type of `measurement_setting`. This can be any subtype of `AbstractMeasurementSetting` or `Nothing` if no settings are provided.
 
 # Usage
 The `MeasurementProbability` struct can be constructed using either a `MeasurementData` object or directly from a quantum state (MPS/MPO) and measurement settings.
@@ -46,7 +46,7 @@ data = MeasurementData(measurement_results, measurement_setting=settings)
 
 # Construct MeasurementProbability from MeasurementData
 Probability = MeasurementProbability(data)
-println(Probability.measurement_Probability[1])  # Print Probability for the first setting
+println(Probability.measurement_probability[1])  # Print Probability for the first setting
 """
 
 function MeasurementProbability(data::MeasurementData{T}) where {T <: AbstractMeasurementSetting}

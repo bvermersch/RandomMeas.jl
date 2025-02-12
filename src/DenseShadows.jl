@@ -36,7 +36,7 @@ end
 
 # Constructor with a precomputed probability tensor `P`
 """
-    DenseShadow(P::ITensor, u::Vector{ITensor}; G::Vector{Float64} = fill(1.0, length(u)))
+    DenseShadow(measurement_probability::Measurement_Probability; G::Vector{Float64} = fill(1.0, length(u)))
 
 Construct a `DenseShadow` object from a precomputed probability tensor.
 
@@ -48,9 +48,12 @@ Construct a `DenseShadow` object from a precomputed probability tensor.
 # Returns
 A `DenseShadow` object.
 """
-function DenseShadow(P::ITensor, u::Vector{ITensor}; G::Vector{Float64} = fill(1.0, length(u)))
+function DenseShadow(Probability::Measurement_Probability{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, length(u)))
     N = length(u)  # Number of qubits/sites
-    ξ = [noprime(first(inds(ui))) for ui in u]  # Extract site indices from unitaries
+    N = Probability.NM
+    setting  = Probability.measurement_setting
+    ξ = setting.site_indices
+    P = Probability.measurement_probability
     rho = 2^N * deepcopy(P)  # Scale the probability tensor
 
     # Apply transformations for each qubit
@@ -68,111 +71,51 @@ function DenseShadow(P::ITensor, u::Vector{ITensor}; G::Vector{Float64} = fill(1
     return DenseShadow(rho, N, ξ)
 end
 
-# Constructor with integer array `measurement_results`
+# Constructor with MeasurementData object
 """
-    DenseShadow(measurement_results::Array{Int}, u::Vector{ITensor}; G::Vector{Float64} = fill(1.0, length(u)))
+    DenseShadow(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, length(u)))
 
-Construct a `DenseShadow` object from raw measurement results.
+Construct a `DenseShadow` object from a MeasurementDataObject
 
 # Arguments
-- `measurement_results::Array{Int}`: Array of measurement results (binary).
-- `u::Vector{ITensor}`: Vector of local unitary transformations.
+- `measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}:
 - `G::Vector{Float64}` (optional): Vector of G values to account for measurement errors (default: 1.0 for all sites).
 
 # Returns
 A `DenseShadow` object.
 """
-function DenseShadow(measurement_results::Array{Int}, u::Vector{ITensor}; G::Vector{Float64} = fill(1.0, size(measurement_results, 2)))
-    ξ = [noprime(first(inds(ui))) for ui in u]  # Extract site indices from unitaries
-    P = get_Born(measurement_results, ξ)  # Compute Born probabilities
-    return DenseShadow(P, u, G=G)  # Construct the shadow
+function DenseShadow(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, size(measurement_results, 2)))
+    Probability = MeasurementProbability(measurement_data)
+    return DenseShadow(Probability, G=G)  # Construct the shadow
 end
+
 
 # Batch Dense Shadows
 """
-    get_dense_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSettings};
+    get_dense_shadows(measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting};
                       G::Vector{Float64} = fill(1.0, N),
-                      number_of_ru_batches::Int = NU,
-                      number_of_projective_measurement_batches::Int = 1)
+                      number_of_ru_batches::Int = NU)
 
 Compute dense shadows for the provided measurement data in batches.
 
 # Arguments
-- `measurement_data::MeasurementData{LocalUnitaryMeasurementSettings}`: Measurement data object.
-- `G::Vector{Float64}` (optional): Vector of G values for robustness (default: 1.0 for all sites).
-- `number_of_ru_batches::Int` (optional): Number of random unitary batches (default: `NU`).
-- `number_of_projective_measurement_batches::Int` (optional): Number of projective measurement batches (default: 1).
-
-# Returns
-A 2D array of `DenseShadow` objects.
-"""
-function get_dense_shadows(
-    measurement_data::MeasurementData{LocalUnitaryMeasurementSettings};
-    G::Vector{Float64} = fill(1.0, measurement_data.N),
-    number_of_ru_batches::Int = measurement_data.measurement_settings.NU,
-    number_of_projective_measurement_batches::Int = 1
-)
-    # Extract dimensions
-    NU, NM, N = measurement_data.NU, measurement_data.NM, measurement_data.N
-    ξ = measurement_data.measurement_settings.site_indices
-    u = measurement_data.measurement_settings.local_unitaries
-    data = measurement_data.measurement_results
-
-    # Ensure G length matches the number of qubits
-    @assert length(G) == N "Length of G must match the number of qubits/sites."
-
-    # Create batches for RUs and projective measurements
-    batch_size = div(NU, number_of_ru_batches)
-    ru_batches = [((b - 1) * batch_size + 1):(b == number_of_ru_batches ? NU : b * batch_size) for b in 1:number_of_ru_batches]
-    batch_size = div(NM, number_of_projective_measurement_batches)
-    measurement_batches = [((b - 1) * batch_size + 1):(b == number_of_projective_measurement_batches ? NM : b * batch_size) for b in 1:number_of_projective_measurement_batches]
-
-    # Initialize array to store dense shadows
-    shadows = Array{DenseShadow}(undef, number_of_ru_batches, number_of_projective_measurement_batches)
-
-    # Compute shadows for each batch
-    for (batch_idx, ru_batch) in enumerate(ru_batches)
-        for (batch_idy, m_batch) in enumerate(measurement_batches)
-            batch_shadow = ITensor(vcat(ξ, prime(ξ)))  # Initialize batch shadow tensor
-            for r in ru_batch
-                shadow_temp = DenseShadow(data[r, m_batch, :], u[r, :]; G = G).shadow_data  # Compute shadow
-                batch_shadow += shadow_temp
-            end
-            shadows[batch_idx, batch_idy] = DenseShadow(batch_shadow / length(ru_batch) , N, ξ)
-        end
-    end
-
-    return shadows
-end
-
-
-
-# Batch Dense Shadows
-"""
-    get_dense_shadows(measurement_probabilities::MeasurementProbabilities{LocalUnitaryMeasurementSettings};
-                      G::Vector{Float64} = fill(1.0, N),
-                      number_of_ru_batches::Int = NU)
-
-Compute dense shadows for the provided the probabilities of measurement outcomes in batches.
-
-# Arguments
-- `measurement_probabilities::MeasurementProbabilities{LocalUnitaryMeasurementSettings}`: Measurement probabilities object.
+- `measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}`: Measurement data object.
 - `G::Vector{Float64}` (optional): Vector of G values for robustness (default: 1.0 for all sites).
 - `number_of_ru_batches::Int` (optional): Number of random unitary batches (default: `NU`).
 
 # Returns
-A 2D array of `DenseShadow` objects.
+A Vector of `DenseShadow` objects.
 """
 function get_dense_shadows(
-    measurement_probabilities::MeasurementProbabilities{LocalUnitaryMeasurementSettings};
-    G::Vector{Float64} = fill(1.0, measurement_probabilities.N),
-    number_of_ru_batches::Int = measurement_probabilities.measurement_settings.NU,
+    measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting};
+    G::Vector{Float64} = fill(1.0, measurement_group.N),
+    number_of_ru_batches::Int = measurement_group.NU
 )
     # Extract dimensions
-    NU, N = measurement_probabilities.NU, measurement_probabilities.N
-    ξ = measurement_probabilities.measurement_settings.site_indices
-    u = measurement_probabilities.measurement_settings.local_unitaries
-    probabilities = measurement_probabilities.measurement_probabilities
+    NU, N = measurement_group.NU, measurement_group.N
+    #u = measurement_data.measurement_settings.local_unitaries
+    data = measurement_group.measurements
+    ξ = data[1].measurement_setting.site_indices
 
     # Ensure G length matches the number of qubits
     @assert length(G) == N "Length of G must match the number of qubits/sites."
@@ -182,20 +125,72 @@ function get_dense_shadows(
     ru_batches = [((b - 1) * batch_size + 1):(b == number_of_ru_batches ? NU : b * batch_size) for b in 1:number_of_ru_batches]
 
     # Initialize array to store dense shadows
-    shadows = Array{DenseShadow}(undef, number_of_ru_batches, 1)
+    shadows = Vector{DenseShadow}(undef, number_of_ru_batches)
 
     # Compute shadows for each batch
-    for (batch_idx, ru_batch) in enumerate(ru_batches)
+    for (batch_id, ru_batch) in enumerate(ru_batches)
             batch_shadow = ITensor(vcat(ξ, prime(ξ)))  # Initialize batch shadow tensor
             for r in ru_batch
-                shadow_temp = DenseShadow(probabilities[r], u[r, :]; G = G).shadow_data  # Compute shadow
+                shadow_temp = DenseShadow(data[r]; G = G).shadow_data  # Compute shadow
                 batch_shadow += shadow_temp
             end
-            shadows[batch_idx, 1] = DenseShadow(batch_shadow / length(ru_batch) , N, ξ)
+            shadows[batch_id] = DenseShadow(batch_shadow / length(ru_batch) , N, ξ)
     end
 
     return shadows
 end
+
+
+
+# # Batch Dense Shadows
+# """
+#     get_dense_shadows(measurement_probabilities::MeasurementProbabilities{LocalUnitaryMeasurementSettings};
+#                       G::Vector{Float64} = fill(1.0, N),
+#                       number_of_ru_batches::Int = NU)
+
+# Compute dense shadows for the provided the probabilities of measurement outcomes in batches.
+
+# # Arguments
+# - `measurement_probabilities::MeasurementProbabilities{LocalUnitaryMeasurementSettings}`: Measurement probabilities object.
+# - `G::Vector{Float64}` (optional): Vector of G values for robustness (default: 1.0 for all sites).
+# - `number_of_ru_batches::Int` (optional): Number of random unitary batches (default: `NU`).
+
+# # Returns
+# A 2D array of `DenseShadow` objects.
+# """
+# function get_dense_shadows(
+#     measurement_probabilities::MeasurementProbabilities{LocalUnitaryMeasurementSettings};
+#     G::Vector{Float64} = fill(1.0, measurement_probabilities.N),
+#     number_of_ru_batches::Int = measurement_probabilities.measurement_settings.NU,
+# )
+#     # Extract dimensions
+#     NU, N = measurement_probabilities.NU, measurement_probabilities.N
+#     ξ = measurement_probabilities.measurement_settings.site_indices
+#     u = measurement_probabilities.measurement_settings.local_unitaries
+#     probabilities = measurement_probabilities.measurement_probabilities
+
+#     # Ensure G length matches the number of qubits
+#     @assert length(G) == N "Length of G must match the number of qubits/sites."
+
+#     # Create batches for RUs and projective measurements
+#     batch_size = div(NU, number_of_ru_batches)
+#     ru_batches = [((b - 1) * batch_size + 1):(b == number_of_ru_batches ? NU : b * batch_size) for b in 1:number_of_ru_batches]
+
+#     # Initialize array to store dense shadows
+#     shadows = Array{DenseShadow}(undef, number_of_ru_batches, 1)
+
+#     # Compute shadows for each batch
+#     for (batch_idx, ru_batch) in enumerate(ru_batches)
+#             batch_shadow = ITensor(vcat(ξ, prime(ξ)))  # Initialize batch shadow tensor
+#             for r in ru_batch
+#                 shadow_temp = DenseShadow(probabilities[r], u[r, :]; G = G).shadow_data  # Compute shadow
+#                 batch_shadow += shadow_temp
+#             end
+#             shadows[batch_idx, 1] = DenseShadow(batch_shadow / length(ru_batch) , N, ξ)
+#     end
+
+#     return shadows
+# end
 
 
 
