@@ -1,7 +1,10 @@
 using Test
 using ITensors,ITensorMPS
 using StatsBase
-using RandomMeas
+#using RandomMeas
+include("../src/MeasurementSetting.jl")
+include("../src/MeasurementData.jl")
+include("../src/MeasurementProbability.jl")
 
 
 
@@ -15,7 +18,7 @@ using RandomMeas
     measurement_results = rand(1:2, NM, N)
 
     # Generate random local unitary measurement setting
-    measurement_setting = sample_local_random_unitary(N;site_indices=site_indices)
+    measurement_setting = LocalUnitaryMeasurementSetting(N;site_indices=site_indices)
 
     # Create MeasurementData
     measurement_data = MeasurementData(measurement_results; measurement_setting=measurement_setting)
@@ -32,7 +35,6 @@ using RandomMeas
         ψ = random_mps(site_indices)
         measurement_probability = MeasurementProbability(ψ, measurement_setting)
         @test measurement_probability.N == N
-        @test length(measurement_probability.measurement_probability) == NU
         @test measurement_probability.measurement_setting === measurement_setting
     end
 
@@ -44,10 +46,4 @@ using RandomMeas
         @test measurement_probability.measurement_setting === measurement_setting
     end
 
-    # Test individual Born probability
-    @testset "Born probability" begin
-        P = get_Born(measurement_results, site_indices)
-        @test P isa ITensor
-        @test sum(array(P)) ≈ 1.0  # Ensure normalization
-    end
 end

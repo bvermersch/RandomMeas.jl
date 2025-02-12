@@ -5,18 +5,18 @@ A container for measurement Probability and setting used in quantum experiments.
 
 # Fields
 - `N::Int`: Number of sites (qubits).
-- `measurement_Probability::Array{MPS, 1}`: An array of Born Probability for each measurement setting.
+- `measurement_Probability::ITensor representing of Born Probability.
 - `measurement_settings::T`: Measurement settings of type `T` or `nothing` if not provided.
 
 # Type Parameter
-- `T`: The type of `measurement_settings`. This can be any subtype of `AbstractMeasurementSettings` or `Nothing` if no settings are provided.
+- `T`: The type of `measurement_settings`. This can be any subtype of `AbstractMeasurementSetting` or `Nothing` if no settings are provided.
 
 # Usage
 The `MeasurementProbability` struct can be constructed using either a `MeasurementData` object or directly from a quantum state (MPS/MPO) and measurement settings.
 """
 struct MeasurementProbability{T}
     N::Int                              # Number of sites (qubits)
-    measurement_probability::Array{ITensor, 1} # Measurement Probability (size: NU)
+    measurement_probability::ITensor # Measurement Probability 
     measurement_setting::T             # Measurement settings (or nothing if not provided)
 end
 
@@ -30,7 +30,7 @@ Construct a `MeasurementProbability` object from a `MeasurementData` object.
 
 # Returns
 A `MeasurementProbability` object with the following:
-- `measurement_probability`: A list of Born probability tensors (one for each measurement setting).
+- `measurement_probability`:  Born probability tensor.
 - `measurement_setting`: The same measurement setting as in the input `MeasurementData`.
 
 # Details
@@ -42,15 +42,16 @@ A `MeasurementProbability` object with the following:
 # Generate random measurement data
 measurement_results = rand(1:2, 100, 5)
 setting = LocalUnitaryMeasurementSetting(5, ensemble="Haar")
-data = MeasurementData(measurement_results, measurement_settings=settings)
+data = MeasurementData(measurement_results, measurement_setting=settings)
 
 # Construct MeasurementProbability from MeasurementData
 Probability = MeasurementProbability(data)
 println(Probability.measurement_Probability[1])  # Print Probability for the first setting
 """
 
-function MeasurementProbability(data::MeasurementData{T}) where {T <: AbstractMeasurementSettings}
+function MeasurementProbability(data::MeasurementData{T}) where {T <: AbstractMeasurementSetting}
     N = data.N
+    NM = data.NM
     ξ = data.measurement_setting.site_indices
     #measurement_Probability = Array{ITensor}(undef, NU)
 
@@ -108,13 +109,33 @@ Notes
 """
 
 function MeasurementProbability(ψ::Union{MPS, MPO}, setting::LocalUnitaryMeasurementSetting)
-    N = settings.N
-    local_unitaries = setting.local_unitaries
+    N = setting.N
+    local_unitary = setting.local_unitary
+    ξ = setting.site_indices
     #measurement_Probability = Array{ITensor}(undef, NU)
     if typeof(ψ) == MPS
-        P = get_Born(apply(local_unitaries, ψ))  # Apply unitaries to MPS and compute Probability
+        #P = get_Born(apply(local_unitary, ψ))  # Apply unitaries to MPS and compute Probability
+        ψu = apply(local_unitary, ψ) 
+        C = δ(ξ[1], ξ[1]',ξ[1]'')
+        R = C * ψu[1] * conj(ψ[1]')
+        R *= δ(ξ[1], ξ[1]'')
+        P = R
+        for i in 2:N
+            Ct = δ(ξ[i], ξ[i]', ξ[i]'')
+            Rt = ψu[i] * conj(ψ[i]') * Ct
+            Rt *= δ(ξ[i], ξ[i]'')
+            P *= Rt
+        end
     else
-        P = get_Born(apply(local_unitaries, ψ; apply_dag=true))  # MPO version
+        #P = get_Born(apply(local_unitary, ψ))  # MPO version
+        ρu = apply(local_unitary,ψ; apply_dag=true)
+        P = ρu[1] * δ(ξ[1],ξ[1]',ξ[1]'')
+        P *= δ(ξ[1]'', ξ[1])
+        for i in 2:N
+            C = ρu[i] * delta(ξ[i], ξ[i]', ξ[i]'')
+            C *= delta(ξ[i]'', ξ[i])
+            P *= C
+        end
     end
     measurement_Probability = P
     return MeasurementProbability(N, measurement_Probability, setting)

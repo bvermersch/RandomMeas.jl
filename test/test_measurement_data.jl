@@ -11,7 +11,7 @@ include("../src/MeasurementData.jl")
     NM = 10  # Number of measurements per setting
 
     # Generate random binary measurement results
-    measurement_results = rand(Bool, NM, N)
+    measurement_results = rand(1:2, NM, N)
 
     # Mock measurement setting
     measurement_setting = LocalUnitaryMeasurementSetting(N, ensemble="Haar")

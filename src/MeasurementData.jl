@@ -45,11 +45,11 @@ A `MeasurementData` object with inferred dimensions and validated setting.
 ```julia
 # With measurement setting
 setting = LocalUnitaryMeasurementSetting(4, ensemble="Haar")
-results = rand(Int, 10, 4)
+results = rand(1:2, 10, 4)
 data_with_setting = MeasurementData(results; measurement_setting=setting)
 
 # Without measurement setting
-data_without_setting = MeasurementData(rand(Int, 10, 4))
+data_without_setting = MeasurementData(rand(1:2, 10, 4))
 ```
 """
 function MeasurementData(

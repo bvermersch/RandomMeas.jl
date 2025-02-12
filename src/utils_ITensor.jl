@@ -300,24 +300,24 @@ function get_Born_MPS(ψ::MPS)
 end
 
 
- """
-     get_Born(ρ::MPO)
+#  """
+#      get_Born(ρ::MPO)
 
- Construct Born Probability vector P(s) from an MPO representation ρ
-"""
-#TODO There is a potential memory issue if the MPO is not ordered.
-function get_Born(ρ::MPO)
-    ξ = firstsiteinds(ρ;plev=0)
-    N = size(ξ, 1)
-    P = ρ[1] * δ(ξ[1],ξ[1]',ξ[1]'')
-    P *= δ(ξ[1]'', ξ[1])
-    for i in 2:N
-        C = ρ[i] * delta(ξ[i], ξ[i]', ξ[i]'')
-        C *= delta(ξ[i]'', ξ[i])
-        P *= C
-    end
-    return P
-end
+#  Construct Born Probability vector P(s) from an MPO representation ρ
+# """
+# #TODO There is a potential memory issue if the MPO is not ordered.
+# function get_Born(ρ::MPO)
+#     ξ = firstsiteinds(ρ;plev=0)
+#     N = size(ξ, 1)
+#     P = ρ[1] * δ(ξ[1],ξ[1]',ξ[1]'')
+#     P *= δ(ξ[1]'', ξ[1])
+#     for i in 2:N
+#         C = ρ[i] * delta(ξ[i], ξ[i]', ξ[i]'')
+#         C *= delta(ξ[i]'', ξ[i])
+#         P *= C
+#     end
+#     return P
+# end
 
 
 """
