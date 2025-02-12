@@ -37,29 +37,29 @@ end
 
 # Constructor for FactorizedShadow from raw measurement results and unitaries
 """
-    FactorizedShadow(measurement_results::Vector{Int}, local_unitaries::Vector{ITensor};
-                     G::Vector{Float64} = fill(1.0, length(local_unitaries)))
+    FactorizedShadow(measurement_results::Vector{Int}, local_unitary::Vector{ITensor};
+                     G::Vector{Float64} = fill(1.0, length(local_unitary)))
 
 Construct a `FactorizedShadow` object from raw measurement results and unitary transformations.
 
 # Arguments
 - `measurement_results::Vector{Int}`: Vector of binary measurement results for each qubit/site.
-- `local_unitaries::Vector{ITensor}`: Vector of local unitary transformations applied during the measurement.
+- `local_unitary::Vector{ITensor}`: Vector of local unitary transformations applied during the measurement.
 - G::Vector{Float64}` (optional): Vector of `G` values for measurement error correction (default: 1.0 for all sites).
 
 # Returns
 A `FactorizedShadow` object.
 """
-function FactorizedShadow(measurement_results::Vector{Int}, local_unitaries::Vector{ITensor}; G::Vector{Float64} = fill(1.0, length(local_unitaries)))
+function FactorizedShadow(measurement_results::Vector{Int}, local_unitary::Vector{ITensor}; G::Vector{Float64} = fill(1.0, length(local_unitary)))
     # Number of qubits/sites
-    N = length(local_unitaries)
+    N = length(local_unitary)
 
     # Validate dimensions
     @assert length(G) == N "Length of G ($length(G)) must match the number of qubits/sites (N = $N)."
     @assert length(measurement_results) == N "Length of measurement_results ($length(measurement_results)) must match the number of qubits/sites (N = $N)."
 
     # Extract site indices from local unitaries
-    ξ = [noprime(first(inds(u))) for u in local_unitaries]
+    ξ = [noprime(first(inds(u))) for u in local_unitary]
 
     # Construct the factorized shadow for each qubit/site
     shadow_data = Vector{ITensor}(undef, N)
@@ -69,7 +69,7 @@ function FactorizedShadow(measurement_results::Vector{Int}, local_unitaries::Vec
         β = (G[i] - 2.0) / (2.0 * G[i] - 1.0)
 
         # Construct the shadow ITensor
-        ψ = dag(local_unitaries[i]) * onehot(ξ[i]' => measurement_results[i])  # State vector after measurement
+        ψ = dag(local_unitary[i]) * onehot(ξ[i]' => measurement_results[i])  # State vector after measurement
         shadow = α * ψ' * dag(ψ) + β * δ(ξ[i], ξ[i]')  # Weighted sum of rank-1 projector and identity
         shadow_data[i] = shadow
 
@@ -80,34 +80,31 @@ end
 
 # Factorized Shadows
 """
-    get_factorized_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSettings};
+    get_factorized_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting};
                            G::Vector{Float64} = fill(1.0, measurement_data.N))
 
 Compute factorized shadows for all measurement results in the provided `MeasurementData`.
 
 # Arguments
-- `measurement_data::MeasurementData{LocalUnitaryMeasurementSettings}`: Measurement data object containing measurement results and settings.
+- `measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}`: Measurement data object containing measurement results and settings.
 - `G::Vector{Float64}` (optional): Vector of `G` values for measurement error correction (default: 1.0 for all sites).
 
 # Returns
-A 2D array of `FactorizedShadow` objects with dimensions `(NU, NM)`.
+A Vector of NM `FactorizedShadow` objects with dimensions.
 """
-function get_factorized_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSettings}; G::Vector{Float64} = fill(1.0, measurement_data.N))
+function get_factorized_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, measurement_data.N))
     # Extract dimensions from measurement data
-    NU, NM, _ = size(measurement_data.measurement_results)
-    shadows = Array{FactorizedShadow}(undef, NU, NM)
+    NM = measurement_data.NM
+    shadows = Vector{FactorizedShadow}(undef, NM)
+    local_unitary = measurement_data.measurement_setting.local_unitary
 
-    for r in 1:NU
         for m in 1:NM
-            # Extract local unitary transformations and measurement results for this RU/shot
-            local_unitaries = measurement_data.measurement_settings.local_unitaries[r, :]
-            data = measurement_data.measurement_results[r, m, :]
+            # Extract local unitary transformations and measurement results for this shot
+            data = measurement_data.measurement_results[m, :]
 
-            # Construct a FactorizedShadow for this RU/shot
-            shadows[r, m] = FactorizedShadow(data, local_unitaries; G = G)
+            # Construct a FactorizedShadow for this shot
+            shadows[m] = FactorizedShadow(data, local_unitary; G = G)
         end
-    end
-
     return shadows
 end
 

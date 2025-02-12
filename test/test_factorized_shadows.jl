@@ -1,38 +1,35 @@
 using Test
 using ITensors
-include("../src/MeasurementSettings.jl")
+include("../src/MeasurementSetting.jl")
 include("../src/MeasurementData.jl")
 include("../src/AbstractShadows.jl")
 include("../src/FactorizedShadows.jl")
-include("../src/Postprocessing.jl")
+#include("../src/Postprocessing.jl")
 
 # Test parameters
 const N = 4  # Number of qubits/sites
-const NU = 3  # Number of measurement settings
 const NM = 5  # Number of projective measurements
 
 # Generate measurement settings
-measurement_settings = LocalUnitaryMeasurementSettings(N, NU, ensemble="Haar")
+measurement_setting = LocalUnitaryMeasurementSetting(N, ensemble="Haar")
 
 # Generate random measurement results
-measurement_results = rand(1:2, NU, NM, N)  # Random binary results in the range [1, 2]
+measurement_results = rand(1:2, NM, N)  # Random binary results in the range [1, 2]
 
 # Create a MeasurementData object
-measurement_data = MeasurementData(measurement_results; measurement_settings=measurement_settings)
+measurement_data = MeasurementData(measurement_results; measurement_setting=measurement_setting)
 
 # Testing FactorizedShadow constructor
 @testset "FactorizedShadow Tests" begin
-    for r in 1:NU
         for m in 1:NM
-            local_unitaries = measurement_settings.local_unitaries[r, :]
-            data = measurement_results[r, m, :]
+            local_unitary = measurement_setting.local_unitary
+            data = measurement_results[m, :]
 
             # Construct FactorizedShadow
-            shadow = FactorizedShadow(data, local_unitaries)
+            shadow = FactorizedShadow(data, local_unitary)
             @show shadow.N == N
             @test length(shadow.shadow_data) == N
         end
-    end
 end
 
 # Testing factorized shadow generation
@@ -40,89 +37,38 @@ end
     G = fill(1.0, N)  # No error correction
     shadows = get_factorized_shadows(measurement_data; G=G)
 
-    @test size(shadows) == (NU, NM)
+    @test length(shadows) == NM
 
-    for r in 1:NU
         for m in 1:NM
-            shadow = shadows[r, m]
+            shadow = shadows[m]
             @test shadow.N == N
             @test length(shadow.shadow_data) == N
         end
-    end
 end
 
 # Test with non-uniform G
 @testset "FactorizedShadow with G" begin
     G = [1.0, 0.9, 1.1, 1.2]  # Example of non-uniform G values
-    for r in 1:NU
+    local_unitary = measurement_setting.local_unitary
         for m in 1:NM
-            local_unitaries = measurement_settings.local_unitaries[r, :]
-            data = measurement_results[r, m, :]
+            data = measurement_results[m, :]
 
             # Construct FactorizedShadow
-            shadow = FactorizedShadow(data, local_unitaries; G=G)
+            shadow = FactorizedShadow(data, local_unitary; G=G)
             @test shadow.N == N
             @test length(shadow.shadow_data) == N
         end
-    end
 end
 
 # Test edge cases
 @testset "FactorizedShadow Edge Cases" begin
     # Invalid G length
-    @test_throws AssertionError FactorizedShadow(measurement_results[1, 1, :], measurement_settings.local_unitaries[1, :]; G=[1.0, 0.9])
+    @test_throws AssertionError FactorizedShadow(measurement_results[1, :], measurement_setting.local_unitary; G=[1.0, 0.9])
 
     # Invalid measurement results length
-    @test_throws AssertionError FactorizedShadow([1, 2], measurement_settings.local_unitaries[1, :])
+    @test_throws AssertionError FactorizedShadow([1, 2], measurement_setting.local_unitary)
 end
 
 
-function get_shadow_factorized_old(data::Array{Int}, ξ::Vector{Index{Int64}}, u::Vector{ITensor};G::Union{Nothing,Vector{Float64}}=nothing)
-    N = length(u)
-    ρ = Vector{ITensor}()
-    for i in 1:N
-        if G ===nothing
-            α = 3
-            β = -1
-        else
-            α = 3 / (2 * G[i] - 1)
-            β = (G[i] - 2) / (2 * G[i] - 1)
-        end
-        #u*_{s',s}|s'><s'|=u^dag_{s,s'}|s'><s'|
-        ψ = dag(u[i]) * onehot(ξ[i]' => data[i])
-        push!(ρ, α * ψ' * dag(ψ) + β * δ(ξ[i], ξ[i]'))
-    end
-    return ρ
-end
-
-@testset "FactorizedShadow Backwards compability" begin
-    # Define parameters
-    N = 4  # Number of qubits/sites
-    ξ = siteinds("Qubit", N)
-    local_unitaries = [op("RandomUnitary", ξ[i]) for i in 1:N]
-    measurement_results = rand(1:2, N)  # Simulate binary results (1, 2 for Julia indexing)
-    G = [1.2, 0.8, 1.5, 1.0]  # Example G values
-
-    # Test FactorizedShadow constructor
-    shadow = FactorizedShadow(measurement_results, local_unitaries; G=G)
-
-    @test shadow.N == N
-    @test length(shadow.shadow_data) == N
-    @test shadow.ξ == ξ
-
-    # Compare outputs of get_shadow_factorized and FactorizedShadow
-    factorized_shadow_manual = get_shadow_factorized_old(measurement_results, ξ, local_unitaries; G=G)
-    @test length(factorized_shadow_manual) == length(shadow.shadow_data)
-
-    for i in 1:N
-        @test isapprox(
-            Array(factorized_shadow_manual[i], ξ[i]', ξ[i]),
-            Array(shadow.shadow_data[i], ξ[i]', ξ[i]),
-            atol=1e-10
-        )
-    end
-
-    println("FactorizedShadow matches get_shadow_factorized outputs.")
-end
 
 println("All tests passed!")
