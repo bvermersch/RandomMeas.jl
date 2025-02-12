@@ -1,30 +1,3 @@
-# using ITensors
-# using NPZ
-# include("MeasurementSetting.jl") #Todo: Remove this line when include in the pacakge
-
-"""
-    struct MeasurementData{T}
-
-A container for measurement data and setting used in quantum experiments.
-
-# Fields
-- `N::Int`: Number of sites (qubits).
-- `NM::Int`: Number of measurements per setting.
-- `measurement_results::Array{Int, 2}`: A 3D array of binary measurement results with dimensions `(NM, N)`.
-- `measurement_setting::T`: Measurement setting of type `T` or `nothing` if not provided.
-
-# Type Parameter
-- `T`: The type of `measurement_setting`. This can be any subtype of `AbstractMeasurementSetting` or `Nothing` if no settings are provided.
-
-# Usage
-The `MeasurementData` struct is typically constructed using the provided constructor functions.
-"""
-struct MeasurementData{T}
-    N::Int                              # Number of sites (qubits)
-    NM::Int                             # Number of measurements per setting
-    measurement_results::Array{Int, 2} # Binary measurement results (size: NM x N)
-    measurement_setting::T   # Measurement setting (or nothing if not provided)
-end
 
 """
     MeasurementData(measurement_results::Array{Int, 2}; measurement_setting::Union{T, Nothing} = nothing)
@@ -69,7 +42,7 @@ function MeasurementData(
 end
 
 """
-    MeasurementData(measurement_probability::MeasurementData{T},NM::Int) where {T <: AbstractMeasurementSetting}
+    MeasurementData(measurement_probability::MeasurementProbability{T},NM::Int) where {T <: AbstractMeasurementSetting}
 
 Returns a Measurement Data Object by sampling NM projective measurements from the array measurement_probability
 

@@ -12,7 +12,7 @@ include("../src/DenseShadows.jl")
 include("../src/Postprocessing.jl")      # Path to Postprocessing.jl
 
 # Set up test parameters
-N = 1  # Number of qubits
+N = 2  # Number of qubits
 NU = 100  # Number of unitaries
 NM = 100  # Number of measurements per unitary
 ξ = siteinds("Qubit", N)

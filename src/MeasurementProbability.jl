@@ -1,26 +1,4 @@
 """
-    MeasurementProbability{T}
-
-A container for measurement Probability and setting used in quantum experiments.
-
-# Fields
-- `N::Int`: Number of sites (qubits).
-- `measurement_probability::ITensor representing of Born Probability.
-- `measurement_setting::T`: Measurement setting of type `T` or `nothing` if not provided.
-
-# Type Parameter
-- `T`: The type of `measurement_setting`. This can be any subtype of `AbstractMeasurementSetting` or `Nothing` if no settings are provided.
-
-# Usage
-The `MeasurementProbability` struct can be constructed using either a `MeasurementData` object or directly from a quantum state (MPS/MPO) and measurement settings.
-"""
-struct MeasurementProbability{T}
-    N::Int                              # Number of sites (qubits)
-    measurement_probability::ITensor # Measurement Probability 
-    measurement_setting::T             # Measurement settings (or nothing if not provided)
-end
-
-"""
     MeasurementProbability(data::MeasurementData{T})
 
 Construct a `MeasurementProbability` object from a `MeasurementData` object.
@@ -127,6 +105,7 @@ function MeasurementProbability(ψ::Union{MPS, MPO}, setting::LocalUnitaryMeasur
             Rt *= δ(ξ[i], ξ[i]'')
             P *= Rt
         end
+        @show P
     else
         #P = get_Born(apply(local_unitary, ψ))  # MPO version
         ρu = apply(local_unitary,ψ; apply_dag=true)

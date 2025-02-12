@@ -1,29 +1,3 @@
-# using ITensors
-# using NPZ
-# include("MeasurementSetting.jl") #Todo: Remove this line when include in the pacakge
-include("MeasurementData.jl")
-"""
-    struct MeasurementGroup{T}
-
-A container for a group of NU measurement data used in quantum experiments.
-
-# Fields
-- `N::Int`: Number of sites (qubits).
-- `NU::Int`: Number of MeasurementData objects
-- `measurements::Vector{MeasurementData{T}}
-
-# Type Parameter
-- `T`: The type of `MeasurementGroup`. This can be any subtype of `AbstractMeasurementSetting` or `Nothing` if no settings are provided.
-
-# Usage
-The `MeasurementData` struct is typically constructed using the provided constructor functions.
-"""
-struct MeasurementGroup{T}
-    N::Int                              # Number of sites (qubits)
-    NU::Int                             # Number of measurementData
-    NM::Int                             # Number of projectivemeasurements per RU
-    measurements::Vector{MeasurementData{T}} # NU MeasurementsData objects
-end
 
 """
     MeasurementGroup(
