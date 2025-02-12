@@ -118,12 +118,12 @@ function MeasurementProbability(ψ::Union{MPS, MPO}, setting::LocalUnitaryMeasur
         #P = get_Born(apply(local_unitary, ψ))  # Apply unitaries to MPS and compute Probability
         ψu = apply(local_unitary, ψ) 
         C = δ(ξ[1], ξ[1]',ξ[1]'')
-        R = C * ψu[1] * conj(ψ[1]')
+        R = C * ψu[1] * conj(ψu[1]')
         R *= δ(ξ[1], ξ[1]'')
         P = R
         for i in 2:N
             Ct = δ(ξ[i], ξ[i]', ξ[i]'')
-            Rt = ψu[i] * conj(ψ[i]') * Ct
+            Rt = ψu[i] * conj(ψu[i]') * Ct
             Rt *= δ(ξ[i], ξ[i]'')
             P *= Rt
         end

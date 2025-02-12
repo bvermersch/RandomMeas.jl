@@ -13,22 +13,24 @@ include("../src/Postprocessing.jl")      # Path to Postprocessing.jl
 
 # Set up test parameters
 N = 1  # Number of qubits
-NU = 5  # Number of unitaries
-NM = 50  # Number of measurements per unitary
+NU = 100  # Number of unitaries
+NM = 100  # Number of measurements per unitary
 ξ = siteinds("Qubit", N)
+ψ1 = random_mps(ξ)
+ψ2 = random_mps(ξ)
+observable = outer(ψ2', ψ2)
+exact_value = inner(ψ1',observable,ψ1)
 measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
 for r in 1:NU
-    measurement_results = rand(1:2, NM, N)
     measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
-    measurements[r] = MeasurementData(measurement_results; measurement_setting=measurement_setting)
+    measurements[r] = MeasurementData(ψ1,NM;mode="dense", measurement_setting=measurement_setting)
 end
 measurement_group = MeasurementGroup(measurements)
 
 
 @testset "Shadows Tests" begin
-    ψ = random_mps(ξ)
-    observable = outer(ψ', ψ)
-
+    
+    
     batch_shadow = get_dense_shadows(measurement_group;number_of_ru_batches=1)
     expect_batch = get_expect_shadow(observable,batch_shadow)
 
@@ -47,6 +49,7 @@ measurement_group = MeasurementGroup(measurements)
     end
    
     # Display results
+    @show exact_value
     @show expect_batch
     @show expect_dense
     @show expect_factorized
