@@ -48,7 +48,7 @@ Construct a `DenseShadow` object from a precomputed probability tensor.
 # Returns
 A `DenseShadow` object.
 """
-function DenseShadow(Probability::MeasurementProbability{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, length(u)))
+function DenseShadow(Probability::MeasurementProbability{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, Probability.N))
     N = Probability.N  # Number of qubits/sites
     setting  = Probability.measurement_setting
     ξ = setting.site_indices
@@ -73,7 +73,7 @@ end
 
 # Constructor with MeasurementData object
 """
-    DenseShadow(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, length(u)))
+    DenseShadow(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, size(measurement_data.N, 2)))
 
 Construct a `DenseShadow` object from a MeasurementDataObject
 
@@ -84,7 +84,7 @@ Construct a `DenseShadow` object from a MeasurementDataObject
 # Returns
 A `DenseShadow` object.
 """
-function DenseShadow(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, size(measurement_results, 2)))
+function DenseShadow(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, measurement_data.N))
     Probability = MeasurementProbability(measurement_data)
     return DenseShadow(Probability, G=G)  # Construct the shadow
 end

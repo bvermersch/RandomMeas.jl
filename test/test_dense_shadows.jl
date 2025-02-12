@@ -38,36 +38,36 @@ include("../src/Postprocessing.jl")      # Path to Postprocessing.jl
         @test isa(shadow.shadow_data, ITensor)
     end
 
-    # # Test DenseShadow constructor with measurement_data
-    # @testset "Constructor with measurement_results" begin
-    #     shadow = DenseShadow(measurement_data; G=G)
-    #     @test shadow.N == N
-    #     @test shadow.ξ == ξ
-    #     @test isa(shadow.shadow_data, ITensor)
-    # end
+    # Test DenseShadow constructor with measurement_data
+    @testset "Constructor with measurement_results" begin
+        shadow = DenseShadow(measurement_data; G=G)
+        @test shadow.N == N
+        @test shadow.ξ == ξ
+        @test isa(shadow.shadow_data, ITensor)
+    end
 
-    # # Test batched dense shadows
-    # @testset "Batched Dense Shadows" begin
-    #     NU = 10  # Number of random unitaries
-    #     NM = 5   # Number of projective measurements per unitary
-    #     measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
-    #     for r in 1:NU
-    #         measurement_results = rand(1:2, NM, N)
-    #         measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
-    #         measurements[r] = MeasurementData(measurement_results; measurement_setting=measurement_setting)
-    #     end
-    #     measurement_group = MeasurementGroup(measurements)
+    # Test batched dense shadows
+    @testset "Batched Dense Shadows" begin
+        NU = 10  # Number of random unitaries
+        NM = 5   # Number of projective measurements per unitary
+        measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
+        for r in 1:NU
+            measurement_results = rand(1:2, NM, N)
+            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
+            measurements[r] = MeasurementData(measurement_results; measurement_setting=measurement_setting)
+        end
+        measurement_group = MeasurementGroup(measurements)
     
-    #     batched_shadows = get_dense_shadows(
-    #         measurement_group;
-    #         G=G,
-    #         number_of_ru_batches=3
-    #     )
+        batched_shadows = get_dense_shadows(
+            measurement_group;
+            G=G,
+            number_of_ru_batches=3
+        )
 
-    #     @test length(batched_shadows) == 3
-    #     for shadow_batch in batched_shadows
-    #         @test isa(shadow_batch, DenseShadow)
-    #         @test shadow_batch.N == N
-    #     end
-    # end
+        @test length(batched_shadows) == 3
+        for shadow_batch in batched_shadows
+            @test isa(shadow_batch, DenseShadow)
+            @test shadow_batch.N == N
+        end
+    end
 end
