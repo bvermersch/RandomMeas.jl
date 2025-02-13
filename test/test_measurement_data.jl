@@ -3,6 +3,8 @@ using ITensors
 using ITensorMPS
 using NPZ
 using StatsBase
+include("../src/Structures.jl")
+
 include("../src/MeasurementSetting.jl")
 include("../src/MeasurementProbability.jl")
 include("../src/MeasurementData.jl")
@@ -78,7 +80,7 @@ include("../src/utils_ITensor.jl")
     end
 
 
-    
+
 
     # # Test 3: Importing MeasurementData with unitaries
     # @testset "Importing MeasurementData with Unitaries" begin

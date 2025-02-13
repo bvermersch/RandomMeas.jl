@@ -20,7 +20,6 @@ struct LocalUnitaryMeasurementSetting <: AbstractMeasurementSetting
     N::Int                              # Number of sites
     local_unitary::Vector{ITensor}  # local unitary represented by a vector of N 2x2 unitary
     site_indices::Vector{Index{Int64}}  # Vector of site indices (length N)
-
     """
     Create a LocalUnitaryMeasurementSettings object with validation.
 
@@ -37,9 +36,16 @@ struct LocalUnitaryMeasurementSetting <: AbstractMeasurementSetting
     )
         @assert length(local_unitary) == N "Mismatch in number of sites (N)."
         @assert length(site_indices) == N "Length of site_indices must match N."
+        for i in 1:N
+            inds_i = inds(local_unitary[i])
+            @assert length(inds_i) == 2 "Local unitary for site $i must have exactly two indices."
+            @assert site_indices[i] in inds_i "Local unitary for site $i must contain the unprimed site index."
+            @assert prime(site_indices[i]) in inds_i "Local unitary for site $i must contain the primed site index."
+        end
         return new(N, local_unitary, site_indices)
     end
 end
+
 
 """
     struct MeasurementData{T}
@@ -63,7 +69,22 @@ struct MeasurementData{T}
     NM::Int                             # Number of measurements per setting
     measurement_results::Array{Int, 2} # Binary measurement results (size: NM x N)
     measurement_setting::T   # Measurement setting (or nothing if not provided)
+
+    # Inner constructor with checks:
+    function MeasurementData{T}(
+        N::Int, NM::Int, measurement_results::Array{Int,2}, measurement_setting::T
+    ) where T
+        @assert size(measurement_results, 1) == NM "measurement_results must have NM rows."
+        @assert size(measurement_results, 2) == N "measurement_results must have N columns."
+        if measurement_setting !== nothing
+            @assert measurement_setting isa AbstractMeasurementSetting "measurement_setting must be a subtype of AbstractMeasurementSetting."
+            @assert measurement_setting.N == N "measurement_setting.N ($(measurement_setting.N)) must match N ($N)."
+        end
+        new(N, NM, measurement_results, measurement_setting)
+    end
 end
+#Simplified constructor for type inference
+MeasurementData(N::Int, NM::Int, measurement_results::Array{Int,2}, measurement_setting::T) where T = MeasurementData{T}(N, NM, measurement_results, measurement_setting)
 
 """
     MeasurementProbability{T}
@@ -83,9 +104,20 @@ The `MeasurementProbability` struct can be constructed using either a `Measureme
 """
 struct MeasurementProbability{T}
     N::Int                              # Number of sites (qubits)
-    measurement_probability::ITensor # Measurement Probability 
+    measurement_probability::ITensor # Measurement Probability
     measurement_setting::T             # Measurement settings (or nothing if not provided)
+
+    function MeasurementProbability{T}(N::Int, measurement_probability::ITensor, measurement_setting::T) where T
+        @assert length(inds(measurement_probability)) == N "The ITensor must have exactly N indices (got $(length(inds(measurement_probability))) vs N = $N)."
+        if measurement_setting !== nothing
+            @assert length(measurement_setting.site_indices) == N "The length of measurement_setting.site_indices must equal N (got $(length(measurement_setting.site_indices)) vs N = $N)."
+            @assert inds(measurement_probability) == measurement_setting.site_indices "The indices in the measurement_probability ITensor must match measurement_setting.site_indices."
+        end
+        new{T}(N, measurement_probability, measurement_setting)
+    end
 end
+#Simplified constructor for type inference
+MeasurementProbability(N::Int, measurement_probability::ITensor, measurement_setting::T) where T = MeasurementProbability{T}(N, measurement_probability, measurement_setting)
 
 
 """
@@ -109,5 +141,15 @@ struct MeasurementGroup{T}
     NU::Int                             # Number of measurementData
     NM::Int                             # Number of projectivemeasurements per RU
     measurements::Vector{MeasurementData{T}} # NU MeasurementsData objects
+        # Inner constructor with dimension and consistency checks.
+        function MeasurementGroup{T}(N::Int, NU::Int, NM::Int, measurements::Vector{MeasurementData{T}}) where T
+            @assert length(measurements) == NU "Expected $NU MeasurementData objects, but got $(length(measurements))."
+            for (i, m) in enumerate(measurements)
+                @assert m.N == N "MeasurementData object at index $i has inconsistent number of sites: expected $N, got $(m.N)."
+                @assert m.NM == NM "MeasurementData object at index $i has inconsistent number of measurements: expected $NM, got $(m.NM)."
+            end
+            new{T}(N, NU, NM, measurements)
+        end
 end
-
+#Simplified constructor for type inference
+MeasurementGroup(N::Int, NU::Int, NM::Int, measurements::Vector{MeasurementData{T}}) where T = MeasurementGroup{T}(N, NU, NM, measurements)

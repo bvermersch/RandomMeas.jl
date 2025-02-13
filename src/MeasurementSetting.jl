@@ -16,7 +16,6 @@ function LocalUnitaryMeasurementSetting(local_unitary_array::Array{ComplexF64, 3
 
     # Generate or validate site indices
     site_indices = site_indices === nothing ? siteinds("Qubit", N) : site_indices
-    @assert length(site_indices) == N "Length of site_indices must match N."
 
     # Convert the array into ITensors
     local_unitary = Vector{ITensor}(undef, N)
@@ -46,7 +45,6 @@ function LocalUnitaryMeasurementSetting(
 )
     # Generate site indices if not provided
     site_indices = site_indices === nothing ? siteinds("Qubit", N) : site_indices
-    @assert length(site_indices) == N "Length of site_indices must match N."
 
     # Generate local unitary
     local_unitary = [get_rotation(site_indices[j], ensemble) for j in 1:N]

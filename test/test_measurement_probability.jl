@@ -2,6 +2,7 @@ using Test
 using ITensors,ITensorMPS
 using StatsBase
 #using RandomMeas
+include("../src/Structures.jl")
 include("../src/MeasurementSetting.jl")
 include("../src/MeasurementData.jl")
 include("../src/MeasurementProbability.jl")
