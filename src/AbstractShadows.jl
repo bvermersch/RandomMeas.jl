@@ -110,8 +110,8 @@ end
 Wrapper for computing trace moments from a vector of shadows. Reshapes the vector into a 2D array
 and then calls the main `get_trace_moment` function.
 """
-function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing)
-    return get_trace_moments(reshape(shadows, :, 1), kth_moment; O=O)
+function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing)
+    return get_trace_moment(reshape(shadows, :, 1), kth_moment; O=O)
 end
 
 """
