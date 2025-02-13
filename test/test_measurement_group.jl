@@ -1,9 +1,5 @@
+using RandomMeas
 using Test
-using ITensors
-using NPZ
-include("../src/MeasurementSetting.jl")
-include("../src/MeasurementData.jl")
-include("../src/MeasurementGroup.jl")
 
 # Test file for MeasurementData.jl
 @testset "MeasurementGroup Tests" begin

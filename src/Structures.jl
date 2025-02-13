@@ -153,3 +153,88 @@ struct MeasurementGroup{T}
 end
 #Simplified constructor for type inference
 MeasurementGroup(N::Int, NU::Int, NM::Int, measurements::Vector{MeasurementData{T}}) where T = MeasurementGroup{T}(N, NU, NM, measurements)
+
+
+# Abstract Shadow Type
+"""
+    AbstractShadow
+
+An abstract type representing a general classical shadow.
+Subtypes should implement specific shadow methodologies, such as dense or factorized shadows.
+"""
+abstract type AbstractShadow end
+
+
+# Factorized Classical Shadow Constructor
+"""
+    FactorizedShadow
+
+A struct representing a factorized classical shadow for a quantum system.
+
+# Fields
+- `shadow_data::Vector{ITensor}`: Array of `N` ITensors, each 2x2, representing the factorized shadow for each qubit/site.
+- `N::Int`: Number of qubits/sites.
+- `ξ::Vector{Index{Int64}}`: Vector of site indices corresponding to the qubits/sites.
+
+# Constructor
+`FactorizedShadow(shadow_data::Vector{ITensor}, N::Int, ξ::Vector{Index{Int64}})`
+"""
+struct FactorizedShadow <: AbstractShadow
+    shadow_data::Vector{ITensor}  # Array of N ITensors, each 2x2
+    N::Int                             # Number of qubits/sites
+    ξ::Vector{Index{Int64}}            # Vector of site indices
+
+    """
+    Create a `FactorizedShadow` object with validation.
+
+    # Arguments
+    - `shadow_data::Vector{ITensor}`: Array of ITensors representing the factorized shadow for each qubit/site.
+    - `N::Int`: Number of qubits/sites.
+    - `ξ::Vector{Index{Int64}}`: Vector of site indices corresponding to the qubits/sites.
+
+    # Throws
+    - `AssertionError` if the dimensions of `shadow_data`, `ξ` do not match `N`.
+    """
+    function FactorizedShadow(shadow_data::Vector{ITensor}, N::Int, ξ::Vector{Index{Int64}})
+        @assert length(shadow_data) == N "Length of shadow_data must match N."
+        @assert length(ξ) == N "Length of site indices ξ must match N."
+        new(shadow_data, N, ξ)
+    end
+end
+
+
+# Dense Classical Shadow: Represents a 2^N x 2^N ITensor
+"""
+    DenseShadow
+
+A struct representing a dense classical shadow, stored as a single ITensor.
+
+# Fields
+- `shadow_data::ITensor`: The dense shadow as an ITensor with legs `ξ` and `ξ'`.
+- `N::Int`: Number of qubits/sites.
+- `ξ::Vector{Index{Int64}}`: Vector of site indices.
+
+# Constructor
+`DenseShadow(shadow_data::ITensor, N::Int, ξ::Vector{Index{Int64}})`
+"""
+struct DenseShadow <: AbstractShadow
+    shadow_data::ITensor
+    N::Int
+    ξ::Vector{Index{Int64}}
+
+    """
+    Create a `DenseShadow` object with validation.
+
+    # Arguments
+    - `shadow_data::ITensor`: The dense shadow tensor.
+    - `N::Int`: Number of qubits/sites.
+    - `ξ::Vector{Index{Int64}}`: Vector of site indices.
+
+    # Throws
+    - `AssertionError` if dimensions of `ξ` do not match `N`.
+    """
+    function DenseShadow(shadow_data::ITensor, N::Int, ξ::Vector{Index{Int64}})
+        @assert length(ξ) == N "Length of site indices ξ must match N."
+        new(shadow_data, N, ξ)
+    end
+end

@@ -5,16 +5,27 @@ export
 
 #TODO: Update the export list
 
-#MeasurementSetting
+#Structures
+MeasurementSetting,
+MeasurementProbability,
+MeasurementData,
+MeasurementGroup,
+AbstractShadow,
+FactorizedShadow,
+DenseShadow,
+
+
 #sample_local_random_unitary,
-#MeasurementSetting,
-#reduce_to_subsystem,
+#MeasurementSetting
+LocalUnitaryMeasurementSetting,
+get_rotation,
+reduce_to_subsystem,
 
 #MeasurementProbability
-MeasurementProbability,
+
 
 #MeasurementData
-MeasurementData
+
 #import_measurement_data,
 #export_measurement_data,
 
@@ -22,31 +33,25 @@ MeasurementData
 #MeasurementGroup
 
 #AbstractShadows
-# AbstractShadow,
-# get_expect_shadow,
-# get_trace_moment,
-# get_trace_moments,
-# get_trace_product,
-# multiply,
-# trace,
-# partial_trace,
-# partial_transpose,
+get_expect_shadow,
+get_trace_moment,
+get_trace_moments,
+get_trace_product,
+multiply,
+trace,
+partial_trace,
+partial_transpose,
 
-# #DenseShadows
-# DenseShadow,
-# get_dense_shadows,
+#DenseShadows
+get_dense_shadows,
 # get_purity_dense_shadows,
 
-# #FactorizedShadows
-# FactorizedShadow,
-# get_factorized_shadows,
-# convert_to_dense_shadow,
-
-#  #Acquisition.jl
-# #simulate_local_measurements,
+#FactorizedShadows
+get_factorized_shadows,
+convert_to_dense_shadow,
 
 
-# #utils_ITensor.jl
+#utils_ITensor.jl
 # flatten,
 # get_entropy,
 # state_to_dm,
@@ -57,20 +62,18 @@ MeasurementData
 # get_spectrum,
 # multiply,
 # square,
-# trace,
+ trace,
 # get_selfXEB,
 
 
-# #Postprocessing.jl
-# get_h_tensor,
-# get_overlap,
-# get_Born_MPS,
-# get_Born,
-# get_purity_shadows,
-# get_purity_direct,
-# get_overlap_direct,
-# get_purity,
-# get_XEB,
+#Postprocessing.jl
+ get_h_tensor,
+ get_overlap,
+ get_purity_shadows,
+ get_purity_direct,
+ get_overlap_direct,
+ get_purity,
+ get_XEB
 
 
 # #Circuits.jl

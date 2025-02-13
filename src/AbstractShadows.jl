@@ -1,12 +1,3 @@
-# Abstract Shadow Type
-"""
-    AbstractShadow
-
-An abstract type representing a general classical shadow.
-Subtypes should implement specific shadow methodologies, such as dense or factorized shadows.
-"""
-abstract type AbstractShadow end
-
 
 """
     get_expect_shadow(O::MPO, shadows::AbstractArray{<:AbstractShadow}; compute_sem::Bool = false)

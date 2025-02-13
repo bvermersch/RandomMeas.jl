@@ -1,10 +1,5 @@
+using RandomMeas
 using Test
-using ITensors,ITensorMPS
-using NPZ
-
-# Include the MeasurementSetting module (adjust the relative path if needed)
-include("../src/Structures.jl")
-include("../src/MeasurementSetting.jl")
 
 @testset "MeasurementSetting Tests" begin
     # Define the number of sites (qubits)

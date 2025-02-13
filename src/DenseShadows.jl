@@ -1,39 +1,3 @@
-# Dense Classical Shadow: Represents a 2^N x 2^N ITensor
-"""
-    DenseShadow
-
-A struct representing a dense classical shadow, stored as a single ITensor.
-
-# Fields
-- `shadow_data::ITensor`: The dense shadow as an ITensor with legs `ξ` and `ξ'`.
-- `N::Int`: Number of qubits/sites.
-- `ξ::Vector{Index{Int64}}`: Vector of site indices.
-
-# Constructor
-`DenseShadow(shadow_data::ITensor, N::Int, ξ::Vector{Index{Int64}})`
-"""
-struct DenseShadow <: AbstractShadow
-    shadow_data::ITensor
-    N::Int
-    ξ::Vector{Index{Int64}}
-
-    """
-    Create a `DenseShadow` object with validation.
-
-    # Arguments
-    - `shadow_data::ITensor`: The dense shadow tensor.
-    - `N::Int`: Number of qubits/sites.
-    - `ξ::Vector{Index{Int64}}`: Vector of site indices.
-
-    # Throws
-    - `AssertionError` if dimensions of `ξ` do not match `N`.
-    """
-    function DenseShadow(shadow_data::ITensor, N::Int, ξ::Vector{Index{Int64}})
-        @assert length(ξ) == N "Length of site indices ξ must match N."
-        new(shadow_data, N, ξ)
-    end
-end
-
 # Constructor with a precomputed probability tensor `P`
 """
     DenseShadow(measurement_probability::MeasurementProbability; G::Vector{Float64} = fill(1.0, length(u)))

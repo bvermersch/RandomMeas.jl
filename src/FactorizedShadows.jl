@@ -1,40 +1,3 @@
-# Factorized Classical Shadow Constructor
-"""
-    FactorizedShadow
-
-A struct representing a factorized classical shadow for a quantum system.
-
-# Fields
-- `shadow_data::Vector{ITensor}`: Array of `N` ITensors, each 2x2, representing the factorized shadow for each qubit/site.
-- `N::Int`: Number of qubits/sites.
-- `ξ::Vector{Index{Int64}}`: Vector of site indices corresponding to the qubits/sites.
-
-# Constructor
-`FactorizedShadow(shadow_data::Vector{ITensor}, N::Int, ξ::Vector{Index{Int64}})`
-"""
-struct FactorizedShadow <: AbstractShadow
-    shadow_data::Vector{ITensor}  # Array of N ITensors, each 2x2
-    N::Int                             # Number of qubits/sites
-    ξ::Vector{Index{Int64}}            # Vector of site indices
-
-    """
-    Create a `FactorizedShadow` object with validation.
-
-    # Arguments
-    - `shadow_data::Vector{ITensor}`: Array of ITensors representing the factorized shadow for each qubit/site.
-    - `N::Int`: Number of qubits/sites.
-    - `ξ::Vector{Index{Int64}}`: Vector of site indices corresponding to the qubits/sites.
-
-    # Throws
-    - `AssertionError` if the dimensions of `shadow_data`, `ξ` do not match `N`.
-    """
-    function FactorizedShadow(shadow_data::Vector{ITensor}, N::Int, ξ::Vector{Index{Int64}})
-        @assert length(shadow_data) == N "Length of shadow_data must match N."
-        @assert length(ξ) == N "Length of site indices ξ must match N."
-        new(shadow_data, N, ξ)
-    end
-end
-
 # Constructor for FactorizedShadow from raw measurement results and unitaries
 """
     FactorizedShadow(measurement_results::Vector{Int}, local_unitary::Vector{ITensor};
@@ -105,6 +68,30 @@ function get_factorized_shadows(measurement_data::MeasurementData{LocalUnitaryMe
             # Construct a FactorizedShadow for this shot
             shadows[m] = FactorizedShadow(data, local_unitary; G = G)
         end
+    return shadows
+end
+
+"""
+    get_factorized_shadows(measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting};
+                           G::Vector{Float64} = fill(1.0, measurement_group.N))
+
+Compute factorized shadows for all measurement results in the provided `MeasurementGroup`.
+
+# Arguments
+- `measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}`: Measurement data object containing measurement results and settings.
+- `G::Vector{Float64}` (optional): Vector of `G` values for measurement error correction (default: 1.0 for all sites).
+
+# Returns
+A Array of NU*NM `FactorizedShadow` objects with dimensions.
+"""
+function get_factorized_shadows(measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, measurement_group.N))
+    # Extract dimensions from measurement data
+    NM = measurement_group.NM
+    NU = measurement_group.NU
+    shadows = Array{FactorizedShadow}(undef, NU, NM)
+    for r in 1:NU
+        shadows[r,:] = get_factorized_shadows(measurement_group.measurements[r];G=G)
+    end
     return shadows
 end
 

@@ -1,18 +1,5 @@
+using RandomMeas
 using Test
-using ITensors
-using StatsBase
-
-include("../src/MeasurementSetting.jl")
-include("../src/MeasurementData.jl")
-include("../src/MeasurementProbability.jl")
-include("../src/MeasurementGroup.jl")
-
-include("../src/AbstractShadows.jl")
-include("../src/DenseShadows.jl")
-
-
-include("../src/Shadows.jl")      # Path to Shadows_Struct.jl
-include("../src/Postprocessing.jl")      # Path to Postprocessing.jl
 
 @testset "DenseShadow Tests" begin
     # Define parameters

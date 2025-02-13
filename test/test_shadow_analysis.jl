@@ -1,15 +1,5 @@
+using RandomMeas
 using Test
-using ITensors
-
-# Include necessary files for the Shadows module
-include("../src/MeasurementSetting.jl")
-include("../src/MeasurementData.jl")
-include("../src/MeasurementProbability.jl")
-include("../src/MeasurementGroup.jl")
-include("../src/AbstractShadows.jl")
-include("../src/FactorizedShadows.jl")
-include("../src/DenseShadows.jl")
-include("../src/Postprocessing.jl")      # Path to Postprocessing.jl
 
 # Set up test parameters
 N = 2  # Number of qubits

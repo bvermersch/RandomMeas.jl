@@ -1,10 +1,5 @@
+using RandomMeas
 using Test
-using ITensors
-include("../src/MeasurementSetting.jl")
-include("../src/MeasurementData.jl")
-include("../src/AbstractShadows.jl")
-include("../src/FactorizedShadows.jl")
-#include("../src/Postprocessing.jl")
 
 # Test parameters
 const N = 4  # Number of qubits/sites

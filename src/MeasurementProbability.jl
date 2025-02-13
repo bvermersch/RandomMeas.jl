@@ -105,7 +105,6 @@ function MeasurementProbability(ψ::Union{MPS, MPO}, setting::LocalUnitaryMeasur
             Rt *= δ(ξ[i], ξ[i]'')
             P *= Rt
         end
-        @show P
     else
         #P = get_Born(apply(local_unitary, ψ))  # MPO version
         ρu = apply(local_unitary,ψ; apply_dag=true)

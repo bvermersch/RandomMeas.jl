@@ -1,14 +1,5 @@
+using RandomMeas
 using Test
-using ITensors
-using ITensorMPS
-using NPZ
-using StatsBase
-include("../src/Structures.jl")
-
-include("../src/MeasurementSetting.jl")
-include("../src/MeasurementProbability.jl")
-include("../src/MeasurementData.jl")
-include("../src/utils_ITensor.jl")
 
 
 # Test file for MeasurementData.jl
