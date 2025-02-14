@@ -64,7 +64,7 @@ convert_to_dense_shadow,
 # square,
  trace,
  get_Born_MPS,
-# get_selfXEB,
+ get_selfXEB,
 
 
 #Estimators.jl

@@ -93,7 +93,7 @@ function MeasurementData(
     NM::Int;
     mode::String = "MPS/MPO",
     measurement_setting::Union{LocalUnitaryMeasurementSetting, Nothing} = nothing,
-)::MeasurementData{LocalUnitaryMeasurementSetting}
+)#::MeasurementData{LocalUnitaryMeasurementSetting}
     if mode=="dense"
         measurement_probability = MeasurementProbability(ψ,measurement_setting)
         return MeasurementData(measurement_probability,NM)

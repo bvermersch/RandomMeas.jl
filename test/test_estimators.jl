@@ -34,6 +34,9 @@ exact_fidelity = abs(inner(ψ1,ψ2))^2
 end
 
 @testset "XEB Test" begin
-    measurements = MeasurementData(ψ1,NM;mode="dense", measurement_setting=nothing)
+    measurements = MeasurementData(ψ1,NM;mode="dense")
     XEB = get_XEB(ψ1,measurements)
+    self_XEB = get_selfXEB(ψ1)
+    @show XEB
+    @show self_XEB
 end

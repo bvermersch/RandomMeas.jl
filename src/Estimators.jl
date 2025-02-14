@@ -170,7 +170,7 @@ function get_overlap(prob1::MeasurementProbability, prob2::MeasurementProbabilit
     overlap = prob1.measurement_probability
     # Sequentially apply the Hamming tensor to each qubit index
     for i in 1:N
-        overlap *= get_h_tensor(ξ[i], prime(ξ[i]))
+        overlap *= get_h_tensor(ξ1[i], prime(ξ1[i]))
     end
 
     # Contract the resulting tensor with the Hermitian conjugate of prob2 (prob2')
@@ -221,7 +221,7 @@ end
 
 
 """
-    get_XEB(ψ::MPS, measurement_data::MeasurementData{LocalUnitaryMeasurementSetting})
+    get_XEB(ψ::MPS, measurement_data::MeasurementData)
 
 Return the linear cross-entropy for the measurement results in `measurement_data`, with respect to a theory state `ψ`.
 
@@ -232,10 +232,10 @@ Return the linear cross-entropy for the measurement results in `measurement_data
 # Returns:
 The linear cross-entropy as a `Float64`.
 """
-function get_XEB(ψ::MPS, measurement_data::MeasurementData{LocalUnitaryMeasurementSetting})
+function get_XEB(ψ::MPS, measurement_data::MeasurementData)
     # Extract site indices and measurement results
     ξ = siteinds(ψ)
-    data = measurement_data.measurements_results
+    data = measurement_data.measurement_results
     NM, N = measurement_data.NM, measurement_data.N  # Extract number of measurement settings (NU), measurements per settings (NM) and qubits/sites (N)
 
     P0 = get_Born_MPS(ψ)  # Compute theoretical Born probabilities
