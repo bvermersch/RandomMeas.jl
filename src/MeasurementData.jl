@@ -53,7 +53,7 @@ Returns a Measurement Data Object by sampling NM projective measurements from th
 # Returns
 A `MeasurementData` object with inferred dimensions and validated setting.
 """
-function MeasurementData(probability::MeasurementProbability{T},NM::Int) where {T <: AbstractMeasurementSetting}
+function MeasurementData(probability::MeasurementProbability{T},NM::Int) where T #{T <: AbstractMeasurementSetting}
     N = probability.N
     Prob = probability.measurement_probability
     prob = real(array(Prob))
