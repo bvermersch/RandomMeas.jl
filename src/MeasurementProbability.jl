@@ -30,10 +30,14 @@ println(Probability.measurement_probability[1])  # Print Probability for the fir
 function MeasurementProbability(data::MeasurementData{T}) where {T <: AbstractMeasurementSetting}
     N = data.N
     NM = data.NM
-    ξ = data.measurement_setting.site_indices
+    if isnothing(data.measurement_setting)
+        ξ  = siteinds("Qubit", N)
+    else
+        ξ = data.measurement_setting.site_indices
+    end
     #measurement_Probability = Array{ITensor}(undef, NU)
 
-    #measurement_Probability[r] = get_Born(data.measurement_results[r, :, :], ξ)
+    #measurement_Probability[r] = get_Born(data.measurement_resultsD[r, :, :], ξ)
     probf = StatsBase.countmap(eachrow(data.measurement_results))  # Dictionary: {state => count}
 
     # Initialize a dense tensor to store Probability
@@ -47,12 +51,12 @@ function MeasurementProbability(data::MeasurementData{T}) where {T <: AbstractMe
     # Normalize the tensor by the total number of measurements
     measurement_Probability = ITensor(prob, ξ) / NM # Compute Born Probability  #TODO: Check whether this is okay and gives a Probability MPS
 
-    return MeasurementProbability(N, measurement_Probability, data.measurement_setting)
+    return MeasurementProbability(N, measurement_Probability, data.measurement_setting,ξ)
 
 end
 
 """
-MeasurementProbability(ψ::Union{MPS, MPO}, setting::LocalUnitaryMeasurementSetting)
+MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{Nothing,LocalUnitaryMeasurementSetting}=nothing)
 
 Construct a MeasurementProbability object from a quantum state (MPS/MPO) and measurement settings.
 
@@ -86,15 +90,20 @@ Notes
 	•	If ψ is an MPO, it assumes the state is mixed and applies unitaries with conjugation.
 """
 
-function MeasurementProbability(ψ::Union{MPS, MPO}, setting::LocalUnitaryMeasurementSetting)
-    N = setting.N
-    local_unitary = setting.local_unitary
-    ξ = setting.site_indices
-    #measurement_Probability = Array{ITensor}(undef, NU)
+function MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{Nothing,LocalUnitaryMeasurementSetting}=nothing)
+    N = length(ψ)
+    if typeof(ψ) == MPS
+        ξ = siteinds(ψ)
+    else
+        ξ = firstsiteinds(ψ;plev=0)
+    end
 
     if typeof(ψ) == MPS
-        #P = get_Born(apply(local_unitary, ψ))  # Apply unitaries to MPS and compute Probability
-        ψu = apply(local_unitary, ψ) 
+        if isnothing(setting)
+            ψu = 1. *ψ
+        else
+            ψu = apply(setting.local_unitary, ψ) 
+        end
         C = δ(ξ[1], ξ[1]',ξ[1]'')
         R = C * ψu[1] * conj(ψu[1]')
         R *= δ(ξ[1], ξ[1]'')
@@ -106,8 +115,11 @@ function MeasurementProbability(ψ::Union{MPS, MPO}, setting::LocalUnitaryMeasur
             P *= Rt
         end
     else
-        #P = get_Born(apply(local_unitary, ψ))  # MPO version
-        ρu = apply(local_unitary,ψ; apply_dag=true)
+        if isnothing(setting)
+            ρu = 1. *ψ
+        else
+            ρu = apply(setting.local_unitary,ψ; apply_dag=true) 
+        end
         P = ρu[1] * δ(ξ[1],ξ[1]',ξ[1]'')
         P *= δ(ξ[1]'', ξ[1])
         for i in 2:N
@@ -116,6 +128,5 @@ function MeasurementProbability(ψ::Union{MPS, MPO}, setting::LocalUnitaryMeasur
             P *= C
         end
     end
-    measurement_probability = P
-    return MeasurementProbability(N, measurement_probability, setting)
+    return MeasurementProbability(N, P, setting,ξ)
 end

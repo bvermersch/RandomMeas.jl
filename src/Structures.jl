@@ -95,6 +95,7 @@ A container for measurement Probability and setting used in quantum experiments.
 - `N::Int`: Number of sites (qubits).
 - `measurement_probability::ITensor representing of Born Probability.
 - `measurement_setting::T`: Measurement setting of type `T` or `nothing` if not provided.
+- `site_indices::Vector{Index{Int64}}`  # Vector of site indices (length N)
 
 # Type Parameter
 - `T`: The type of `measurement_setting`. This can be any subtype of `AbstractMeasurementSetting` or `Nothing` if no settings are provided.
@@ -105,19 +106,20 @@ The `MeasurementProbability` struct can be constructed using either a `Measureme
 struct MeasurementProbability{T}
     N::Int                              # Number of sites (qubits)
     measurement_probability::ITensor # Measurement Probability
-    measurement_setting::T             # Measurement settings (or nothing if not provided)
+    measurement_setting::T            # Measurement settings (or nothing if not provided)
+    site_indices::Vector{Index{Int64}}
 
-    function MeasurementProbability{T}(N::Int, measurement_probability::ITensor, measurement_setting::T) where T
+    function MeasurementProbability{T}(N::Int, measurement_probability::ITensor, measurement_setting::T,site_indices::Vector{Index{Int64}}) where T
         @assert length(inds(measurement_probability)) == N "The ITensor must have exactly N indices (got $(length(inds(measurement_probability))) vs N = $N)."
+        @assert length(site_indices) == N "The length of measurement_setting.site_indices must equal N (got $(length(site_indices)) vs N = $N)."
         if measurement_setting !== nothing
-            @assert length(measurement_setting.site_indices) == N "The length of measurement_setting.site_indices must equal N (got $(length(measurement_setting.site_indices)) vs N = $N)."
-            @assert inds(measurement_probability) == measurement_setting.site_indices "The indices in the measurement_probability ITensor must match measurement_setting.site_indices."
+            @assert site_indices == measurement_setting.site_indices "The indices in the measurement_probability ITensor must match measurement_setting.site_indices."
         end
-        new{T}(N, measurement_probability, measurement_setting)
+        new{T}(N, measurement_probability, measurement_setting,site_indices)
     end
 end
 #Simplified constructor for type inference
-MeasurementProbability(N::Int, measurement_probability::ITensor, measurement_setting::T) where T = MeasurementProbability{T}(N, measurement_probability, measurement_setting)
+MeasurementProbability(N::Int, measurement_probability::ITensor, measurement_setting::T,site_indices::Vector{Index{Int64}}) where T = MeasurementProbability{T}(N, measurement_probability, measurement_setting,site_indices)
 
 
 """

@@ -286,8 +286,8 @@ function reduce_to_subsystem(
     # Reduce the measurement setting
     reduced_setting = reduce_to_subsystem(data.measurement_setting, subsystem)
 
-    # Reduce the measurement results: NU x NM x N → NU x NM x |subsystem|
-    reduced_results = data.measurement_results[:, :, subsystem]
+    # Reduce the measurement results: NM x N →  NM x |subsystem|
+    reduced_results = data.measurement_results[:, subsystem]
 
     # Create and return the new MeasurementData object
     return MeasurementData(reduced_results; measurement_setting=reduced_setting)

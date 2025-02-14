@@ -4,7 +4,7 @@ using Test
 
 @testset "MeasurementProbability Tests" begin
     # Test parameters
-    N = 4  # Number of qubits
+    N = 2  # Number of qubits
     NM = 50  # Number of measurements per setting
     site_indices = siteinds("Qubit", N)
 
@@ -38,6 +38,13 @@ using Test
         measurement_probability = MeasurementProbability(ρ, measurement_setting)
         @test measurement_probability.N == N
         @test measurement_probability.measurement_setting === measurement_setting
+    end
+
+     # Constructor 4: From state (MPS) without setting
+     @testset "Constructor from MPS without setting" begin
+        ψ = random_mps(site_indices)
+        measurement_probability = MeasurementProbability(ψ)
+        @test measurement_probability.N == N
     end
 
 end

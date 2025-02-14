@@ -63,7 +63,7 @@ function reduce_to_subsystem(
 
     # Reduce the measurement setting
     NU = group.NU
-    reduced_measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}
+    reduced_measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
     for r in 1:NU
         reduced_measurements[r] = reduce_to_subsystem(group.measurements[r],subsystem)
     end

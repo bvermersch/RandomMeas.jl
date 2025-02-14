@@ -63,15 +63,14 @@ convert_to_dense_shadow,
 # multiply,
 # square,
  trace,
+ get_Born_MPS,
 # get_selfXEB,
 
 
-#Postprocessing.jl
+#Estimators.jl
  get_h_tensor,
+ get_fidelity,
  get_overlap,
- get_purity_shadows,
- get_purity_direct,
- get_overlap_direct,
  get_purity,
  get_XEB
 
