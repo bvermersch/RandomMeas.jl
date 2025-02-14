@@ -51,7 +51,7 @@ get_factorized_shadows,
 convert_to_dense_shadow,
 
 
-#utils_ITensor.jl
+#QuantumInformation.jl
 # flatten,
 # get_entropy,
 # state_to_dm,

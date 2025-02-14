@@ -22,7 +22,7 @@ measurement_group2= MeasurementGroup(measurements2)
 
 exact_fidelity = abs(inner(ψ1,ψ2))^2
 
-@testset "Purity and Overlap Tests" begin
+@testset "Purity and Overlap Tests for pure states" begin
     fidelity = get_fidelity(measurement_group1,measurement_group2)
     purity1 = get_purity(measurement_group1)
     overlap = get_overlap(measurement_group1,measurement_group2)

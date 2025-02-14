@@ -17,7 +17,7 @@ include("DenseShadows.jl")
 # #include("Acquisition.jl")
 include("Estimators.jl")
 # include("Shadows.jl")
-include("utils_ITensor.jl")
+include("QuantumInformation.jl")
 # include("Circuits.jl")
 # include("ShallowShadows.jl")
 
