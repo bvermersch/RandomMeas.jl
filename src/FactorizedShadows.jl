@@ -112,7 +112,7 @@ The expectation value as a `ComplexF64` (or `Float64` if purely real).
 """
 function get_expect_shadow(O::MPO, shadow::FactorizedShadow)
     N = shadow.N
-    ξ = shadow.ξ
+    ξ = shadow.site_indices
     X = 1
     for i in 1:N
         s = ξ[i]
@@ -140,7 +140,7 @@ A new `FactorizedShadow` object representing the element-wise product of the two
 """
 function multiply(shadow1::FactorizedShadow, shadow2::FactorizedShadow)
     @assert shadow1.N == shadow2.N "Number of qubits/sites must match."
-    @assert shadow1.ξ == shadow2.ξ "Site indices must match."
+    @assert shadow1.site_indices == shadow2.site_indices "Site indices must match."
 
     # Perform element-wise multiplication of the shadows with mapprime
     combined_shadows = Vector{ITensor}(undef, shadow1.N)
@@ -149,7 +149,7 @@ function multiply(shadow1::FactorizedShadow, shadow2::FactorizedShadow)
     end
 
     # Return the new FactorizedShadow
-    return FactorizedShadow(combined_shadows, shadow1.N, shadow1.ξ)
+    return FactorizedShadow(combined_shadows, shadow1.N, shadow1.site_indices)
 end
 
 
@@ -174,7 +174,7 @@ function trace(shadow::FactorizedShadow)
 
     # Compute the product of traces of individual tensors
     for i in 1:shadow.N
-        tensor_trace = scalar(shadow.shadow_data[i] * δ(shadow.ξ[i], prime(shadow.ξ[i])))
+        tensor_trace = scalar(shadow.shadow_data[i] * δ(shadow.site_indices[i], prime(shadow.site_indices[i])))
         total_trace *= tensor_trace
     end
 
@@ -206,7 +206,7 @@ function partial_trace(shadow::FactorizedShadow, subsystem::Vector{Int}; assume_
 
     # Extract tensors and site indices for the subsystem
     reduced_shadow_data = shadow.shadow_data[subsystem]
-    reduced_ξ = shadow.ξ[subsystem]
+    reduced_ξ = shadow.site_indices[subsystem]
 
     if !assume_unit_trace
 
@@ -216,7 +216,7 @@ function partial_trace(shadow::FactorizedShadow, subsystem::Vector{Int}; assume_
         # Iterate over sites not in the subsystem and compute the trace
         for i in setdiff(1:shadow.N, subsystem)
             tensor = shadow.shadow_data[i]
-            trace_value = scalar(tensor * δ(shadow.ξ[i], prime(shadow.ξ[i])))
+            trace_value = scalar(tensor * δ(shadow.site_indices[i], prime(shadow.site_indices[i])))
             trace_product *= trace_value
         end
 
@@ -258,11 +258,11 @@ function partial_transpose(shadow::FactorizedShadow, subsystem::Vector{Int})::Fa
     # Create a new vector for the ITensor views.
     new_shadow_data = copy(shadow.shadow_data)
     for i in subsystem
-        a = shadow.ξ[i]      # unprimed index for site i
+        a = shadow.site_indices[i]      # unprimed index for site i
         b = prime(a)         # its primed partner
         new_shadow_data[i] = swapind(new_shadow_data[i], a, b)
     end
-    return FactorizedShadow(new_shadow_data, shadow.N, shadow.ξ)
+    return FactorizedShadow(new_shadow_data, shadow.N, shadow.site_indices)
 end
 
 """
@@ -278,7 +278,7 @@ A `DenseShadow` object with the combined ITensor.
 """
 function convert_to_dense_shadow(factorized_shadow::FactorizedShadow)::DenseShadow
     N = factorized_shadow.N
-    ξ = factorized_shadow.ξ
+    ξ = factorized_shadow.site_indices
 
     # Start with the first shadow tensor
     dense_tensor = factorized_shadow.shadow_data[1]

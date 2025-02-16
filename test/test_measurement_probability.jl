@@ -43,7 +43,8 @@ using Test
      # Constructor 4: From state (MPS) without setting
      @testset "Constructor from MPS without setting" begin
         ψ = random_mps(site_indices)
-        measurement_probability = MeasurementProbability(ψ)
+        measurement_setting = ComputationalBasisMeasurementSetting(N; site_indices=site_indices)
+        measurement_probability = MeasurementProbability(ψ, measurement_setting)
         @test measurement_probability.N == N
     end
 

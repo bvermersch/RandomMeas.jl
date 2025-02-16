@@ -130,6 +130,23 @@ using Test
             @test setting.N == N
         end
     end
+
+    @testset "ComputationalBasisMeasurementSetting Tests" begin
+        # Define number of sites (qubits)
+        N = 3
+
+        # Generate site indices using the helper function (assumes siteinds is defined)
+        site_indices = siteinds("Qubit", N)
+
+        # Create a ComputationalBasisMeasurementSetting object
+        comp_setting = ComputationalBasisMeasurementSetting(N, site_indices)
+
+        # Check that the number of sites is correct and the vectors have length N
+        @test comp_setting.N == N
+        @test length(comp_setting.site_indices) == N
+        @test length(comp_setting.local_unitary) == N
+
+    end
 end
 
 

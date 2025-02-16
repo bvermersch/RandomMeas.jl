@@ -39,13 +39,13 @@ using Test
         ψ = random_mps(ξ)
 
         #dense mode
-        data = MeasurementData(ψ,NM,mode="dense",measurement_setting=measurement_setting)
+        data = MeasurementData(ψ,NM,measurement_setting,mode="dense")
         @test data.N == N
         @test data.NM == NM
         @test data.measurement_setting === measurement_setting
 
         #mps mode
-        data = MeasurementData(ψ,NM;mode="MPS/MPO",measurement_setting=measurement_setting)
+        data = MeasurementData(ψ,NM,measurement_setting;mode="MPS/MPO")
         @test data.N == N
         @test data.NM == NM
         @test data.measurement_setting === measurement_setting
@@ -58,13 +58,13 @@ using Test
         ρ = outer(ψ',ψ)
 
         #dense mode
-        data = MeasurementData(ρ,NM;mode="dense",measurement_setting=measurement_setting)
+        data = MeasurementData(ρ,NM,measurement_setting;mode="dense")
         @test data.N == N
         @test data.NM == NM
         @test data.measurement_setting === measurement_setting
 
         #mps mode
-        data = MeasurementData(ρ,NM;mode="MPS/MPO",measurement_setting=measurement_setting)
+        data = MeasurementData(ρ,NM,measurement_setting;mode="MPS/MPO")
         @test data.N == N
         @test data.NM == NM
         @test data.measurement_setting === measurement_setting

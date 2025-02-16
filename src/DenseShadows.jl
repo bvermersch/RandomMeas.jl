@@ -172,7 +172,7 @@ The expectation value as a `ComplexF64` (or `Float64` if purely real).
 """
 function get_expect_shadow(O::MPO, shadow::DenseShadow)
     N = shadow.N
-    ξ = shadow.ξ
+    ξ = shadow.site_indices
     X = 1 * shadow.shadow_data'
     for i in 1:N
         s = ξ[i]
@@ -200,13 +200,13 @@ A new `DenseShadow` object that represents the trace product of the two input sh
 """
 function multiply(shadow1::DenseShadow, shadow2::DenseShadow)::DenseShadow
     @assert shadow1.N == shadow2.N "Number of qubits/sites mismatch between shadows."
-    @assert shadow1.ξ == shadow2.ξ "Site indices mismatch between shadows."
+    @assert shadow1.site_indices == shadow2.site_indices "Site indices mismatch between shadows."
 
     # Perform the trace product of the shadows
     product_shadow = mapprime(shadow1.shadow_data * prime(shadow2.shadow_data), 2, 1)
 
     # Return a new DenseShadow object with the resulting shadow, while retaining the original indices and G values
-    return DenseShadow(product_shadow, shadow1.N, shadow1.ξ)
+    return DenseShadow(product_shadow, shadow1.N, shadow1.site_indices)
 end
 
 
@@ -229,9 +229,9 @@ function trace(shadow::DenseShadow)
     # Copy the shadow ITensor to avoid modifying the original
     shadow_tensor = copy(shadow.shadow_data)
 
-    # Contract all indices ξ[i] with their primes ξ'[i]
+    # Contract all indices site_indices[i] with their primes site_indices'[i]
     for i in 1:shadow.N
-        shadow_tensor *= δ(shadow.ξ[i], prime(shadow.ξ[i]))
+        shadow_tensor *= δ(shadow.site_indices[i], prime(shadow.site_indices[i]))
     end
 
     # Extract the resulting scalar value
@@ -258,7 +258,7 @@ function partial_trace(shadow::DenseShadow, subsystem::Vector{Int})::DenseShadow
 
     # Determine indices to trace out
     trace_out_indices = setdiff(1:shadow.N, subsystem)
-    trace_out_ξ = shadow.ξ[trace_out_indices]
+    trace_out_ξ = shadow.site_indices[trace_out_indices]
 
     # Compute the partial trace
     reduced_shadow_data = copy(shadow.shadow_data)
@@ -267,7 +267,7 @@ function partial_trace(shadow::DenseShadow, subsystem::Vector{Int})::DenseShadow
     end
 
     # Extract the reduced site indices
-    reduced_ξ = shadow.ξ[subsystem]
+    reduced_ξ = shadow.site_indices[subsystem]
 
     # Construct and return the reduced DenseShadow
     return DenseShadow(reduced_shadow_data, length(subsystem), reduced_ξ)
@@ -295,11 +295,11 @@ function partial_transpose(shadow::DenseShadow, subsystem::Vector{Int})::DenseSh
     # Work on a view of the internal ITensor.
     A = shadow.shadow_data
     for i in subsystem
-        a = shadow.ξ[i]      # unprimed index for site i
+        a = shadow.site_indices[i]      # unprimed index for site i
         b = prime(a)         # its primed partner
         A = swapind(A, a, b)  # swap the indices; swapind returns a view
     end
-    return DenseShadow(A, shadow.N, shadow.ξ)
+    return DenseShadow(A, shadow.N, shadow.site_indices)
 end
 
 ############
