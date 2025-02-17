@@ -103,7 +103,7 @@ function MeasurementData(
             end
         else
             ρu = apply(u,ψ;apply_dag=true)
-            ρu[1] /= trace(ρu, ξ)
+            ρu[1] /= get_trace(ρu)
             if N > 1
                 for m in 1:NM
                     data[m, :] = ITensorMPS.sample(ρu)

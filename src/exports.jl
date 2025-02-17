@@ -54,17 +54,8 @@ convert_to_dense_shadow,
 
 
 #QuantumInformation.jl
-# flatten,
-# get_entropy,
-# state_to_dm,
-# reduce_dm,
-# ITensortoMPO,
-# power,
-# get_moment,
-# get_spectrum,
-# multiply,
-# square,
- trace,
+ get_trace_moment,
+ get_trace,
  get_Born_MPS,
  get_selfXEB,
 

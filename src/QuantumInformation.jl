@@ -13,11 +13,12 @@ function flatten(O::Union{MPS,MPO,Vector{ITensor}})
 end
 
 """
-    trace(ρ::MPO,s::Vector{Index{Int64}})
+    get_trace(ρ::MPO,s::Vector{Index{Int64}})
 """
-function trace(ρ::MPO,s::Vector{Index{Int64}})
+function get_trace(ρ::MPO)
+    s = firstsiteinds(ρ;plev=0)
 	NA = size(s,1)
-  X = ρ[1]*δ(s[1],s[1]')
+        X = ρ[1]*δ(s[1],s[1]')
 	for i in 2:NA
 		X *= ρ[i]*δ(s[i],s[i]')
 	end
@@ -25,44 +26,43 @@ function trace(ρ::MPO,s::Vector{Index{Int64}})
 end
 
 """
-    reduce_dm(ρ::MPO,part::Vector{Int64})
+    reduce_to_subsystem(ρ::MPO,subsystem::Vector{Int64})
 
 compute the reduce density matrix over sites mentionned in part
 """
-#TODO The function defintion is not consistent. compare the the reduce_dm for MPS.
 
-function reduce_dm(ρ::MPO,subsystem::Vector{Int64})
+function reduce_to_subsystem(ρ::MPO,subsystem::Vector{Int64})
 	N = length(ρ)
 	NA = size(subsystem,1)
     s = firstsiteinds(ρ;plev=0)
-	sA = s[part]
+	sA = s[subsystem]
 	ρA = MPO(sA)
 	L = 1
-	for i in 1:part[1]-1
+	for i in 1:subsystem[1]-1
 		L *= ρ[i]*δ(s[i],s[i]')
 	end
 
 	for j in 1:NA
 		if j<NA
-			imax = part[j+1]-1
+			imax = subsystem[j+1]-1
 		else
 			imax = N
 		end
 		R = 1
-		for i in part[j]+1:imax
+		for i in subsystem[j]+1:imax
        		 R *= ρ[i]*δ(s[i],s[i]')
 		end
 		if j==1
-			ρA[1] = L*ρ[part[1]]*R
+			ρA[1] = L*ρ[subsystem[1]]*R
 		else
-			ρA[j] =  ρ[part[j]]*R
+			ρA[j] =  ρ[subsystem[j]]*R
 		end
 	end
 	return ρA
 end
 
-function reduce_dm(ψ::MPS,subsystem::Vector{Int64})
-	return reduce_dm(outer(ψ',ψ),subsystem)
+function reduce_to_subsystem(ψ::MPS,subsystem::Vector{Int64})
+	return reduce_to_subsystem(outer(ψ',ψ),subsystem)
 end
 
 """
@@ -105,20 +105,20 @@ end
 
 TBW
 """
-function get_trace_moment(ψ::Union{MPS,MPO},k::Int,subsystem::Vector{Int}=collect(1:length(Ψ)))
-    if diff(subsystem) == ones(Int,2) && subsystem[1]==1 && type(ψ)==MPS
-        spec = get_entanglement_spectrum(ψ,subsystem[-1])
+function get_trace_moment(ψ::Union{MPS,MPO},k::Int,subsystem::Vector{Int}=collect(1:length(ψ)))
+    if diff(subsystem) == ones(Int,length(subsystem)-1) && subsystem[1]==1 && typeof(ψ)==MPS
+        spec = get_entanglement_spectrum(ψ,subsystem[end])
         return get_trace_moment(spec,k)
     else
         ρ = reduce_to_subsystem(ψ,subsystem)
         if k==2 #In the purity case k=2, tr(rho^2) = inner product of the mpo <ρ|ρ>
-            return inner(ρ',ρ)
+            return norm(ρ)^2
         else
             ρk = 1. * ρ
             for _ in 2:k
                 ρk = apply(ρk,ρ;cutoff=1e-12)
             end
-            return trace(ρk)
+            return get_trace(ρk)
         end
     end
 end
