@@ -27,7 +27,7 @@ Probability = MeasurementProbability(data)
 println(Probability.measurement_probability[1])  # Print Probability for the first setting
 """
 
-function MeasurementProbability(data::MeasurementData{T}) where {T <: AbstractMeasurementSetting}
+function MeasurementProbability(data::MeasurementData{T}) where  T <: Union{Nothing, AbstractMeasurementSetting}
     N = data.N
     NM = data.NM
     if isnothing(data.measurement_setting)
@@ -35,9 +35,7 @@ function MeasurementProbability(data::MeasurementData{T}) where {T <: AbstractMe
     else
         ξ = data.measurement_setting.site_indices
     end
-    #measurement_Probability = Array{ITensor}(undef, NU)
 
-    #measurement_Probability[r] = get_Born(data.measurement_resultsD[r, :, :], ξ)
     probf = StatsBase.countmap(eachrow(data.measurement_results))  # Dictionary: {state => count}
 
     # Initialize a dense tensor to store Probability
@@ -90,7 +88,7 @@ Notes
 	•	If ψ is an MPO, it assumes the state is mixed and applies unitaries with conjugation.
 """
 
-function MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{Nothing,LocalUnitaryMeasurementSetting}=nothing)
+function MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{ComputationalBasisMeasurementSetting,LocalUnitaryMeasurementSetting})
     N = length(ψ)
     if typeof(ψ) == MPS
         ξ = siteinds(ψ)
@@ -99,11 +97,7 @@ function MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{Nothing,Loca
     end
 
     if typeof(ψ) == MPS
-        if isnothing(setting)
-            ψu = 1. *ψ
-        else
-            ψu = apply(setting.local_unitary, ψ) 
-        end
+        ψu = apply(setting.local_unitary, ψ)
         C = δ(ξ[1], ξ[1]',ξ[1]'')
         R = C * ψu[1] * conj(ψu[1]')
         R *= δ(ξ[1], ξ[1]'')
@@ -115,11 +109,7 @@ function MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{Nothing,Loca
             P *= Rt
         end
     else
-        if isnothing(setting)
-            ρu = 1. *ψ
-        else
-            ρu = apply(setting.local_unitary,ψ; apply_dag=true) 
-        end
+        ρu = apply(setting.local_unitary,ψ; apply_dag=true)
         P = ρu[1] * δ(ξ[1],ξ[1]',ξ[1]'')
         P *= δ(ξ[1]'', ξ[1])
         for i in 2:N

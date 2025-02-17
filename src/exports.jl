@@ -17,7 +17,9 @@ DenseShadow,
 
 #sample_local_random_unitary,
 #MeasurementSetting
+LocalMeasurementSetting,
 LocalUnitaryMeasurementSetting,
+ComputationalBasisMeasurementSetting,
 get_rotation,
 reduce_to_subsystem,
 

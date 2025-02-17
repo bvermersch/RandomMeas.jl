@@ -5,13 +5,13 @@ using Test
     # Define parameters
     N = 4  # Number of qubits/sites
     NM = 10 # Number of projective measurements
-    ξ = siteinds("Qubit", N)  # Site indices
+    site_indices = siteinds("Qubit", N)  # Site indices
     #P = get_Born(measurement_results, ξ)  # Compute Born probabilities
     G = [1.2, 0.8, 1.5, 1.0]  # Example G values for robustness
     measurement_results = rand(1:2, NM, N)
 
     # Generate random local unitary measurement setting
-    measurement_setting = LocalUnitaryMeasurementSetting(N;site_indices=ξ)
+    measurement_setting = LocalUnitaryMeasurementSetting(N;site_indices=site_indices)
     # Create MeasurementData
     measurement_data = MeasurementData(measurement_results; measurement_setting=measurement_setting)
     measurement_probability = MeasurementProbability(measurement_data)
@@ -21,7 +21,7 @@ using Test
     @testset "Constructor with measurement_probability" begin
         shadow = DenseShadow(measurement_probability; G=G)
         @test shadow.N == N
-        @test shadow.ξ == ξ
+        @test shadow.site_indices == site_indices
         @test isa(shadow.shadow_data, ITensor)
     end
 
@@ -29,7 +29,7 @@ using Test
     @testset "Constructor with measurement_results" begin
         shadow = DenseShadow(measurement_data; G=G)
         @test shadow.N == N
-        @test shadow.ξ == ξ
+        @test shadow.site_indices == site_indices
         @test isa(shadow.shadow_data, ITensor)
     end
 
@@ -40,11 +40,11 @@ using Test
         measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
         for r in 1:NU
             measurement_results = rand(1:2, NM, N)
-            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
+            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=site_indices,ensemble="Haar")
             measurements[r] = MeasurementData(measurement_results; measurement_setting=measurement_setting)
         end
         measurement_group = MeasurementGroup(measurements)
-    
+
         batched_shadows = get_dense_shadows(
             measurement_group;
             G=G,

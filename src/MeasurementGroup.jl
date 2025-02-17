@@ -28,7 +28,7 @@ group = MeasurementGroup(measurements)
 """
 function MeasurementGroup(
     measurements::Vector{MeasurementData{T}}
-) where {T <: AbstractMeasurementSetting}
+) where T <: Union{Nothing, AbstractMeasurementSetting}
     # Infer dimensions from measurements
     NU = length(measurements)
     N = measurements[1].N
@@ -54,9 +54,9 @@ Reduce a `MeasurementGroup object (with `LocalUnitaryMeasurementSetting`) to a s
 A new `MeasurementGroup` object corresponding to the specified subsystem.
 """
 function reduce_to_subsystem(
-    group::MeasurementGroup{LocalUnitaryMeasurementSetting},
+    group::MeasurementGroup{LocalMeasurementSetting},
     subsystem::Vector{Int}
-)::MeasurementGroup{LocalUnitaryMeasurementSetting}
+)::MeasurementGroup{LocalMeasurementSetting}
     # Validate the subsystem
     @assert all(x -> x >= 1 && x <= group.N, subsystem) "Subsystem indices must be between 1 and N."
     @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."

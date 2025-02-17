@@ -28,21 +28,15 @@ data_without_setting = MeasurementData(rand(1:2, 10, 4))
 function MeasurementData(
     measurement_results::Array{Int, 2};
     measurement_setting::Union{T, Nothing} = nothing
-) where {T <: AbstractMeasurementSetting}
+) where T <: Union{Nothing, AbstractMeasurementSetting}
     # Infer dimensions from measurement_results
     NM, N = size(measurement_results)
-
-    # Validate dimensions of measurement_setting, if provided
-    if measurement_setting !== nothing
-        @assert measurement_setting.N == N "Measurement setting must have the same N as the results."
-    end
-
     # Delegate to the struct constructor
     return MeasurementData(N, NM, measurement_results, measurement_setting)
 end
 
 """
-    MeasurementData(measurement_probability::MeasurementProbability{T},NM::Int) where {T <: AbstractMeasurementSetting}
+    MeasurementData(measurement_probability::MeasurementProbability{T},NM::Int) where T <: Union{Nothing, AbstractMeasurementSetting}
 
 Returns a Measurement Data Object by sampling NM projective measurements from the array measurement_probability
 
@@ -53,7 +47,7 @@ Returns a Measurement Data Object by sampling NM projective measurements from th
 # Returns
 A `MeasurementData` object with inferred dimensions and validated setting.
 """
-function MeasurementData(probability::MeasurementProbability{T},NM::Int) where T #{T <: AbstractMeasurementSetting}
+function MeasurementData(probability::MeasurementProbability{T},NM::Int) where T <: Union{Nothing, AbstractMeasurementSetting}
     N = probability.N
     Prob = probability.measurement_probability
     prob = real(array(Prob))
@@ -90,10 +84,10 @@ A `MeasurementData` object
 """
 function MeasurementData(
     ψ::Union{MPO, MPS},
-    NM::Int;
+    NM::Int,
+    measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting};
     mode::String = "MPS/MPO",
-    measurement_setting::Union{LocalUnitaryMeasurementSetting, Nothing} = nothing,
-)#::MeasurementData{LocalUnitaryMeasurementSetting}
+)
     if mode=="dense"
         measurement_probability = MeasurementProbability(ψ,measurement_setting)
         return MeasurementData(measurement_probability,NM)
@@ -276,9 +270,9 @@ Reduce a `MeasurementData` object (with `LocalUnitaryMeasurementSetting`) to a s
 A new `MeasurementData` object corresponding to the specified subsystem.
 """
 function reduce_to_subsystem(
-    data::MeasurementData{LocalUnitaryMeasurementSetting},
+    data::MeasurementData{LocalMeasurementSetting},
     subsystem::Vector{Int}
-)::MeasurementData{LocalUnitaryMeasurementSetting}
+)::MeasurementData{LocalMeasurementSetting}
     # Validate the subsystem
     @assert all(x -> x >= 1 && x <= data.N, subsystem) "Subsystem indices must be between 1 and N."
     @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."

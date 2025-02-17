@@ -1,3 +1,21 @@
+"""
+Create a `ComputationalBasisMeasurementSetting` for N sites.
+
+# Arguments:
+- `N::Int`: Number of sites.
+- `site_indices::Union{Vector{Index{Int64}}, Nothing}`: Optional vector of site indices. If not provided, it will be generated.
+
+# Returns:
+- A `ComputationalBasisMeasurementSetting` object.
+"""
+function ComputationalBasisMeasurementSetting(N::Int; site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing)
+    if site_indices === nothing
+        site_indices = siteinds("Qubit", N)
+    end
+    return ComputationalBasisMeasurementSetting(N, site_indices)
+end
+
+
 
 """
 Create a `LocalUnitaryMeasurementSetting` object from an N x 2 x 2 array.
@@ -154,9 +172,9 @@ Reduce a `LocalUnitaryMeasurementSetting` object to a specified subsystem.
 A new `LocalUnitaryMeasurementSetting` object corresponding to the specified subsystem.
 """
 function reduce_to_subsystem(
-    settings::LocalUnitaryMeasurementSetting,
+    settings::LocalMeasurementSetting,
     subsystem::Vector{Int}
-)::LocalUnitaryMeasurementSetting
+)::LocalMeasurementSetting
     # Validate the subsystem
     @assert all(x -> x >= 1 && x <= settings.N, subsystem) "Subsystem indices must be between 1 and N."
     @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."
@@ -164,11 +182,8 @@ function reduce_to_subsystem(
     # Extract the reduced local unitary and site indices
     reduced_unitary = settings.local_unitary[subsystem]
     reduced_indices = settings.site_indices[subsystem]
+    reduced_N = length(subsystem)
 
     # Create the new LocalUnitaryMeasurementSetting object
-    return LocalUnitaryMeasurementSetting(
-        length(subsystem),  # New N is the size of the subsystem
-        reduced_unitary,
-        reduced_indices
-    )
+    return typeof(settings)(reduced_N, reduced_unitary, reduced_indices)
 end

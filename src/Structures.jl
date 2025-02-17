@@ -5,6 +5,8 @@ Specific implementations (e.g., LocalUnitaryMeasurementSetting) should subtype t
 """
 abstract type AbstractMeasurementSetting end
 
+abstract type LocalMeasurementSetting <: AbstractMeasurementSetting end
+
 # Local Unitary Measurement Setting
 """
 LocalUnitaryMeasurementSetting
@@ -16,7 +18,7 @@ A struct representing local unitary measurement settings for quantum systems.
 - `local_unitary::Vector{ITensor}`: A local unitary represented by N 2x2 ITensors.
 - `site_indices::Vector{Index{Int64}}`: Vector of site indices of length N.
 """
-struct LocalUnitaryMeasurementSetting <: AbstractMeasurementSetting
+struct LocalUnitaryMeasurementSetting <: LocalMeasurementSetting
     N::Int                              # Number of sites
     local_unitary::Vector{ITensor}  # local unitary represented by a vector of N 2x2 unitary
     site_indices::Vector{Index{Int64}}  # Vector of site indices (length N)
@@ -46,6 +48,24 @@ struct LocalUnitaryMeasurementSetting <: AbstractMeasurementSetting
     end
 end
 
+# Concrete type for computational basis measurement settings:
+# It contains only N, site_indices, and a local_unitary vector composed of identity ITensors.
+struct ComputationalBasisMeasurementSetting <: LocalMeasurementSetting
+    N::Int                              # Number of sites
+    local_unitary::Vector{ITensor}      # Vector of N identity ITensors
+    site_indices::Vector{Index{Int64}}  # Vector of site indices (length N)
+
+    function ComputationalBasisMeasurementSetting(N::Int, site_indices::Vector{Index{Int64}})
+        @assert length(site_indices) == N "Length of site_indices must match N."
+        # Create a vector of identity ITensors, one for each site.
+        local_unitary = Vector{ITensor}(undef, N)
+        for i in 1:N
+            local_unitary[i] = delta(site_indices[i], prime(site_indices[i]))
+        end
+        new(N, local_unitary, site_indices)
+    end
+end
+
 
 """
     struct MeasurementData{T}
@@ -64,7 +84,7 @@ A container for measurement data and setting used in quantum experiments.
 # Usage
 The `MeasurementData` struct is typically constructed using the provided constructor functions.
 """
-struct MeasurementData{T}
+struct MeasurementData{T<:Union{Nothing, AbstractMeasurementSetting}}
     N::Int                              # Number of sites (qubits)
     NM::Int                             # Number of measurements per setting
     measurement_results::Array{Int, 2} # Binary measurement results (size: NM x N)
@@ -84,7 +104,7 @@ struct MeasurementData{T}
     end
 end
 #Simplified constructor for type inference
-MeasurementData(N::Int, NM::Int, measurement_results::Array{Int,2}, measurement_setting::T) where T = MeasurementData{T}(N, NM, measurement_results, measurement_setting)
+MeasurementData(N::Int, NM::Int, measurement_results::Array{Int,2}, measurement_setting::T) where T<:Union{Nothing, AbstractMeasurementSetting} = MeasurementData{T}(N, NM, measurement_results, measurement_setting)
 
 """
     MeasurementProbability{T}
@@ -103,7 +123,7 @@ A container for measurement Probability and setting used in quantum experiments.
 # Usage
 The `MeasurementProbability` struct can be constructed using either a `MeasurementData` object or directly from a quantum state (MPS/MPO) and measurement settings.
 """
-struct MeasurementProbability{T}
+struct MeasurementProbability{T<:Union{AbstractMeasurementSetting, Nothing}}
     N::Int                              # Number of sites (qubits)
     measurement_probability::ITensor # Measurement Probability
     measurement_setting::T            # Measurement settings (or nothing if not provided)
@@ -119,7 +139,7 @@ struct MeasurementProbability{T}
     end
 end
 #Simplified constructor for type inference
-MeasurementProbability(N::Int, measurement_probability::ITensor, measurement_setting::T,site_indices::Vector{Index{Int64}}) where T = MeasurementProbability{T}(N, measurement_probability, measurement_setting,site_indices)
+MeasurementProbability(N::Int, measurement_probability::ITensor, measurement_setting::T,site_indices::Vector{Index{Int64}}) where T<:Union{Nothing, AbstractMeasurementSetting} = MeasurementProbability{T}(N, measurement_probability, measurement_setting,site_indices)
 
 
 """
@@ -138,7 +158,7 @@ A container for a group of NU measurement data used in quantum experiments.
 # Usage
 The `MeasurementData` struct is typically constructed using the provided constructor functions.
 """
-struct MeasurementGroup{T}
+struct MeasurementGroup{T<:Union{AbstractMeasurementSetting, Nothing}}
     N::Int                              # Number of sites (qubits)
     NU::Int                             # Number of measurementData
     NM::Int                             # Number of projectivemeasurements per RU
@@ -154,7 +174,7 @@ struct MeasurementGroup{T}
         end
 end
 #Simplified constructor for type inference
-MeasurementGroup(N::Int, NU::Int, NM::Int, measurements::Vector{MeasurementData{T}}) where T = MeasurementGroup{T}(N, NU, NM, measurements)
+MeasurementGroup(N::Int, NU::Int, NM::Int, measurements::Vector{MeasurementData{T}}) where T<:Union{Nothing, AbstractMeasurementSetting} = MeasurementGroup{T}(N, NU, NM, measurements)
 
 
 # Abstract Shadow Type
@@ -176,7 +196,7 @@ A struct representing a factorized classical shadow for a quantum system.
 # Fields
 - `shadow_data::Vector{ITensor}`: Array of `N` ITensors, each 2x2, representing the factorized shadow for each qubit/site.
 - `N::Int`: Number of qubits/sites.
-- `ξ::Vector{Index{Int64}}`: Vector of site indices corresponding to the qubits/sites.
+- `site_indices::Vector{Index{Int64}}`: Vector of site indices corresponding to the qubits/sites.
 
 # Constructor
 `FactorizedShadow(shadow_data::Vector{ITensor}, N::Int, ξ::Vector{Index{Int64}})`
@@ -184,7 +204,7 @@ A struct representing a factorized classical shadow for a quantum system.
 struct FactorizedShadow <: AbstractShadow
     shadow_data::Vector{ITensor}  # Array of N ITensors, each 2x2
     N::Int                             # Number of qubits/sites
-    ξ::Vector{Index{Int64}}            # Vector of site indices
+    site_indices::Vector{Index{Int64}}            # Vector of site indices
 
     """
     Create a `FactorizedShadow` object with validation.
@@ -192,15 +212,23 @@ struct FactorizedShadow <: AbstractShadow
     # Arguments
     - `shadow_data::Vector{ITensor}`: Array of ITensors representing the factorized shadow for each qubit/site.
     - `N::Int`: Number of qubits/sites.
-    - `ξ::Vector{Index{Int64}}`: Vector of site indices corresponding to the qubits/sites.
+    - `site_indices::Vector{Index{Int64}}`: Vector of site indices corresponding to the qubits/sites.
 
     # Throws
     - `AssertionError` if the dimensions of `shadow_data`, `ξ` do not match `N`.
     """
-    function FactorizedShadow(shadow_data::Vector{ITensor}, N::Int, ξ::Vector{Index{Int64}})
+    function FactorizedShadow(shadow_data::Vector{ITensor}, N::Int, site_indices::Vector{Index{Int64}})
         @assert length(shadow_data) == N "Length of shadow_data must match N."
-        @assert length(ξ) == N "Length of site indices ξ must match N."
-        new(shadow_data, N, ξ)
+        @assert length(site_indices) == N "Length of site indices ξ must match N."
+        for i in 1:N
+            # Get the indices of the ITensor for site i.
+            inds_i = inds(shadow_data[i])
+            @assert length(inds_i) == 2 "ITensor at index $i must have exactly two indices."
+            # Assert that the indices exactly match: first the unprimed index, then its primed version.
+            @assert site_indices[i] in inds_i "ITensor at index $i: first index must be equal to the corresponding site index."
+            @assert prime(site_indices[i]) in inds_i "ITensor at index $i: second index must be equal to the primed site index."
+        end
+        new(shadow_data, N, site_indices)
     end
 end
 
@@ -212,31 +240,36 @@ end
 A struct representing a dense classical shadow, stored as a single ITensor.
 
 # Fields
-- `shadow_data::ITensor`: The dense shadow as an ITensor with legs `ξ` and `ξ'`.
+- `shadow_data::ITensor`: The dense shadow as an ITensor with legs `site_indices` and `site_indices'`.
 - `N::Int`: Number of qubits/sites.
-- `ξ::Vector{Index{Int64}}`: Vector of site indices.
+- `site_indices::Vector{Index{Int64}}`: Vector of site indices.
 
 # Constructor
-`DenseShadow(shadow_data::ITensor, N::Int, ξ::Vector{Index{Int64}})`
+`DenseShadow(shadow_data::ITensor, N::Int, site_indices::Vector{Index{Int64}})`
 """
 struct DenseShadow <: AbstractShadow
     shadow_data::ITensor
     N::Int
-    ξ::Vector{Index{Int64}}
-
+    site_indices::Vector{Index{Int64}}
     """
     Create a `DenseShadow` object with validation.
 
     # Arguments
     - `shadow_data::ITensor`: The dense shadow tensor.
     - `N::Int`: Number of qubits/sites.
-    - `ξ::Vector{Index{Int64}}`: Vector of site indices.
+    - `site_indices::Vector{Index{Int64}}`: Vector of site indices.
 
     # Throws
-    - `AssertionError` if dimensions of `ξ` do not match `N`.
+    - `AssertionError` if dimensions of `site_indices` do not match `N`.
     """
-    function DenseShadow(shadow_data::ITensor, N::Int, ξ::Vector{Index{Int64}})
-        @assert length(ξ) == N "Length of site indices ξ must match N."
-        new(shadow_data, N, ξ)
+    function DenseShadow(shadow_data::ITensor, N::Int, site_indices::Vector{Index{Int64}})
+        @assert length(site_indices) == N "Length of site indices site_indices must match N."
+        unprimed = [i for i in inds(shadow_data) if plev(i)==0]
+        primed = [i for i in inds(shadow_data) if plev(i)==1]
+        @assert length(unprimed)==N "Expected N unprimed indices"
+        @assert length(primed)==N "Expected N primed indices"
+        @assert Set(unprimed)==Set(site_indices) "The unprimed indices do not match the site_indices"
+        @assert Set(primed)==Set(map(prime, site_indices)) "The primed indices do not match the primed version of site_indices"
+        new(shadow_data, N, site_indices)
     end
 end
