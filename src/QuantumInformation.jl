@@ -99,9 +99,27 @@ function get_trace_moment(spec::ITensor, k::Int)
 end
 
 
+"""
+    partial_transpose(ρ::MPO,subsystem::Vector{Int})
+
+TBW
+"""
+function partial_transpose(ρ::MPO,subsystem::Vector{Int})
+    ξ = firstsiteinds(ρ;plev=0)
+    ρT = MPO(ξ)
+    for i in 1:length(ξ)
+        if i in subsystem
+            ρT[i]  = swapind(ρ[i],ξ[i],ξ[i]')
+        else
+            ρT[i] = 1. * ρ[i] 
+        end
+    end
+    return ρT
+end
+
 
 """
-    get_trace_moment(ψ::Union{MPS,MPO},k::Int,subsystem::Vector{Int}=length(Ψ))
+    get_trace_moment(ψ::Union{MPS,MPO},k::Int,subsystem::Vector{Int}=collect(1:length(ψ)),partial_transpose::Bool=false)
 
 TBW
 """
@@ -121,6 +139,15 @@ function get_trace_moment(ψ::Union{MPS,MPO},k::Int,subsystem::Vector{Int}=colle
             return get_trace(ρk)
         end
     end
+end
+
+"""
+    get_trace_moments(ψ::Union{MPS,MPO},k_vector::Vector{Int},subsystem::Vector{Int}=collect(1:length(ψ)))
+
+TBW
+"""
+function get_trace_moments(ψ::Union{MPS,MPO},k_vector::Vector{Int},subsystem::Vector{Int}=collect(1:length(ψ)))
+    return [get_trace_moment(ψ,k,subsystem) for k in k_vector]
 end
 
 """

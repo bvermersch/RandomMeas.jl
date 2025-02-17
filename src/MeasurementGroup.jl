@@ -39,6 +39,33 @@ function MeasurementGroup(
 end
 
 """
+    MeasurementGroup(
+    ψ::Union{MPO, MPS},
+    NU::Int
+    NM::Int,
+    mode::String = "MPS/MPO",
+)::MeasurementGroup{LocalUnitaryMeasurementSetting}
+
+Implements a MeasurementGroup from ψ based on generating NU LocalMeasurementSetting objects
+"""
+function MeasurementGroup(
+    ψ::Union{MPO, MPS},
+    NU::Int,
+    NM::Int;
+    mode::String = "MPS/MPO",
+)::MeasurementGroup{LocalUnitaryMeasurementSetting}
+
+    measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
+    ξ = siteinds(ψ)
+    N = length(ξ)
+    for r in 1:NU
+        measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
+        measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode="dense")
+    end
+    return MeasurementGroup(measurements)
+end
+
+"""
     reduce_to_subsystem(
     group::MeasurementGroup{T},
     subsystem::Vector{Int}

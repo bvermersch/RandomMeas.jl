@@ -58,6 +58,7 @@ convert_to_dense_shadow,
  get_trace,
  get_Born_MPS,
  get_selfXEB,
+ partial_transpose,
 
 
 #Estimators.jl

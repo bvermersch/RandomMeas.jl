@@ -6,10 +6,9 @@ N = 4      # Number of qubits
 ξ = siteinds("Qubit", N)
 
 # Generate measurement settings and data
-ψ = random_mps(ξ;linkdims=3)
-ϕ = random_mps(ξ;linkdims=3)
+ψ = random_mps(ComplexF64,ξ;linkdims=3)
+ϕ = random_mps(ComplexF64,ξ;linkdims=3)
 ρ = 0.7*outer(ψ',ψ)+0.3*outer(ϕ',ϕ)
-
 
 @testset "Full state Trace Moments" begin
     @show get_trace(ρ)
@@ -29,4 +28,21 @@ end
     @show purity_2
     @show trrho3_1
     @show trrho3_2
+end
+
+@testset "PartialTranspose Moments" begin
+    #First method
+    ρT = partial_transpose(ρ,collect(1:2))
+
+    purity = get_trace_moment(ρ,2)
+    @show purity
+
+    p2 = get_trace_moment(ρT,2)
+    @show p2
+
+    trrho3 = get_trace_moment(ρ,3)
+    @show trrho3
+
+    p3 = get_trace_moment(ρT,3)
+    @show p3
 end

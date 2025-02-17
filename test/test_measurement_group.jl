@@ -17,7 +17,7 @@ using Test
 
 
 
-    # Test 1: Creating MeasurementData with setting
+    # Test 1: Creating MeasurementGroup with setting
     @testset "With Measurement Setting" begin
         group = MeasurementGroup(measurements)
 
@@ -27,7 +27,27 @@ using Test
         @test group.measurements[1] == data1
     end
 
-     # Test 2: reduce_to_subsystem
+     # Test 2: Creating MeasurementGroup from an MPS dense mode
+     @testset "With Measurement Setting" begin
+        NU = 10
+        ψ = random_mps(ξ; linkdims=3);
+        group = MeasurementGroup(ψ,NU,NM;mode="dense")
+        @test group.N == N
+        @test group.NU == NU
+        @test group.NM == NM
+    end
+
+    # Test 3: Creating MeasurementGroup from an MPS | MPS/MPO mode
+         @testset "With Measurement Setting" begin
+            NU = 10
+            ψ = random_mps(ξ; linkdims=3);
+            group = MeasurementGroup(ψ,NU,NM;mode="MPS/MPO")
+            @test group.N == N
+            @test group.NU == NU
+            @test group.NM == NM
+    end
+
+     # Test 3: reduce_to_subsystem
      @testset "With Measurement Setting" begin
         group = MeasurementGroup(measurements)
         reduced_group = reduce_to_subsystem(group,collect(1:2))
