@@ -269,20 +269,18 @@ Reduce a `MeasurementData` object (with `LocalUnitaryMeasurementSetting`) to a s
 # Returns
 A new `MeasurementData` object corresponding to the specified subsystem.
 """
-function reduce_to_subsystem(
-    data::MeasurementData{LocalMeasurementSetting},
-    subsystem::Vector{Int}
-)::MeasurementData{LocalMeasurementSetting}
-    # Validate the subsystem
+function reduce_to_subsystem(data::MeasurementData{T}, subsystem::Vector{Int})::MeasurementData{T} where T <: Union{Nothing, LocalMeasurementSetting}
+    # Validate that each index in the subsystem is in the valid range.
     @assert all(x -> x >= 1 && x <= data.N, subsystem) "Subsystem indices must be between 1 and N."
     @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."
 
-    # Reduce the measurement setting
-    reduced_setting = reduce_to_subsystem(data.measurement_setting, subsystem)
+    # Reduce the measurement setting only if it is provided.
+    reduced_setting = data.measurement_setting === nothing ? nothing :
+        reduce_to_subsystem(data.measurement_setting, subsystem)
 
-    # Reduce the measurement results: NM x N →  NM x |subsystem|
+    # Reduce the measurement results: From dimensions (NM x N) to (NM x |subsystem|)
     reduced_results = data.measurement_results[:, subsystem]
 
-    # Create and return the new MeasurementData object
+    # Create and return the new MeasurementData object with the same type parameter.
     return MeasurementData(reduced_results; measurement_setting=reduced_setting)
 end

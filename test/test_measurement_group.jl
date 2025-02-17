@@ -27,4 +27,15 @@ using Test
         @test group.measurements[1] == data1
     end
 
+     # Test 2: reduce_to_subsystem
+     @testset "With Measurement Setting" begin
+        group = MeasurementGroup(measurements)
+        reduced_group = reduce_to_subsystem(group,collect(1:2))
+
+        @test reduced_group.N == 2
+        @test reduced_group.NU == 2
+        @test reduced_group.NM == NM      
+        #@test reduced_group.measurements[1] == reduce_to_subsystem(data1,collect(1:2))
+    end
+
   end

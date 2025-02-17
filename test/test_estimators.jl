@@ -14,8 +14,8 @@ measurements1 = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU
 measurements2 = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
 for r in 1:NU
     measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
-    measurements1[r] = MeasurementData(ψ1,NM;mode="dense", measurement_setting=measurement_setting)
-    measurements2[r] = MeasurementData(ψ2,NM;mode="dense", measurement_setting=measurement_setting)
+    measurements1[r] = MeasurementData(ψ1,NM,measurement_setting;mode="dense")
+    measurements2[r] = MeasurementData(ψ2,NM,measurement_setting;mode="dense")
 end
 measurement_group1= MeasurementGroup(measurements1)
 measurement_group2= MeasurementGroup(measurements2)
@@ -34,7 +34,8 @@ exact_fidelity = abs(inner(ψ1,ψ2))^2
 end
 
 @testset "XEB Test" begin
-    measurements = MeasurementData(ψ1,NM;mode="dense")
+    measurement_setting = ComputationalBasisMeasurementSetting(N;site_indices=ξ)
+    measurements = MeasurementData(ψ1,NM,measurement_setting;mode="dense")
     XEB = get_XEB(ψ1,measurements)
     self_XEB = get_selfXEB(ψ1)
     @show XEB
