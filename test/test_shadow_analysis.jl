@@ -13,7 +13,7 @@ exact_value = inner(ψ1',observable,ψ1)
 measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
 for r in 1:NU
     measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
-    measurements[r] = MeasurementData(ψ1,NM;mode="dense", measurement_setting=measurement_setting)
+    measurements[r] = MeasurementData(ψ1,NM,measurement_setting;mode="dense")
 end
 measurement_group = MeasurementGroup(measurements)
 
