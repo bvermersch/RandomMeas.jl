@@ -90,11 +90,7 @@ Notes
 
 function MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{ComputationalBasisMeasurementSetting,LocalUnitaryMeasurementSetting})
     N = length(ψ)
-    if typeof(ψ) == MPS
-        ξ = siteinds(ψ)
-    else
-        ξ = firstsiteinds(ψ;plev=0)
-    end
+    ξ = get_siteinds(ψ)
     @assert ξ==setting.site_indices "ψ and setting must have the same site indices"
 
     if typeof(ψ) == MPS

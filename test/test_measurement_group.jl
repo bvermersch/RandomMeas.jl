@@ -28,7 +28,7 @@ using Test
     end
 
      # Test 2: Creating MeasurementGroup from an MPS dense mode
-     @testset "With Measurement Setting" begin
+     @testset "Creating MeasurementGroup from an MPS dense mode" begin
         NU = 10
         ψ = random_mps(ξ; linkdims=3);
         group = MeasurementGroup(ψ,NU,NM;mode="dense")
@@ -38,7 +38,7 @@ using Test
     end
 
     # Test 3: Creating MeasurementGroup from an MPS | MPS/MPO mode
-         @testset "With Measurement Setting" begin
+         @testset "Creating MeasurementGroup from an MPS | MPS/MPO mode" begin
             NU = 10
             ψ = random_mps(ξ; linkdims=3);
             group = MeasurementGroup(ψ,NU,NM;mode="MPS/MPO")
@@ -47,7 +47,30 @@ using Test
             @test group.NM == NM
     end
 
-     # Test 3: reduce_to_subsystem
+    # Test 4: Creating MeasurementGroup from an MPO | dense mode
+        @testset "Creating MeasurementGroup from an MPO | dense mode" begin
+            NU = 10
+            ψ = random_mps(ξ; linkdims=3);
+            ρ  = outer(ψ',ψ)
+            group = MeasurementGroup(ρ,NU,NM;mode="dense")
+            @test group.N == N
+            @test group.NU == NU
+            @test group.NM == NM
+    end
+
+       # Test5 : Creating MeasurementGroup from an MPO | MPS/MPO mode
+       @testset "Creating MeasurementGroup from an MPO | MPS/MPO mode" begin
+        NU = 10
+        ψ = random_mps(ξ; linkdims=3);
+        ρ  = outer(ψ',ψ)
+        group = MeasurementGroup(ρ,NU,NM;mode="MPS/MPO")
+        @test group.N == N
+        @test group.NU == NU
+        @test group.NM == NM
+end
+
+
+     # Test 6: reduce_to_subsystem
      @testset "With Measurement Setting" begin
         group = MeasurementGroup(measurements)
         reduced_group = reduce_to_subsystem(group,collect(1:2))

@@ -54,11 +54,12 @@ convert_to_dense_shadow,
 
 
 #QuantumInformation.jl
- get_trace_moment,
- get_trace,
- get_Born_MPS,
- get_selfXEB,
- partial_transpose,
+get_siteinds,
+get_trace_moment,
+get_trace,
+get_Born_MPS,
+get_selfXEB,
+partial_transpose,
 
 
 #Estimators.jl
@@ -66,12 +67,12 @@ convert_to_dense_shadow,
  get_fidelity,
  get_overlap,
  get_purity,
- get_XEB
+ get_XEB,
 
 
-# #Circuits.jl
-# apply_depo_channel,
-# random_circuit,
+#Circuits.jl
+apply_depo_channel,
+random_circuit
 # random_Pauli_layer,
 # random_magnetic_field_layer,
 

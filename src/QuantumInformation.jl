@@ -13,6 +13,20 @@ function flatten(O::Union{MPS,MPO,Vector{ITensor}})
 end
 
 """
+    get_siteinds(ψ::Union{MPS,MPO})
+
+TBW
+"""
+function get_siteinds(ψ::Union{MPS,MPO})
+    if typeof(ψ) == MPS
+        ξ = siteinds(ψ)
+    else
+        ξ = firstsiteinds(ψ;plev=0)
+        return ξ
+    end
+end
+
+"""
     get_trace(ρ::MPO,s::Vector{Index{Int64}})
 """
 function get_trace(ρ::MPO)

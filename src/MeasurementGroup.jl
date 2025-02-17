@@ -53,14 +53,22 @@ function MeasurementGroup(
     NU::Int,
     NM::Int;
     mode::String = "MPS/MPO",
+    progress_bar::Bool=false
 )::MeasurementGroup{LocalUnitaryMeasurementSetting}
-
+    ξ = get_siteinds(ψ)
     measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
-    ξ = siteinds(ψ)
+    ξ = get_siteinds(ψ)
     N = length(ξ)
-    for r in 1:NU
-        measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
-        measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode="dense")
+    if progress_bar==true
+        @showprogress dt=1 for r in 1:NU
+            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
+            measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode=mode)
+        end
+    else
+        for r in 1:NU
+            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
+            measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode=mode)
+        end
     end
     return MeasurementGroup(measurements)
 end
