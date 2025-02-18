@@ -1,19 +1,22 @@
 """
-    get_depolarization_vectors(u:: Vector{Vector{ITensor}},ξ::Vector{Index{Int64}})
+    get_depolarization_vectors(group::MeasurementGroup{ShallowUnitaryMeasurementSetting})
 
 TBW
 """
-function get_depolarization_vectors(u:: Vector{Vector{ITensor}},ξ::Vector{Index{Int64}})
-    N = length(ξ)
-    v = siteinds("Qubit", N; addtags="virtual")
-    s = siteinds("Qubit", N;addtags="input")
+function get_depolarization_vectors(group::MeasurementGroup{ShallowUnitaryMeasurementSetting})
+    N = group.N
+    ξ = group.measurements[1].measurement_setting.site_indices
 
-    Nu = length(u)
-    c = Vector{MPS}()
+    v = siteinds("Qubit", N; addtags="virtual")
+    #s = siteinds("Qubit", N;addtags="input")
+
+    NU = group.NU
+    depolarization_vectors = Vector{MPS}()
     ψ0 = MPS(ξ,["Dn" for n in 1:N]  ) 
 
-    @showprogress dt=1 for r in 1:Nu
-        ψu = apply(u[r],ψ0)
+    @showprogress dt=1 for r in 1:NU
+        local_unitary = group.measurements[r].measurement_setting.local_unitary
+        ψu = apply(local_unitary,ψ0)
         Pu = get_Born_MPS(ψu)
 
         O = MPO(ξ)
@@ -23,109 +26,16 @@ function get_depolarization_vectors(u:: Vector{Vector{ITensor}},ξ::Vector{Index
             O[i] = s0*s0'*onehot(v''[i]=>1)-s1*s1'*onehot(v''[i]=>1)
             O[i] += 2*s1*s1'*onehot(v''[i]=>2)
         end
-        Ou = apply(u[r],O;apply_dag=true)
+        Ou = apply(local_unitary,O;apply_dag=true)
         POu = get_Born_MPS(Ou)
 
         for i in 1:N
             Pu[i] *= POu[i]*δ(v[i],v[i]'')
         end
         orthogonalize!(Pu,1)
-        push!(c,Pu)
+        push!(depolarization_vectors,Pu)
     end
-    return c
-end
-
-"""
-    fit_depolarization_vector(M::Union{Vector{MPO},Vector{MPS}},χ::Int64,nsweeps::Int64)
-
-TBW
-"""
-function fit_depolarization_vector(M::Union{Vector{MPO},Vector{MPS}},χ::Int64,nsweeps::Int64)
-    Nu = length(M)
-    #ξ = firstsiteinds(M[1];plev=0)
-    N = length(M[1])
-    σ = truncate(M[1];maxdim=χ)
-    orthogonalize!(σ,1)
-
-    L = Array{ITensor}(undef,Nu,N)
-    R = Array{ITensor}(undef,Nu,N)
-    Ma = Array{ITensor}(undef,Nu,N)
-    for r in 1:Nu
-        Ma[r,:] = M[r].data
-    end
-    #init the right environments
-    for r in 1:Nu
-        X = 1.
-        for j in N:-1:2
-            X *= Ma[r,j]*dag(σ[j])
-            R[r,j] = X
-        end
-    end
-    #first overlap
-    @showprogress dt=1  for sw in 1:nsweeps
-        dist2 = real(inner(σ,σ))
-        for m in M
-            dist2 -= real(inner(m,σ))/Nu
-            dist2 -= real(inner(σ,m))/Nu
-        end
-        println("Cost function ",dist2)
-        #println("overlap ",real(sum([inner(m,σ) for m in M]))/Nu/norm(σ)^2)
-        #left part of the sweep
-        for i in 1:N
-            if i==1
-                σ[1] = sum(Ma[:,1].*R[:,2])/Nu
-            elseif i<N
-                σ[i] = sum(R[:,i+1].*Ma[:,i].*L[:,i-1])/Nu
-            else
-                σ[N] = sum(L[:,i-1].*Ma[:,i])/Nu
-            end
-            if i<N
-                bindex = commonind(σ[i],σ[i+1])
-                orthogonalize!(σ,i+1)
-                bindex2 = commonind(σ[i],σ[i+1])
-                replaceind!(σ[i],bindex2,bindex)
-                replaceind!(σ[i+1],bindex2,bindex)
-            end
-            #updating the left environments
-            if i==1
-                L[:,1] = [Ma[r,1]*dag(σ[1]) for r in 1:Nu]
-            elseif i<=N
-                L[:,i] = [L[r,i-1]*Ma[r,i]*dag(σ[i]) for r in 1:Nu]
-            end
-            #println("right norm ",norm(flatten(σ)-Mf))
-        end
-        #right part of the sweep
-        @showprogress dt=1 for i in N:-1:1
-            if i==1
-                σ[1] = sum(Ma[:,1].*R[:,2])/Nu
-            elseif i<N
-                σ[i] = sum(R[:,i+1].*Ma[:,i].*L[:,i-1])/Nu
-            else
-                σ[N] = sum(L[:,i-1].*Ma[:,i])/Nu
-            end
-            if i>1
-                bindex = commonind(σ[i],σ[i-1])
-                orthogonalize!(σ,i-1)
-                bindex2 = commonind(σ[i],σ[i-1])
-                replaceind!(σ[i],bindex2,bindex)
-                replaceind!(σ[i-1],bindex2,bindex)
-            end
-            #updating the right environments
-            if i==N
-                R[:,N] = [Ma[r,N]*dag(σ[N]) for r in 1:Nu]
-            elseif i>1
-                R[:,i] = [R[r,i+1]*Ma[r,i]*dag(σ[i]) for r in 1:Nu]
-            end
-            #println("left norm ",norm(flatten(σ)-Mf))
-        end
-    end
-    dist2 = real(inner(σ,σ))
-    @showprogress dt=1 for m in M
-           dist2 -= real(inner(σ,m))/Nu
-           dist2 -= real(inner(m,σ))/Nu
-    end
-    println("Cost function ",dist2)
-    return σ
+    return depolarization_vectors
 end
 
 #useful function for get_inverse_depolarization_vector

@@ -19,7 +19,7 @@ include("Estimators.jl")
 # include("Shadows.jl")
 include("QuantumInformation.jl")
 include("Circuits.jl")
-# include("ShallowShadows.jl")
+include("ShallowShadows.jl")
 
 include("exports.jl")
 

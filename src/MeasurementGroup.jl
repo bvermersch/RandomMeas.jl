@@ -74,6 +74,44 @@ function MeasurementGroup(
 end
 
 """
+    MeasurementGroup(
+    ψ::Union{MPO, MPS},
+    NU::Int,
+    NM::Int,
+    depth::Int;
+    mode::String = "MPS/MPO",
+    progress_bar::Bool=false
+)::MeasurementGroup{ShallowlUnitaryMeasurementSetting}
+
+Implements a MeasurementGroup from ψ based on generating NU ShallowMeasurementSetting objects
+"""
+function MeasurementGroup(
+    ψ::Union{MPO, MPS},
+    NU::Int,
+    NM::Int,
+    depth::Int;
+    mode::String = "MPS/MPO",
+    progress_bar::Bool=false
+)::MeasurementGroup{ShallowUnitaryMeasurementSetting}
+    ξ = get_siteinds(ψ)
+    measurements = Vector{MeasurementData{ShallowUnitaryMeasurementSetting}}(undef,NU)
+    ξ = get_siteinds(ψ)
+    N = length(ξ)
+    if progress_bar==true
+        @showprogress dt=1 for r in 1:NU
+            measurement_setting = ShallowUnitaryMeasurementSetting(N,depth; site_indices=ξ)
+            measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode=mode)
+        end
+    else
+        for r in 1:NU
+            measurement_setting = ShallowUnitaryMeasurementSetting(N,depth; site_indices=ξ)
+            measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode=mode)
+        end
+    end
+    return MeasurementGroup(measurements)
+end
+
+"""
     reduce_to_subsystem(
     group::MeasurementGroup{T},
     subsystem::Vector{Int}

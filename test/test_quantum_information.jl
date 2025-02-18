@@ -46,3 +46,16 @@ end
     p3 = get_trace_moment(ρT,3)
     @show p3
 end
+
+
+@testset "MPS compression" begin
+    N_ = 10
+    ξ_ = siteinds("Qubit", N)
+    NU = 10
+    ψ_list = [random_mps(ComplexF64,ξ;linkdims=3) for r in 1:NU]
+    χ = 5
+    nsweeps = 6
+    ψ_sum_approx = get_average_mps(ψ_list,χ,nsweeps)
+    ψ_sum = sum(ψ_list)/NU
+    @show norm(ψ_sum_approx-ψ_sum)
+end

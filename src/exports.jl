@@ -63,6 +63,7 @@ get_Born_MPS,
 get_selfXEB,
 partial_transpose,
 flatten,
+get_average_mps,
 
 
 #Estimators.jl
@@ -75,12 +76,12 @@ flatten,
 
 #Circuits.jl
 apply_depo_channel,
-random_circuit
+random_circuit,
 # random_Pauli_layer,
 # random_magnetic_field_layer,
 
-# #ShallowShadows.jl
-# get_depolarization_vectors,
-# fit_depolarization_vector,
+#ShallowShadows.jl,
+get_depolarization_vectors
+#fit_depolarization_vector
 # get_inverse_depolarization_vector,
 # apply_inverse_channel
