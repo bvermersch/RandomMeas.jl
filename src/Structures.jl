@@ -90,6 +90,41 @@ struct ComputationalBasisMeasurementSetting <: LocalMeasurementSetting
     end
 end
 
+# ---------------------------------------------------------------------------
+# Shallow Unitary Measurement Setting
+# ---------------------------------------------------------------------------
+"""
+    ShallowUnitaryMeasurementSetting
+
+A struct representing measurement settings which is, for each qubit, specified through a single qubit rotation, rotating from the computational basis into the measurement basis.
+
+# Fields
+- `N::Int`: Number of sites (qubits).
+- 'K::Int`: Number of gates that creates the shallow_unitary
+- `localunitary::Vector{ITensor}`: A vector of Ngates representing the shallow unitary
+- `site_indices::Vector{Index{Int64}}`: A vector of site indices of length N.
+
+# Constructor
+Creates a `ShallowUnitaryMeasurementSetting` object after validating that:
+- The length of `local_unitary` equals `K`
+- The length of `site_indices` equals `N`.
+"""
+struct ShallowUnitaryMeasurementSetting <: AbstractMeasurementSetting
+    N::Int                              # Number of sites
+    K::Int                               # Number of gates
+    local_unitary::Vector{ITensor}      # Vector of K 2x2 ITensors (one and two qubit gates)
+    site_indices::Vector{Index{Int64}}  # Vector of site indices (length N)
+
+    function ShallowUnitaryMeasurementSetting(
+        N::Int, K::Int,local_unitary::Vector{ITensor}, site_indices::Vector{Index{Int64}}
+    )
+        @assert length(local_unitary) == K "Expected $K ITensors in local_unitary, got $(length(shallow_unitary))."
+        @assert length(site_indices) == N "Expected $N site_indices, got $(length(site_indices))."
+        return new(N, K, local_unitary, site_indices)
+    end
+end
+
+
 
 # ---------------------------------------------------------------------------
 # Measurement Data
@@ -306,6 +341,39 @@ struct DenseShadow <: AbstractShadow
         @assert length(primed) == N "Expected N primed indices, got $(length(primed))."
         @assert Set(unprimed) == Set(site_indices) "Unprimed indices do not match site_indices."
         @assert Set(primed) == Set(map(prime, site_indices)) "Primed indices do not match map(prime, site_indices)."
+        new(shadow_data, N, site_indices)
+    end
+end
+
+
+# ---------------------------------------------------------------------------
+# Shallow Classical Shadow
+# ---------------------------------------------------------------------------
+"""
+    ShallowShadow
+
+A struct representing a shallow classical shadow, stored as a MPO ITensor object.
+
+# Fields
+- `shadow_data::MPOr`: An MPO representing the shallow shadow.
+- `N::Int`: Number of sites (qubits).
+- `site_indices::Vector{Index{Int64}}`: A vector of site indices (length N).
+
+# Constructor
+`ShallowShadow(shadow_data::MPO, N::Int, site_indices::Vector{Index{Int64}})`
+validates that:
+- `site_indices` has length N.
+- `shadow_data` has exactly N Tensors, and the site indices match with site_indices
+"""
+struct ShallowShadow <: AbstractShadow
+    shadow_data::MPO
+    N::Int
+    site_indices::Vector{Index{Int64}}
+
+    function ShallowShadow(shadow_data::MPO, N::Int, site_indices::Vector{Index{Int64}})
+        @assert length(site_indices) == N "Expected site_indices length to be N ($N), got $(length(site_indices))."
+        #inds_all = inds(shadow_data)
+        @assert site_indices == get_siteinds(shadow_data) "sites indices should match"
         new(shadow_data, N, site_indices)
     end
 end

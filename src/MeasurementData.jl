@@ -85,7 +85,7 @@ A `MeasurementData` object
 function MeasurementData(
     ψ::Union{MPO, MPS},
     NM::Int,
-    measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting};
+    measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting};
     mode::String = "MPS/MPO",
 )
     if mode=="dense"
@@ -98,6 +98,7 @@ function MeasurementData(
         u = measurement_setting.local_unitary
         if isa(ψ,MPS)
             ψu = apply(reverse(u),ψ) #using reverse allows us to maintain orthocenter(ψ)=1 ;)
+            orthogonalize!(ψu,1)
             for m in 1:NM
                 data[m, :] = ITensorMPS.sample(ψu)
             end

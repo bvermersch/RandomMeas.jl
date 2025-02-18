@@ -72,6 +72,38 @@ function LocalUnitaryMeasurementSetting(
     return LocalUnitaryMeasurementSetting(N, local_unitary, site_indices)
 end
 
+"""
+    ShallowUnitaryMeasurementSetting(
+    N::Int,depth::Int;
+    site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing,
+    
+)
+
+Create a `ShallowUnitaryMeasurementSetting` object by random sampling random circuit
+
+# Arguments:
+- `N::Int`: Number of sites.
+- `depth:Int`: depth of the random circuit
+- `site_indices::Union{Vector{Index}, Nothing}`: Optional vector of site indices. If not provided, it will be generated.
+
+# Returns:
+- A ShallowUnitaryMeasurementSetting object.
+"""
+function ShallowUnitaryMeasurementSetting(
+    N::Int,depth::Int;
+    site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing,
+)
+    # Generate site indices if not provided
+    site_indices = site_indices === nothing ? siteinds("Qubit", N) : site_indices
+
+    # Generate random_circuit
+    local_unitary = random_circuit(site_indices,depth)
+    K = length(local_unitary)
+
+    # Call the main constructor
+    return ShallowUnitaryMeasurementSetting(N, K, local_unitary, site_indices)
+end
+
 # Helper Function to Generate Single Qubit unitary
 """
     get_rotation(ξ::Index{Int64}, ensemble::String = "Haar")

@@ -7,19 +7,21 @@ export
 
 #Structures
 MeasurementSetting,
+LocalMeasurementSetting,
+LocalUnitaryMeasurementSetting,
+ComputationalBasisMeasurementSetting,
+ShallowUnitaryMeasurementSetting,
 MeasurementProbability,
 MeasurementData,
 MeasurementGroup,
 AbstractShadow,
 FactorizedShadow,
 DenseShadow,
+ShallowShadow,
 
 
 #sample_local_random_unitary,
 #MeasurementSetting
-LocalMeasurementSetting,
-LocalUnitaryMeasurementSetting,
-ComputationalBasisMeasurementSetting,
 get_rotation,
 reduce_to_subsystem,
 
