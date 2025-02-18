@@ -2,8 +2,8 @@ using RandomMeas
 using Test
 
 # Test parameters
-const N = 4  # Number of qubits/sites
-const NM = 5  # Number of projective measurements
+N = 4  # Number of qubits/sites
+NM = 5  # Number of projective measurements
 
 # Generate measurement settings
 measurement_setting = LocalUnitaryMeasurementSetting(N, ensemble="Haar")

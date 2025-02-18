@@ -60,6 +60,7 @@ get_trace,
 get_Born_MPS,
 get_selfXEB,
 partial_transpose,
+flatten,
 
 
 #Estimators.jl
