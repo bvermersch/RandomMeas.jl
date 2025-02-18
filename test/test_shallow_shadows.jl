@@ -13,6 +13,8 @@ using Test
     # Generate random local unitary measurement setting
     measurement_setting = ShallowUnitaryMeasurementSetting(N,depth;site_indices=site_indices)
     measurement_data = MeasurementData(ψ,NM,measurement_setting;mode="MPS/MPO")
+    measurement_data = MeasurementData(ψ,NM,measurement_setting;mode="dense")
+
     # Create MeasurementData
     # measurement_data = MeasurementData(measurement_results; measurement_setting=measurement_setting)
     # measurement_probability = MeasurementProbability(measurement_data)

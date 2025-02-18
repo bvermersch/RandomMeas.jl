@@ -88,7 +88,7 @@ Notes
 	•	If ψ is an MPO, it assumes the state is mixed and applies unitaries with conjugation.
 """
 
-function MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{ComputationalBasisMeasurementSetting,LocalUnitaryMeasurementSetting})
+function MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{ShallowUnitaryMeasurementSetting,ComputationalBasisMeasurementSetting,LocalUnitaryMeasurementSetting})
     N = length(ψ)
     ξ = get_siteinds(ψ)
     @assert ξ==setting.site_indices "ψ and setting must have the same site indices"
