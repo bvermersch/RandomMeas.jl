@@ -1,31 +1,43 @@
 """
-Create a `ComputationalBasisMeasurementSetting` for N sites.
+    ComputationalBasisMeasurementSetting(N; site_indices=nothing)
+
+Create a `ComputationalBasisMeasurementSetting` for `N` sites. This setting corresponds to measurement in the computational basis.
 
 # Arguments:
-- `N::Int`: Number of sites.
-- `site_indices::Union{Vector{Index{Int64}}, Nothing}`: Optional vector of site indices. If not provided, it will be generated.
+- `N::Int`: Number of sites (qubits).
+- `site_indices::Union{Vector{Index{Int64}}, Nothing}` (optional): Site indices. If `nothing`, they are automatically generated.
 
 # Returns:
 - A `ComputationalBasisMeasurementSetting` object.
+
+# Example:
+```julia
+setting = ComputationalBasisMeasurementSetting(4)
+```
 """
 function ComputationalBasisMeasurementSetting(N::Int; site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing)
-    if site_indices === nothing
-        site_indices = siteinds("Qubit", N)
-    end
+    site_indices = site_indices === nothing ? siteinds("Qubit", N) : site_indices
     return ComputationalBasisMeasurementSetting(N, site_indices)
 end
 
 
-
 """
-Create a `LocalUnitaryMeasurementSetting` object from an N x 2 x 2 array.
+    LocalUnitaryMeasurementSetting(local_unitary_array; site_indices=nothing)
+
+Create a `LocalUnitaryMeasurementSetting` object from an `N × 2 × 2` array of unitary matrices.
 
 # Arguments:
-- `local_unitary_array::Array{ComplexF64, 3}`:  N x 2 x 2 array of unitary.
-- `site_indices::Union{Vector{Index{Int64}}, Nothing}`: Optional vector of site indices. If not provided, it will be generated.
+- `local_unitary_array::Array{ComplexF64, 3}`: An `N × 2 × 2` array of unitary matrices.
+- `site_indices::Union{Vector{Index{Int64}}, Nothing}` (optional): Site indices. If `nothing`, they are automatically generated.
 
 # Returns:
 - A `LocalUnitaryMeasurementSetting` object.
+
+# Example:
+```julia
+unitary_array = rand(ComplexF64, 4, 2, 2)
+setting = LocalUnitaryMeasurementSetting(unitary_array)
+```
 """
 function LocalUnitaryMeasurementSetting(local_unitary_array::Array{ComplexF64, 3}; site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing)
     # Extract dimensions
@@ -36,25 +48,29 @@ function LocalUnitaryMeasurementSetting(local_unitary_array::Array{ComplexF64, 3
     site_indices = site_indices === nothing ? siteinds("Qubit", N) : site_indices
 
     # Convert the array into ITensors
-    local_unitary = Vector{ITensor}(undef, N)
-    for n in 1:N
-            local_unitary[n] = ITensor(local_unitary_array[n, :, :], site_indices[n]', site_indices[n])
-    end
+    local_unitary = [ITensor(local_unitary_array[n, :, :], site_indices[n]', site_indices[n]) for n in 1:N]
 
     # Call the main constructor
     return LocalUnitaryMeasurementSetting(N, local_unitary, site_indices)
 end
 
 """
-Create a `LocalUnitaryMeasurementSetting` object by random sampling local unitary
+    LocalUnitaryMeasurementSetting(N; site_indices=nothing, ensemble="Haar")
+
+Create a `LocalUnitaryMeasurementSetting` object by randomly sampling local unitary operators.
 
 # Arguments:
-- `N::Int`: Number of sites.
-- `site_indices::Union{Vector{Index}, Nothing}`: Optional vector of site indices. If not provided, it will be generated.
-- `ensemble::String`: Type of random unitary to generate ("Haar", "Pauli", or "Identity").
+- `N::Int`: Number of sites (qubits).
+- `site_indices::Union{Vector{Index}, Nothing}` (optional): Site indices. If `nothing`, they are automatically generated.
+- `ensemble::String`: Type of random unitary (`"Haar"`, `"Pauli"`, `"Identity"`).
 
 # Returns:
-- A LocalUnitaryMeasurementSetting object.
+- A `LocalUnitaryMeasurementSetting` object.
+
+# Example:
+```julia
+setting = LocalUnitaryMeasurementSetting(4, ensemble="Haar")
+```
 """
 function LocalUnitaryMeasurementSetting(
     N::Int;
@@ -66,28 +82,28 @@ function LocalUnitaryMeasurementSetting(
 
     # Generate local unitary
     local_unitary = [get_rotation(site_indices[j], ensemble) for j in 1:N]
-    #print(local_unitary)
 
     # Call the main constructor
     return LocalUnitaryMeasurementSetting(N, local_unitary, site_indices)
 end
 
 """
-    ShallowUnitaryMeasurementSetting(
-    N::Int,depth::Int;
-    site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing,
-    
-)
+    ShallowUnitaryMeasurementSetting(N, depth; site_indices=nothing)
 
-Create a `ShallowUnitaryMeasurementSetting` object by random sampling random circuit
+Create a `ShallowUnitaryMeasurementSetting` object by generating a random quantum circuit.
 
 # Arguments:
-- `N::Int`: Number of sites.
-- `depth:Int`: depth of the random circuit
-- `site_indices::Union{Vector{Index}, Nothing}`: Optional vector of site indices. If not provided, it will be generated.
+- `N::Int`: Number of sites (qubits).
+- `depth::Int`: Depth of the random circuit.
+- `site_indices::Union{Vector{Index{Int64}}, Nothing}` (optional): Site indices. If `nothing`, they are automatically generated.
 
 # Returns:
-- A ShallowUnitaryMeasurementSetting object.
+- A `ShallowUnitaryMeasurementSetting` object.
+
+# Example:
+```julia
+setting = ShallowUnitaryMeasurementSetting(4, 3)
+```
 """
 function ShallowUnitaryMeasurementSetting(
     N::Int,depth::Int;
@@ -104,18 +120,22 @@ function ShallowUnitaryMeasurementSetting(
     return ShallowUnitaryMeasurementSetting(N, K, local_unitary, site_indices)
 end
 
-# Helper Function to Generate Single Qubit unitary
 """
-    get_rotation(ξ::Index{Int64}, ensemble::String = "Haar")
+    get_rotation(site_index, ensemble="Haar")
 
-Generate a single qubit unitary with indices (ξ', ξ) sampled from the specified ensemble.
+Generate a single-qubit unitary sampled from a specified ensemble.
 
 # Arguments:
-- `ξ::Index{Int64}`: Site index.
-- `ensemble::String`: Type of unitary ensemble ("Haar", "Pauli", "CompBasis").
+- `site_index::Index{Int64}`: Site index.
+- `ensemble::String`: Type of unitary ensemble (`"Haar"`, `"Pauli"`, `"Identity"`).
 
 # Returns:
-- An ITensor representing the unitary.
+- An `ITensor` representing the unitary transformation.
+
+# Example:
+```julia
+U = get_rotation(site_index, "Pauli")
+```
 """
 function get_rotation(site_index::Index{Int64}, ensemble::String = "Haar")
     r_matrix = zeros(ComplexF64, (2, 2))
@@ -192,23 +212,28 @@ end
 
 
 """
-    reduce_to_subsystem(settings::LocalUnitaryMeasurementSetting, subsystem::Vector{Int})
+    reduce_to_subsystem(settings, subsystem)
 
-Reduce a `LocalUnitaryMeasurementSetting` object to a specified subsystem.
+Reduce a `LocalMeasurementSetting` object to a specified subsystem.
 
-# Arguments
-- `settings::LocalUnitaryMeasurementSetting`: The original measurement settings object.
+# Arguments:
+- `settings::LocalMeasurementSetting`: The original measurement settings object.
 - `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
 
-# Returns
-A new `LocalUnitaryMeasurementSetting` object corresponding to the specified subsystem.
+# Returns:
+- A new `LocalMeasurementSetting` object corresponding to the specified subsystem.
+
+# Example:
+```julia
+reduced_setting = reduce_to_subsystem(full_setting, [1, 3])
+```
 """
 function reduce_to_subsystem(
     settings::LocalMeasurementSetting,
     subsystem::Vector{Int}
 )::LocalMeasurementSetting
     # Validate the subsystem
-    @assert all(x -> x >= 1 && x <= settings.N, subsystem) "Subsystem indices must be between 1 and N."
+    @assert all(1 .≤ subsystem .≤ settings.N) "Subsystem indices must be between 1 and N."
     @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."
 
     # Extract the reduced local unitary and site indices

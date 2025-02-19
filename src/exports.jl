@@ -1,9 +1,15 @@
+"""
+    Exports.jl
+
+This file re-exports the public symbols of the RandomMeas package.
+It uses Reexport.jl to expose selected types and functions from both internal modules
+and external dependencies, forming the public API of RandomMeas.
+"""
+
 using Reexport
 @reexport using ITensors,ITensorMPS,ProgressMeter,OptimKit
 
 export
-
-#TODO: Update the export list
 
 #Structures
 MeasurementSetting,
@@ -11,29 +17,28 @@ LocalMeasurementSetting,
 LocalUnitaryMeasurementSetting,
 ComputationalBasisMeasurementSetting,
 ShallowUnitaryMeasurementSetting,
+
 MeasurementProbability,
 MeasurementData,
 MeasurementGroup,
+
 AbstractShadow,
 FactorizedShadow,
 DenseShadow,
 ShallowShadow,
 
-
-#sample_local_random_unitary,
-#MeasurementSetting
+#Methods for MeasurementSetting
 get_rotation,
 reduce_to_subsystem,
 
-#MeasurementProbability
+#Methods for MeasurementProbability
 
 
-#MeasurementData
+#Methods for MeasurementData
 
 #import_measurement_data,
 #export_measurement_data,
 
-#MeasurementGroup
 #MeasurementGroup
 
 #AbstractShadows

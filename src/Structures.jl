@@ -20,37 +20,40 @@ abstract type LocalMeasurementSetting <: AbstractMeasurementSetting end
 # Local Unitary Measurement Setting
 # ---------------------------------------------------------------------------
 """
-    LocalUnitaryMeasurementSetting
+    LocalUnitaryMeasurementSetting(N, local_unitary, site_indices)
 
-A struct representing measurement settings which is, for each qubit, specified through a single qubit rotation, rotating from the computational basis into the measurement basis.
+A measurement setting where each qubit is specified by a single-qubit rotation.
+Rotates from the computational basis into the measurement basis.
 
 # Fields
 - `N::Int`: Number of sites (qubits).
-- `local_unitary::Vector{ITensor}`: A vector of N ITensors representing the local unitary basis rotations.
-- `site_indices::Vector{Index{Int64}}`: A vector of site indices of length N.
+- `local_unitary::Vector{ITensor}`: A vector of `N` ITensors representing the local unitary basis rotations.
+- `site_indices::Vector{Index{Int64}}`: A vector of site indices of length `N`.
 
-# Constructor
-Creates a `LocalUnitaryMeasurementSetting` object after validating that:
-- The length of `local_unitary` and `site_indices` equals `N`.
-- Each ITensor in `local_unitary` has exactly two indices: one unprimed and one primed,
-  and these indices contain the corresponding `site_indices[i]` and `prime(site_indices[i])`.
+# Constraints
+- `N == length(local_unitary) == length(site_indices)`.
+- Each ITensor in `local_unitary` has exactly **two indices**:
+  - One unprimed (`site_indices[i]`)
+  - One primed (`prime(site_indices[i])`).
 """
 struct LocalUnitaryMeasurementSetting <: LocalMeasurementSetting
-    N::Int                              # Number of sites
-    local_unitary::Vector{ITensor}      # Vector of N 2x2 ITensors (local unitaries)
-    site_indices::Vector{Index{Int64}}  # Vector of site indices (length N)
+    N::Int
+    local_unitary::Vector{ITensor}
+    site_indices::Vector{Index{Int64}}
 
     function LocalUnitaryMeasurementSetting(
         N::Int, local_unitary::Vector{ITensor}, site_indices::Vector{Index{Int64}}
     )
         @assert length(local_unitary) == N "Expected $N ITensors in local_unitary, got $(length(local_unitary))."
         @assert length(site_indices) == N "Expected $N site_indices, got $(length(site_indices))."
-        for i in 1:N
-            inds_i = inds(local_unitary[i])
-            @assert length(inds_i) == 2 "ITensor for site $i must have exactly two indices, got $(length(inds_i))."
-            @assert site_indices[i] in inds_i "ITensor for site $i must contain the unprimed site index."
-            @assert prime(site_indices[i]) in inds_i "ITensor for site $i must contain the primed site index."
+
+        for (i, U) in enumerate(local_unitary)
+            inds_i = inds(U)
+            @assert length(inds_i) == 2 "ITensor at site $i must have exactly two indices, got $(length(inds_i))."
+            @assert site_indices[i] in inds_i "ITensor at site $i must contain the unprimed site index."
+            @assert prime(site_indices[i]) in inds_i "ITensor at site $i must contain the primed site index."
         end
+
         return new(N, local_unitary, site_indices)
     end
 end
@@ -70,9 +73,8 @@ This setting uses the computational basis, so that each local unitary is by cons
 - `local_unitary::Vector{ITensor}`: A vector of N identity ITensors.
 - `site_indices::Vector{Index{Int64}}`: A vector of site indices (length N).
 
-# Constructor
-Creates a `ComputationalBasisMeasurementSetting` object by constructing a vector of identity ITensors
-using the `delta` function for each site.
+# Constraints
+- `N == length(site_indices)`.
 """
 struct ComputationalBasisMeasurementSetting <: LocalMeasurementSetting
     N::Int                              # Number of sites
@@ -82,10 +84,8 @@ struct ComputationalBasisMeasurementSetting <: LocalMeasurementSetting
     function ComputationalBasisMeasurementSetting(N::Int, site_indices::Vector{Index{Int64}})
         @assert length(site_indices) == N "Expected $N site_indices, got $(length(site_indices))."
         # Create a vector of identity ITensors for each site.
-        local_unitary = Vector{ITensor}(undef, N)
-        for i in 1:N
-            local_unitary[i] = delta(site_indices[i], prime(site_indices[i]))
-        end
+        local_unitary = [delta(site_indices[i], prime(site_indices[i])) for i in 1:N]
+
         new(N, local_unitary, site_indices)
     end
 end
