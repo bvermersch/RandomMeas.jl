@@ -36,16 +36,16 @@ function MeasurementData(
 end
 
 """
-    MeasurementData(measurement_probability::MeasurementProbability{T},NM::Int) where T <: Union{Nothing, AbstractMeasurementSetting}
+    MeasurementData(measurement_probability::MeasurementProbability{T}, NM::Int) where T <: Union{Nothing, AbstractMeasurementSetting}
 
-Returns a Measurement Data Object by sampling NM projective measurements from the array measurement_probability
+Returns a `MeasurementData` object by sampling `NM` projective measurements based on the provided measurement probability.
 
 # Arguments
-- `measurement_probability::MeasurementProbability`.
-- `NM::Int' number of projective measurements
+- `measurement_probability::MeasurementProbability`: A container with the measurement probability (an ITensor) and associated settings.
+- `NM::Int`: The number of projective measurements to sample.
 
 # Returns
-A `MeasurementData` object with inferred dimensions and validated setting.
+A `MeasurementData` object with dimensions inferred from the measurement probability.
 """
 function MeasurementData(probability::MeasurementProbability{T},NM::Int) where T <: Union{Nothing, AbstractMeasurementSetting}
     N = probability.N
@@ -62,25 +62,20 @@ function MeasurementData(probability::MeasurementProbability{T},NM::Int) where T
 end
 
 """
-    MeasurementData(
-    ψ::Union{MPO, MPS},
-    NM::Int;
-    mode::String = "MPS/MPO",
-    measurement_settings::Union{LocalUnitaryMeasurementSettings, Nothing} = nothing,
-)::MeasurementData{LocalUnitaryMeasurementSettings}
-Returns a Measurement Data Object by sampling NM projective measurements from a quantum state
+    MeasurementData(ψ::Union{MPO, MPS}, NM::Int; mode::String = "MPS/MPO", measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting} = nothing)
+
+Returns a `MeasurementData` object by sampling `NM` projective measurements from the quantum state `ψ`.
 
 # Arguments
-- `state::Union{MPO, MPS}`: The quantum state to be measured, represented as a matrix product operator (MPO) or matrix product state (MPS).
-- `NM::Int64`: The number of measurement shots to simulate for each unitary setting.
-- `mode::String` (optional): Specifies the simulation method.
-  - `"dense"`: Simulates measurements using the dense representation of the state.
-  - `"MPS/MPO"` (default): Simulates measurements using tensor network (TN) methods for memory efficiency.
-  - Any other value will result in an error.
-- `measurement_settings::Union{LocalUnitaryMeasurementSettings, Nothing}` (optional): Specifies the local unitary settings for the measurements.
-  - If `nothing`, defaults to computational basis measurements.
+- `ψ::Union{MPO, MPS}`: The quantum state represented as a Matrix Product Operator (MPO) or Matrix Product State (MPS).
+- `NM::Int`: The number of measurement shots to simulate for each setting.
+- `mode::String` (optional): Specifies the simulation method. Options:
+   - `"dense"`: Uses the dense representation.
+   - `"MPS/MPO"` (default): Uses tensor network methods for memory efficiency.
+- `measurement_setting` (optional): A measurement setting object (if not provided, defaults to computational basis measurements).
+
 # Returns
-A `MeasurementData` object
+A `MeasurementData` object with the corresponding measurement results and setting.
 """
 function MeasurementData(
     ψ::Union{MPO, MPS},
@@ -91,7 +86,7 @@ function MeasurementData(
     if mode=="dense"
         measurement_probability = MeasurementProbability(ψ,measurement_setting)
         return MeasurementData(measurement_probability,NM)
-    else
+    elseif mode == "MPS/MPO"
         N = measurement_setting.N
         data = zeros(Int,NM,N)
         ξ = measurement_setting.site_indices
@@ -116,6 +111,8 @@ function MeasurementData(
             end
         end
         return MeasurementData(N,NM,data,measurement_setting)
+    else
+        throw(ArgumentError("Invalid simulation mode: \"$mode\". Expected either \"dense\" or \"MPS/MPO\"."))
     end
 end
 
@@ -259,23 +256,31 @@ end
 
 
 """
-    reduce_to_subsystem(data::MeasurementData{LocalUnitaryMeasurementSetting}, subsystem::Vector{Int})
+    reduce_to_subsystem(data::MeasurementData{T}, subsystem::Vector{Int}) where T <: Union{Nothing, LocalMeasurementSetting}
 
-Reduce a `MeasurementData` object (with `LocalUnitaryMeasurementSetting`) to a specified subsystem.
+Reduce a `MeasurementData` object to a specified subsystem, preserving the measurement setting type if available.
 
 # Arguments
-- `data::MeasurementData{LocalUnitaryMeasurementSetting}`: The original measurement data object.
-- `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
+- `data::MeasurementData{T}`: The original measurement data object, where `T` is either `nothing` or a subtype of `LocalMeasurementSetting`.
+- `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain. Each index must be between 1 and `data.N`.
 
 # Returns
-A new `MeasurementData` object corresponding to the specified subsystem.
+A new `MeasurementData{T}` object with:
+- The measurement results reduced from dimensions `(NM, N)` to `(NM, |subsystem|)`.
+- The measurement setting reduced accordingly (if one is provided), or remaining as `nothing`.
+
+# Example
+```julia
+# Suppose `data` is a MeasurementData object with N = 4.
+# To retain only sites 1 and 3:
+reduced_data = reduce_to_subsystem(data, [1, 3])
 """
 function reduce_to_subsystem(data::MeasurementData{T}, subsystem::Vector{Int})::MeasurementData{T} where T <: Union{Nothing, LocalMeasurementSetting}
     # Validate that each index in the subsystem is in the valid range.
     @assert all(x -> x >= 1 && x <= data.N, subsystem) "Subsystem indices must be between 1 and N."
     @assert length(unique(subsystem)) == length(subsystem) "Subsystem indices must be unique."
 
-    # Reduce the measurement setting only if it is provided.
+    # Reduce the measurement setting if it is provided.
     reduced_setting = data.measurement_setting === nothing ? nothing :
         reduce_to_subsystem(data.measurement_setting, subsystem)
 
