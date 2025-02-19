@@ -55,6 +55,8 @@ function get_expect_shadow(O::MPO, shadow::AbstractShadow)
         return get_expect_shadow(O, shadow::DenseShadow)
     elseif shadow isa FactorizedShadow
         return get_expect_shadow(O, shadow::FactorizedShadow)
+    elseif shadow isa ShallowShadow
+        return get_expect_shadow(O, shadow::ShallowShadow)
     else
         throw(ArgumentError("Unsupported shadow type: $(typeof(shadow))"))
     end

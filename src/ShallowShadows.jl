@@ -63,6 +63,18 @@ function get_depolarization_map(depolarization_mps::MPS,s::Vector{Index{Int64}},
     return get_depolarization_map(depolarization_mps.data,siteinds(depolarization_mps),s,ξ)
 end
 
+"""
+    apply_map(map::MPO,state::MPO,s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+
+Apply a map map((s,s')→(ξ,ξ')) on a state of indices (ξ,ξ')
+"""
+function apply_map(map::Vector{ITensor},state::MPO,s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+    N = length(map)
+    state_s = [state[i]*δ(s[i],ξ[i])*δ(s'[i],ξ'[i]) for i in 1:N] #relabel indices as input indices
+    return MPO([map[i]*state_s[i] for i in 1:N])
+
+end
+
 #Computes the square norm 2 between the data of the two MPS/MPO (similar to norm(A-B) in ITensor)
 function norm2_vec(A::Vector{ITensor},B::Vector{ITensor})
     term = inner_vec(A,A)
@@ -88,7 +100,7 @@ function loss_inverse_depolarization_map(inverse_depolarization_mps_data::Vector
     inverse_depolarization_map = get_depolarization_map(inverse_depolarization_mps_data,v,ξ,η)
     combined_map = [depolarization_map[i]*inverse_depolarization_map[i] for i in 1:N]
     identity_map = [δ(s[i],η[i])*δ(s'[i],η'[i]) for i in 1:N]
-    return norm2_vec(combined_map,identity_map)
+    return norm2_vec(combined_map,identity_map)/4^N #we normalize with the norm of the identity_map
 end
 
 # Constructor for ShallowSShadow from raw measurement results and unitaries
@@ -106,21 +118,22 @@ Construct a `ShallowSShadow` object from raw measurement results and unitary tra
 A `ShallowShadow` object.
 """
 function ShallowShadow(measurement_results::Vector{Int}, local_unitary::Vector{ITensor}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
-    # Number of qubits/sites
+    N = length(measurement_results) # Number of qubits/sites
+    K = length(local_unitary)
 
-    N = length(local_unitary)
-
-    local_unitary_dag = reverse([swapinds(dag(local_unitary[i]),ξ[i],ξ[i]') for i in 1:N])
+    local_unitary_dag = reverse([swapprime(dag(local_unitary[k]),0,1) for k in 1:K])
 
     # Construct the factorized shadow for each qubit/site
     shadow_data = Vector{ITensor}(undef, N)
 
     states = [measurement_results[i]==2 ? "Dn" : "Up" for i in 1:N]
     ψ0  = MPS(ComplexF64,ξ,states);
+
     ψ = apply(local_unitary_dag,ψ0)
-    replace_siteinds!(ψ,s)
+    #ψ1 = apply(local_unitary,ψ)
+    #replace_siteinds!(ψ,s)
     ρ = outer(ψ',ψ)
-    shadow_data = MPO([inverse_shallow_map[i]*ρ[i] for i in 1:N])
+    shadow_data = apply_map(inverse_shallow_map,ρ,s,ξ)
     return ShallowShadow(shadow_data, N, ξ)
 end
 
@@ -149,3 +162,48 @@ function get_shallow_shadows(measurement_data::MeasurementData{ShallowUnitaryMea
 
     return [ShallowShadow(measurement_results[m,:], local_unitary, inverse_shallow_map,s,ξ) for m in 1:NM]
 end
+
+"""
+    get_expect_shadow(O::MPO, shadow::ShallowShadow)
+
+Compute the expectation value of an MPO operator `O` using a shallow shadow.
+
+# Arguments:
+- `O::MPO`: The MPO operator for which the expectation value is computed.
+- `shadow::ShallowShadow`: A factorized shadow object.
+
+# Returns:
+The expectation value as a `ComplexF64` (or `Float64` if purely real).
+"""
+function get_expect_shadow(O::MPO, shadow::ShallowShadow)
+    N = shadow.N
+    ξ = shadow.site_indices
+    X = 1
+    for i in 1:N
+        s = ξ[i]
+        X *= shadow.shadow_data[i]'
+        X *= O[i] * δ(s, s'')
+    end
+    return X[]  # Return the full complex value
+end
+
+"""
+    get_expect_shadow(O::MPO, measurement_data::MeasurementData{ShallowUnitaryMeasurementSetting}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+
+Compute the expectation value of an MPO operator `O` from a shallow MeasurementData and and inverse shallow_map
+
+# Returns:
+The expectation value as a `ComplexF64` (or `Float64` if purely real).
+"""
+function get_expect_shadow(O::MPO, measurement_data::MeasurementData{ShallowUnitaryMeasurementSetting}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+    N = measurement_data.N
+    @assert N<17 "Expensive routine memorywise, reduce N or use different get_expect_shadow method"
+    inverse_observable = apply_map(inverse_shallow_map,O,s,ξ)
+    local_unitary = measurement_data.measurement_setting.local_unitary
+    inverse_observable_u = apply(local_unitary,inverse_observable;apply_dag=true)
+    inverse_observable_u_diagonal = flatten(get_Born_MPS(inverse_observable_u))
+
+    probability = MeasurementProbability(measurement_data)
+    return (inverse_observable_u_diagonal*probability.measurement_probability)[]
+end
+

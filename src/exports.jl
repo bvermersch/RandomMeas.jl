@@ -84,6 +84,7 @@ random_circuit,
 get_shallow_depolarization_mps,
 get_depolarization_map,
 loss_inverse_depolarization_map,
+apply_map,
 get_shallow_shadows
 # get_inverse_depolarization_vector,
 # apply_inverse_channel
