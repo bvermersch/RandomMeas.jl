@@ -1,5 +1,5 @@
 using Reexport
-@reexport using ITensors,ITensorMPS
+@reexport using ITensors,ITensorMPS,ProgressMeter,OptimKit
 
 export
 
