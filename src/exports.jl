@@ -81,7 +81,9 @@ random_circuit,
 # random_magnetic_field_layer,
 
 #ShallowShadows.jl,
-get_depolarization_vectors
-#fit_depolarization_vector
+get_shallow_depolarization_mps,
+get_depolarization_map,
+loss_inverse_depolarization_map,
+get_shallow_shadows
 # get_inverse_depolarization_vector,
 # apply_inverse_channel

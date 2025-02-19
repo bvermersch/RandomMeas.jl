@@ -32,6 +32,9 @@ Create a random circuit of given depth. Returns the list of gates as a vector of
 function random_circuit(ξ::Vector{Index{Int64}},depth::Int64)
     N = length(ξ)
     circuit = ITensor[]
+    if depth == 0
+        append!(circuit, [op("RandomUnitary", ξ[j]) for j in 1:N])
+    else
     for d in 1:depth
         if d%2==1
             random_layer = [op("RandomUnitary", ξ[j], ξ[j+1]) for j in 1:2:N-1]
@@ -40,6 +43,7 @@ function random_circuit(ξ::Vector{Index{Int64}},depth::Int64)
         end
         append!(circuit, random_layer)
     end
+end
     return circuit
 end
 

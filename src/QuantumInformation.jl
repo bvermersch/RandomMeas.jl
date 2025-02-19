@@ -213,7 +213,8 @@ end
 """
     get_average_MPS(ψ_list::Vector{MPS},χ::Int64,nsweeps::Int64)
 
-TBW
+Approximate σ = Average(ψ_list) and an MPS ψ of bond dimension χ via a DMRG-Like Algorithm. 
+To monitor the minimization distance, we track the cost function cost_function = <ψ|ψ>-<ψ|σ>-<σ|ψ> (||σ-ψ||_2^2-<σ|σ>)
 """
 function get_average_mps(ψ_list::Vector{MPS},χ::Int64,nsweeps::Int64)
     NU = length(ψ_list)
@@ -221,8 +222,6 @@ function get_average_mps(ψ_list::Vector{MPS},χ::Int64,nsweeps::Int64)
 
     #ψ = truncate(ψ_list[1];maxdim=χ)
     #orthogonalize!(ψ,1)
-
-
     ψ = random_mps(siteinds(ψ_list[1]); linkdims=χ);
 
     L = Array{ITensor}(undef,NU,N)
@@ -241,13 +240,12 @@ function get_average_mps(ψ_list::Vector{MPS},χ::Int64,nsweeps::Int64)
     end
     #first overlap
     @showprogress dt=1  for sw in 1:nsweeps
-        dist2 = real(inner(ψ,ψ))
+        cost_function = real(inner(ψ,ψ))
         for ψ_r in ψ_list
-            dist2 -= real(inner(ψ_r,ψ))/NU
-            dist2 -= real(inner(ψ,ψ_r))/NU
+            cost_function -= real(inner(ψ_r,ψ))/NU
+            cost_function -= real(inner(ψ,ψ_r))/NU
         end
-        println("Cost function ",dist2)
-        #println("overlap ",real(sum([inner(m,ψ) for m in M]))/Nu/norm(ψ)^2)
+        println("Cost function ",cost_function)
         #left part of the sweep
         for i in 1:N
             if i==1
@@ -258,11 +256,7 @@ function get_average_mps(ψ_list::Vector{MPS},χ::Int64,nsweeps::Int64)
                 ψ[N] = sum(L[:,i-1].*Ma[:,i])/NU
             end
             if i<N
-                #bindex = commonind(ψ[i],ψ[i+1])
                 orthogonalize!(ψ,i+1)
-                #bindex2 = commonind(ψ[i],ψ[i+1])
-                #replaceind!(ψ[i],bindex2,bindex)
-                #replaceind!(ψ[i+1],bindex2,bindex)
             end
             #updating the left environments
             if i==1
@@ -270,8 +264,7 @@ function get_average_mps(ψ_list::Vector{MPS},χ::Int64,nsweeps::Int64)
             elseif i<=N
                 L[:,i] = [L[r,i-1]*Ma[r,i]*dag(ψ[i]) for r in 1:NU]
             end
-            #println("right norm ",norm(flatten(ψ)-Mf))
-        end
+           end
         #right part of the sweep
         @showprogress dt=1 for i in N:-1:1
             if i==1
@@ -282,26 +275,21 @@ function get_average_mps(ψ_list::Vector{MPS},χ::Int64,nsweeps::Int64)
                 ψ[N] = sum(L[:,i-1].*Ma[:,i])/NU
             end
             if i>1
-                #bindex = commonind(ψ[i],ψ[i-1])
                 orthogonalize!(ψ,i-1)
-                #bindex2 = commonind(ψ[i],ψ[i-1])
-                #replaceind!(ψ[i],bindex2,bindex)
-                #replaceind!(ψ[i-1],bindex2,bindex)
-            end
+                end
             #updating the right environments
             if i==N
                 R[:,N] = [Ma[r,N]*dag(ψ[N]) for r in 1:NU]
             elseif i>1
                 R[:,i] = [R[r,i+1]*Ma[r,i]*dag(ψ[i]) for r in 1:NU]
             end
-            #println("left norm ",norm(flatten(ψ)-Mf))
         end
     end
-    dist2 = real(inner(ψ,ψ))
+    cost_function = real(inner(ψ,ψ))
     @showprogress dt=1 for ψ_r in ψ_list
-           dist2 -= real(inner(ψ,ψ_r))/NU
-           dist2 -= real(inner(ψ_r,ψ))/NU
+        cost_function -= real(inner(ψ,ψ_r))/NU
+        cost_function -= real(inner(ψ_r,ψ))/NU
     end
-    println("Cost function ",dist2)
+    println("Cost function ",cost_function)
     return ψ
 end

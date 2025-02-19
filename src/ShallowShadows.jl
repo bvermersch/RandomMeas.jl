@@ -1,9 +1,9 @@
 """
-    get_depolarization_vectors(group::MeasurementGroup{ShallowUnitaryMeasurementSetting})
+    get_shallow_depolarization_mps(group::MeasurementGroup{ShallowUnitaryMeasurementSetting})
 
 TBW
 """
-function get_depolarization_vectors(group::MeasurementGroup{ShallowUnitaryMeasurementSetting})
+function get_shallow_depolarization_mps(group::MeasurementGroup{ShallowUnitaryMeasurementSetting})
     N = group.N
     ξ = group.measurements[1].measurement_setting.site_indices
 
@@ -38,90 +38,114 @@ function get_depolarization_vectors(group::MeasurementGroup{ShallowUnitaryMeasur
     return depolarization_vectors
 end
 
-#useful function for get_inverse_depolarization_vector
+"""
+    get_depolarization_map(depolarization_mps::MPS,s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+
+returns a shallow map \\mathcal{M} parametrization by a depolarization_mps c(\\nu)
+ where the state is depolarized over partition \\A_{
+u} with probability c(\\nu)=1
+"""
+function get_depolarization_map(depolarization_mps_data::Vector{ITensor},v::Vector{Index{Int64}},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+    N = length(depolarization_mps_data)
+    depolarization_op(vi,si,ξi) = onehot(vi=>1)*δ(ξi,si)*δ(ξi',si')+onehot(vi=>2)*δ(ξi,ξi')*δ(si',si)/2
+    depolarization_map = [depolarization_op(v[i],s[i],ξ[i])*depolarization_mps_data[i] for i in 1:N]
+    return depolarization_map
+end
+
+"""
+    get_depolarization_map(depolarization_mps::MPS,s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+
+returns a shallow map \\mathcal{M} parametrization by a depolarization_mps c(\\nu)
+ where the state is depolarized over partition \\A_{
+u} with probability c(\\nu)=1
+"""
+function get_depolarization_map(depolarization_mps::MPS,s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+    return get_depolarization_map(depolarization_mps.data,siteinds(depolarization_mps),s,ξ)
+end
+
+#Computes the square norm 2 between the data of the two MPS/MPO (similar to norm(A-B) in ITensor)
+function norm2_vec(A::Vector{ITensor},B::Vector{ITensor})
+    term = inner_vec(A,A)
+    term += inner_vec(B,B)
+    term -= inner_vec(B,A)
+    term -= inner_vec(A,B)
+    return real(term)
+end
+
+#Computes the inner product between the data of the two MPS/MPO (similar to inner of ITensor)
 function inner_vec(A::Vector{ITensor},B::Vector{ITensor})
     N = length(A)
     X = 1
     for i in 1:N
         X *= A[i]*prime(dag(B[i]);tags="Link")
     end
-    return real(X[])
+    return X[]
 end
 
-#useful function for get_inverse_depolarization_vector
-function or_product(A::Vector{ITensor},B::Vector{ITensor},or_op::Vector{ITensor})
-    N = length(A)
-    return  map((i) -> A[i]'*B[i]''*or_op[i], range(1,N)) 
+function loss_inverse_depolarization_map(inverse_depolarization_mps_data::Vector{ITensor},depolarization_map::Vector{ITensor},v::Vector{Index{Int64}},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})    
+    N = length(inverse_depolarization_mps_data)
+    η = siteinds("Qubit", N)  # Output Site indices
+    inverse_depolarization_map = get_depolarization_map(inverse_depolarization_mps_data,v,ξ,η)
+    combined_map = [depolarization_map[i]*inverse_depolarization_map[i] for i in 1:N]
+    identity_map = [δ(s[i],η[i])*δ(s'[i],η'[i]) for i in 1:N]
+    return norm2_vec(combined_map,identity_map)
 end
 
-
+# Constructor for ShallowSShadow from raw measurement results and unitaries
 """
-    get_inverse_depolarization_vector(c::MPS,χ::Int,sweeps::Int)
+    ShallowShadow(measurement_results::Vector{Int}, local_unitary::Vector{ITensor};
+                     G::Vector{Float64} = fill(1.0, length(local_unitary)))
 
-TBW
+Construct a `ShallowSShadow` object from raw measurement results and unitary transformations.
+
+# Arguments
+- `measurement_results::Vector{Int}`: Vector of binary measurement results for each qubit/site.
+- `local_unitary::Vector{ITensor}`: Vector of local unitary transformations applied during the measurement.
+
+# Returns
+A `ShallowShadow` object.
 """
-function get_inverse_depolarization_vector(c::MPS,χ::Int,nsweeps::Int)
-    v = siteinds(c)
-    N = length(c)
-    c_ = c.data
-    d = randomMPS(Float64,v;linkdims=χ)
-    optimizer = LBFGS(; maxiter=100, verbosity=0, gradtol = 1e-6)
+function ShallowShadow(measurement_results::Vector{Int}, local_unitary::Vector{ITensor}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+    # Number of qubits/sites
 
-    e = ITensor[]
-    or_op = ITensor[]
-    for i in 1:N
-        push!(e,onehot(v[i]=>1))
-        X = onehot(v[i]=>1)*onehot(v[i]'=>1)*onehot(v[i]''=>1)
-        X += onehot(v[i]=>2)*onehot(v[i]'=>1)*onehot(v[i]''=>2)
-        X += onehot(v[i]=>2)*onehot(v[i]'=>2)*onehot(v[i]''=>1)
-        X += onehot(v[i]=>2)*onehot(v[i]'=>2)*onehot(v[i]''=>2)
-        push!(or_op,X)
-    end
-    
+    N = length(local_unitary)
 
-    loss(x) = inner_vec(or_product(c_,x,or_op),or_product(c_,x,or_op))-inner_vec(or_product(c_,x,or_op),e)-inner_vec(e,or_product(c_,x,or_op))+inner_vec(e,e)
+    local_unitary_dag = reverse([swapinds(dag(local_unitary[i]),ξ[i],ξ[i]') for i in 1:N])
 
-    for s in 1:nsweeps
-        for j in 1:N
-                if s÷2==0 #right moving sweep
-                    i = j
-                else
-                    i = N+1-j #left moving
-                end
-                orthogonalize!(d,j)
-                lossi(xi) = loss([d[1:i-1];xi;d[i+1:N]])
-                loss_and_grad(xi) = lossi(xi),lossi'(xi)
-                #@show i,s,lossi'(d[i])
-                di, fs, gs, niter, normgradhistory = optimize(loss_and_grad, d[i], optimizer)
-                d[i] = di
-        end
-        println("sweep ",s, " Cost function ", loss(d.data)) 
-    end
-    return d
+    # Construct the factorized shadow for each qubit/site
+    shadow_data = Vector{ITensor}(undef, N)
+
+    states = [measurement_results[i]==2 ? "Dn" : "Up" for i in 1:N]
+    ψ0  = MPS(ComplexF64,ξ,states);
+    ψ = apply(local_unitary_dag,ψ0)
+    replace_siteinds!(ψ,s)
+    ρ = outer(ψ',ψ)
+    shadow_data = MPO([inverse_shallow_map[i]*ρ[i] for i in 1:N])
+    return ShallowShadow(shadow_data, N, ξ)
 end
 
 """
-    apply_inverse_channel(O::MPO,d::MPS)
+    get_shallow_shadows(measurement_data::MeasurementData{ShallowUnitaryMeasurementSetting}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
 
-something
+Construct a `ShallowSShadow` object from MeasurementData
+
+# Arguments
+
+
+# Returns
+A `ShallowShadow` object.
 """
-function apply_inverse_channel(O::MPO,d::MPS)
-    ξ = firstsiteinds(O;plev=0)
-    v = siteinds(d)
-    N = length(ξ)
-    s = siteinds("Qubit", N;addtags="input")
-    Of = copy(O)
-    for i in 1:N
-        #initial state
-        Oi = O[i]*δ(ξ[i],s[i])*δ(ξ'[i],s'[i])
+function get_shallow_shadows(measurement_data::MeasurementData{ShallowUnitaryMeasurementSetting}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+    # Number of qubits/sites
 
-        #dissipator
-        D = onehot(v[i]=>1)*δ(ξ[i],s[i])*δ(ξ'[i],s'[i])
-        D += onehot(v[i]=>2)*δ(ξ[i],ξ'[i])*δ(s'[i],s[i])/2
-        D *= d[i]
+    N = measurement_data.N
+    setting = measurement_data.measurement_setting
 
-        #final state
-        Of[i] = D*Oi
-    end
-    return orthogonalize(Of,1)
+    # Extract site indices from local unitaries
+    @assert ξ == setting.site_indices
+    local_unitary = setting.local_unitary
+    measurement_results = measurement_data.measurement_results
+    NM = measurement_data.NM
+
+    return [ShallowShadow(measurement_results[m,:], local_unitary, inverse_shallow_map,s,ξ) for m in 1:NM]
 end
