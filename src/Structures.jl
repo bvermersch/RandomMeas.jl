@@ -170,11 +170,13 @@ end
 MeasurementData(N::Int, NM::Int, measurement_results::Array{Int,2}, measurement_setting::T) where T<:Union{Nothing, AbstractMeasurementSetting} =
     MeasurementData{T}(N, NM, measurement_results, measurement_setting)
 
-
+# ---------------------------------------------------------------------------
+# Measurement Probability
+# ---------------------------------------------------------------------------
 """
     MeasurementProbability{T}
 
-A container for measurement probabilities and settings obtained either f.
+	A container for measurement probabilities and settings obtained either estimated from measurement data or directly computed from quantum states.
 
 # Fields
 - `N::Int`: Number of sites (qubits).
@@ -224,11 +226,19 @@ A container for a group of measurement data objects used in actual or simulated 
 - `measurements::Vector{MeasurementData{T}}`: A vector of measurement data objects.
 
 # Type Parameter
-- `T`: The type of measurement setting for each measurement data object,
+- `T`: The type of the measurement setting for each measurement data object,
   constrained to `Union{Nothing, AbstractMeasurementSetting}`.
 
 # Usage
-Typically constructed via the provided constructors.
+Typically constructed via one of the provided constructors.
+
+# Example
+```julia
+# Assume setting1 and setting2 are valid measurement settings
+data1 = MeasurementData(results1; measurement_setting=setting1)
+data2 = MeasurementData(results2; measurement_setting=setting2)
+group = MeasurementGroup([data1, data2])
+```
 """
 struct MeasurementGroup{T<:Union{AbstractMeasurementSetting, Nothing}}
     N::Int                              # Number of sites (qubits)

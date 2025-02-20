@@ -1,29 +1,27 @@
-
 """
-    MeasurementGroup(
-    measurements::Vector{MeasurementData{T}}
-) where {T <: AbstractMeasurementSetting}
+    MeasurementGroup(measurements::Vector{MeasurementData{T}}) where {T <: Union{Nothing, AbstractMeasurementSetting}}
 
-Creates a `MeasurementGroup` object by inferring the dimensions of the measurement results and validating the provided setting.
+Construct a `MeasurementGroup` object by inferring dimensions from a vector of `MeasurementData` objects.
 
 # Arguments
-- measurements::Vector{MeasurementData{T}} a vector of MeasurementData objects of type T
+- `measurements::Vector{MeasurementData{T}}`: A vector of `MeasurementData` objects.
 
 # Returns
-A `MeasurementGroup` object with inferred dimensions a
+A `MeasurementGroup` object with:
+- `N`: Inferred from the first element (assumed consistent across all elements).
+- `NU`: Number of measurement data objects.
+- `NM`: Inferred from the first element.
+- `measurements`: The provided vector.
 
-
-# Examples
+# Example
 ```julia
-#
 setting1 = LocalUnitaryMeasurementSetting(4, ensemble="Haar")
 results1 = rand(1:2, 10, 4)
-data1 = MeasurementData(results; measurement_setting=setting)
+data1 = MeasurementData(results1; measurement_setting=setting1)
 setting2 = LocalUnitaryMeasurementSetting(4, ensemble="Haar")
 results2 = rand(1:2, 10, 4)
-data2 = MeasurementData(results; measurement_setting=setting)
-measurements = [data1,data2]
-group = MeasurementGroup(measurements)
+data2 = MeasurementData(results2; measurement_setting=setting2)
+group = MeasurementGroup([data1, data2])
 ```
 """
 function MeasurementGroup(
@@ -39,14 +37,22 @@ function MeasurementGroup(
 end
 
 """
-    MeasurementGroup(
-    ψ::Union{MPO, MPS},
-    NU::Int
-    NM::Int,
-    mode::String = "MPS/MPO",
-)::MeasurementGroup{LocalUnitaryMeasurementSetting}
+MeasurementGroup(ψ::Union{MPO, MPS}, NU::Int, NM::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
+::MeasurementGroup{LocalUnitaryMeasurementSetting}
 
-Implements a MeasurementGroup from ψ based on generating NU LocalMeasurementSetting objects
+Construct a MeasurementGroup from a quantum state ψ by generating NU local measurement settings and simulating NM
+projective measurements per setting.
+
+# Arguments
+	-  ψ::Union{MPO, MPS}: The quantum state.
+	-	NU::Int: Number of measurement data objects to generate.
+	-	NM::Int: Number of measurements per setting.
+	-	mode::String: Simulation mode; defaults to “MPS/MPO”.
+	-	progress_bar::Bool: Whether to show a progress bar.
+
+# Returns
+A MeasurementGroup{LocalUnitaryMeasurementSetting} object.
+
 """
 function MeasurementGroup(
     ψ::Union{MPO, MPS},
@@ -74,16 +80,23 @@ function MeasurementGroup(
 end
 
 """
-    MeasurementGroup(
-    ψ::Union{MPO, MPS},
-    NU::Int,
-    NM::Int,
-    depth::Int;
-    mode::String = "MPS/MPO",
-    progress_bar::Bool=false
-)::MeasurementGroup{ShallowlUnitaryMeasurementSetting}
+MeasurementGroup(ψ::Union{MPO, MPS}, NU::Int, NM::Int, depth::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
+::MeasurementGroup{ShallowUnitaryMeasurementSetting}
 
-Implements a MeasurementGroup from ψ based on generating NU ShallowMeasurementSetting objects
+Construct a MeasurementGroup from a quantum state ψ by generating NU shallow measurement settings and simulating
+NM measurements per unitary.
+
+# Arguments
+	-  ψ::Union{MPO, MPS}: The quantum state.
+	-	NU::Int: Number of measurement data objects to generate.
+	-	NM::Int: Number of measurements per setting.
+    -   depth::Int: Circuit depth for shallow settings.
+	-	mode::String: Simulation mode; defaults to “MPS/MPO”.
+	-	progress_bar::Bool: Whether to show a progress bar.
+# Returns
+
+A MeasurementGroup{ShallowUnitaryMeasurementSetting} object.
+
 """
 function MeasurementGroup(
     ψ::Union{MPO, MPS},
@@ -116,7 +129,7 @@ end
     group::MeasurementGroup{T},
     subsystem::Vector{Int}
 )::MeasurementGroup{T} where T <: LocalMeasurementSetting
-    
+
 Reduce a `MeasurementGroup object (with `LocalUnitaryMeasurementSetting`) to a specified subsystem.
 
 # Arguments
