@@ -147,6 +147,39 @@ using Test
         @test length(comp_setting.local_unitary) == N
 
     end
+
+    @testset "Test 7: Import/Export Unitary" begin
+        # Create a local unitary measurement setting
+        setting = LocalUnitaryMeasurementSetting(N; ensemble="Haar")
+
+        # Create a temporary file for export.
+        tmp_dir = mktempdir()
+        tmp_file = joinpath(tmp_dir, "tempfile.npz")
+
+        # Export the setting to the temporary file.
+        export_LocalUnitaryMeasurementSetting(setting, tmp_file)
+
+        # Import the setting from the temporary file.
+        imported_setting = import_LocalUnitaryMeasurementSetting(tmp_file; site_indices=setting.site_indices)
+
+        # Check that the imported setting has the same dimensions.
+        @test imported_setting.N == setting.N
+        @test length(imported_setting.site_indices) == N
+        @test length(imported_setting.local_unitary) == N
+
+        # For each site, check that the exported and then imported ITensor (converted to an Array)
+        # matches the expected identity matrix.
+        for i in 1:N
+            # Convert both the original and imported ITensors to arrays using the same indices.
+            original_array = Array(setting.local_unitary[i], setting.site_indices[i]', setting.site_indices[i])
+            imported_array = Array(imported_setting.local_unitary[i], imported_setting.site_indices[i]', imported_setting.site_indices[i])
+            @test isapprox(original_array, imported_array, atol=1e-10)
+        end
+
+        # Clean up the temporary file.
+        rm(tmp_dir, recursive=true)
+    end
+
 end
 
 

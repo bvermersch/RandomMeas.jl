@@ -150,7 +150,7 @@ end
 """
     get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
 
-Compute multiple trace moments from an array of shadow objects.
+Wrapper function. Compute multiple trace moments from an array of shadow objects.
 
 # Arguments
 - `shadows::Array{<:AbstractShadow, 2}`: An array of shadow objects with dimensions `(n_ru, n_m)`.
@@ -181,6 +181,7 @@ Wrapper function. Compute multiple trace moments from a vector of shadow objects
 
 # Returns
 A vector of trace moments.
+
 # Example
 ```julia
 moments = get_trace_moments(shadows_vector, [1, 2, 3])

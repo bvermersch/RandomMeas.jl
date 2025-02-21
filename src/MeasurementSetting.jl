@@ -167,49 +167,6 @@ function get_rotation(site_index::Index{Int64}, ensemble::String = "Haar")
     end
 end
 
-# # Export Method
-# """
-# Export the unitary in a LocalUnitaryMeasurementSettings object to an .npz file with a single field: local_unitary.
-
-# # Arguments:
-# - `ms::LocalUnitaryMeasurementSettings`: The measurement settings to export.
-# - `filepath::String`: Path to the output .npz file.
-# """
-# function export_unitary(ms::LocalUnitaryMeasurementSettings, filepath::String)
-#     # Prepare the local_unitary array for export
-#     local_unitary = Array{ComplexF64}(undef, ms.NU, ms.N, 2, 2)
-#     for r in 1:ms.NU
-#         for n in 1:ms.N
-#             local_unitary[r, n, :, :] = Array(ms.local_unitary[r, n], ms.site_indices[n]', ms.site_indices[n])
-#         end
-#     end
-
-#     # Write to the .npz file
-#     npzwrite(filepath, Dict("local_unitary" => local_unitary))
-#     println("Exported to NPZ file: $filepath")
-# end
-
-# # Import Method
-# """
-# Import unitary from an .npz file and create a LocalUnitaryMeasurementSettings object.
-
-# # Arguments:
-# - `filepath::String`: Path to the input .npz file.
-# - `site_indices::Union{Vector{Index{Int64}}, Nothing}`: Optional site indices. If not provided, they will be generated.
-
-# # Returns:
-# - A LocalUnitaryMeasurementSettings object.
-# """
-# function import_unitary(filepath::String; site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing)::LocalUnitaryMeasurementSettings
-#     # Read the .npz file
-#     data = npzread(filepath)
-
-#     # Extract the local_unitary field
-#     @assert haskey(data, "local_unitary") "Missing 'local_unitary' field in the NPZ file."
-
-#     return LocalUnitaryMeasurementSettings(data["local_unitary"]; site_indices=site_indices)
-# end
-
 
 """
     reduce_to_subsystem(settings, subsystem)
@@ -243,4 +200,46 @@ function reduce_to_subsystem(
 
     # Create the new LocalUnitaryMeasurementSetting object
     return typeof(settings)(reduced_N, reduced_unitary, reduced_indices)
+end
+
+
+# Export Method
+"""
+Export the unitary in a LocalUnitaryMeasurementSetting object to an .npz file with a single field: local_unitary.
+
+# Arguments:
+- `ms::LocalUnitaryMeasurementSetting`: The measurement settings to export.
+- `filepath::String`: Path to the output .npz file.
+"""
+function export_LocalUnitaryMeasurementSetting(ms::LocalUnitaryMeasurementSetting, filepath::String)
+    # Prepare the local_unitary array for export
+    local_unitary = Array{ComplexF64}(undef, ms.N, 2, 2)
+    for n in 1:ms.N
+            local_unitary[n, :, :] = Array(ms.local_unitary[n], ms.site_indices[n]', ms.site_indices[n])
+    end
+
+    # Write to the .npz file
+    npzwrite(filepath, Dict("local_unitary" => local_unitary))
+    println("Exported to NPZ file: $filepath")
+end
+
+# Import Method
+"""
+Import unitary from an .npz file and create a LocalUnitaryMeasurementSetting object.
+
+# Arguments:
+- `filepath::String`: Path to the input .npz file.
+- `site_indices::Union{Vector{Index{Int64}}, Nothing}`: Optional site indices. If not provided, they will be generated.
+
+# Returns:
+- A LocalUnitaryMeasurementSettings object.
+"""
+function import_LocalUnitaryMeasurementSetting(filepath::String; site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing)::LocalUnitaryMeasurementSetting
+    # Read the .npz file
+    data = npzread(filepath)
+
+    # Extract the local_unitary field
+    @assert haskey(data, "local_unitary") "Missing 'local_unitary' field in the NPZ file."
+
+    return LocalUnitaryMeasurementSetting(data["local_unitary"]; site_indices=site_indices)
 end

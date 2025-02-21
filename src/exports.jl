@@ -30,6 +30,8 @@ ShallowShadow,
 #Methods for MeasurementSetting
 get_rotation,
 reduce_to_subsystem,
+export_LocalUnitaryMeasurementSetting,
+import_LocalUnitaryMeasurementSetting,
 
 #Methods for MeasurementProbability
 
