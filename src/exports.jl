@@ -32,6 +32,8 @@ get_rotation,
 reduce_to_subsystem,
 export_LocalUnitaryMeasurementSetting,
 import_LocalUnitaryMeasurementSetting,
+import_MeasurementData,
+export_MeasurementData,
 
 #Methods for MeasurementProbability
 

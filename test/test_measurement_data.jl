@@ -70,6 +70,65 @@ using Test
         @test data.measurement_setting === measurement_setting
     end
 
+    @testset "MeasurementData Import/Export Tests" begin
+        # Setup parameters
+        N = 4       # Number of sites (qubits)
+        NM = 10     # Number of measurements per setting
+
+        # Generate random binary measurement results (values 1 or 2)
+        measurement_results = rand(1:2, NM, N)
+
+        # Create a measurement setting (using the Identity ensemble for clarity)
+        setting = LocalUnitaryMeasurementSetting(N; ensemble="Haar")
+
+            data_with_setting = MeasurementData(measurement_results; measurement_setting=setting)
+
+            @test data_with_setting.N == N
+            @test data_with_setting.NM == NM
+            @test data_with_setting.measurement_results == measurement_results
+            @test data_with_setting.measurement_setting === setting
+
+        # Export and then import the data with setting
+        tmp_dir = mktempdir()
+        tmp_file = joinpath(tmp_dir, "data_with_setting.npz")
+        export_MeasurementData(data_with_setting, tmp_file)
+        imported_data = import_MeasurementData(tmp_file; predefined_setting=setting)
+
+        @test imported_data.N == data_with_setting.N
+        @test imported_data.NM == data_with_setting.NM
+        @test imported_data.measurement_results == data_with_setting.measurement_results
+
+        @show imported_data.measurement_setting
+
+        if imported_data.measurement_setting !== nothing
+            @test imported_data.measurement_setting.site_indices == setting.site_indices
+        else
+            @test false
+        end
+
+        rm(tmp_dir, recursive=true)
+
+        # Test 2: MeasurementData without measurement setting
+            data_without_setting = MeasurementData(measurement_results)
+            @test data_without_setting.N == N
+            @test data_without_setting.NM == NM
+            @test data_without_setting.measurement_results == measurement_results
+            @test data_without_setting.measurement_setting === nothing
+
+        # Export and import the data without setting
+        tmp_dir2 = mktempdir()
+        tmp_file2 = joinpath(tmp_dir2, "data_without_setting.npz")
+        export_MeasurementData(data_without_setting, tmp_file2)
+        imported_data2 = import_MeasurementData(tmp_file2)
+
+        @test imported_data2.N == data_without_setting.N
+        @test imported_data2.NM == data_without_setting.NM
+        @test imported_data2.measurement_results == data_without_setting.measurement_results
+        @test imported_data2.measurement_setting === nothing
+
+        rm(tmp_dir2, recursive=true)
+    end
+
 
 
 
