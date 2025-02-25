@@ -29,10 +29,10 @@ quantum many-body states and processes.
 
 5. **Additional Functionality:**
    - `Estimators.jl`
-   - `QuantumInformation.jl`
+   - `TensorNetworkUtilities.jl`
    - `Circuits.jl`
    - `ShallowShadows.jl`
-   Provide estimation functions, quantum information utilities, circuit tools, and protocols for shallow shadows.
+   Provide estimation functions (not involving classical shadows), utilities for tensor network states, circuit tools, and protocols for shallow shadows.
 
 6. **Exports:**
    Re-exports public symbols via `exports.jl`, forming the package’s public API.

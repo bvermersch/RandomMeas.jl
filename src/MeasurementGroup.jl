@@ -222,7 +222,6 @@ A MeasurementGroup object with:
 function import_MeasurementGroup(filepath::String; predefined_settings=nothing, site_indices=nothing)
     data = npzread(filepath)
 
-    @show keys(data)
     measurement_results = data["measurement_results"]  # Expected shape: (NU, NM, N)
     NU, _, N = size(measurement_results)
 
@@ -266,6 +265,8 @@ function import_MeasurementGroup(filepath::String; predefined_settings=nothing, 
         end
         measurements[i] = MeasurementData(m_results; measurement_setting=ms)
     end
+
+    println("We are constructing a MeasurementGroup object with measurement settings of type $T.")
 
     return MeasurementGroup(measurements)
 end

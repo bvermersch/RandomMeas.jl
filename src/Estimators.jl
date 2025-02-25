@@ -16,8 +16,8 @@ Compute the fidelity of two quantum states Tr(ρ1 ρ2)/SROOT(Tr(ρ1^2),Tr(ρ2^2)
 - The computed fidelity.
 """
 function get_fidelity(
-    group_1::MeasurementGroup{LocalUnitaryMeasurementSetting},
-    group_2::MeasurementGroup{LocalUnitaryMeasurementSetting},
+    group_1::MeasurementGroup,
+    group_2::MeasurementGroup,
     subsystem::Vector{Int} = collect(1:group_1.N);
     apply_bias_correction::Bool = false
 )
@@ -161,8 +161,6 @@ function get_overlap(prob1::MeasurementProbability, prob2::MeasurementProbabilit
     ξ1 = prob1.site_indices
     ξ2 = prob2.site_indices
 
-    @assert ξ2 == ξ1  # Ensure site indices match
-
     N = prob1.N
     @assert N==prob2.N "Number of qubits must match"
 
@@ -170,7 +168,7 @@ function get_overlap(prob1::MeasurementProbability, prob2::MeasurementProbabilit
     overlap = prob1.measurement_probability
     # Sequentially apply the Hamming tensor to each qubit index
     for i in 1:N
-        overlap *= get_h_tensor(ξ1[i], prime(ξ1[i]))
+        overlap *= get_h_tensor(ξ1[i], prime(ξ2[i]))
     end
 
     # Contract the resulting tensor with the Hermitian conjugate of prob2 (prob2')
