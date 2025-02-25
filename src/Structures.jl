@@ -247,19 +247,36 @@ struct MeasurementGroup{T<:Union{AbstractMeasurementSetting, Nothing}}
     measurements::Vector{MeasurementData{T}}  # Vector of MeasurementData objects
 
     # Inner constructor with validations.
-    function MeasurementGroup{T}(N::Int, NU::Int, NM::Int, measurements::Vector{MeasurementData{T}}) where T
+    function MeasurementGroup{T}(N::Int, NU::Int, NM::Int, measurements::Vector{MeasurementData{T}}) where T<:Union{AbstractMeasurementSetting, Nothing}
         @assert length(measurements) == NU "Expected $NU MeasurementData objects, got $(length(measurements))."
         for (i, m) in enumerate(measurements)
             @assert m.N == N "MeasurementData at index $i has N = $(m.N), expected $N."
             @assert m.NM == NM "MeasurementData at index $i has NM = $(m.NM), expected $NM."
         end
+
+         # Ensure that either all measurement_setting fields are nothing or all are non-nothing.
+        @assert all(m -> m.measurement_setting === nothing, measurements) ||
+        all(m -> m.measurement_setting !== nothing, measurements) "All MeasurementData objects must have a consistent measurement_setting: either all nothing or all non-nothing."
+
+        # If all settings are non-nothing, ensure they all have the same type and identical site_indices.
+        if all(m -> m.measurement_setting !== nothing, measurements)
+            let first_setting = measurements[1].measurement_setting
+                for (i, m) in enumerate(measurements)
+                    @assert typeof(m.measurement_setting) == typeof(first_setting) "MeasurementData at index $i has measurement_setting of type $(typeof(m.measurement_setting)) which does not match the expected type $(typeof(first_setting))."
+                    @assert m.measurement_setting.site_indices == first_setting.site_indices "MeasurementData at index $i has measurement_setting site_indices $(m.measurement_setting.site_indices) which do not match the expected site_indices $(first_setting.site_indices)."
+                end
+            end
+        end
+
         new(N, NU, NM, measurements)
     end
 end
 
 # Simplified outer constructor for type inference.
-MeasurementGroup(N::Int, NU::Int, NM::Int, measurements::Vector{MeasurementData{T}}) where T<:Union{Nothing, AbstractMeasurementSetting} =
+MeasurementGroup(N::Int, NU::Int, NM::Int, measurements::Vector{MeasurementData{T}}) where T<:Union{AbstractMeasurementSetting, Nothing} =
     MeasurementGroup{T}(N, NU, NM, measurements)
+
+
 
 
 # ---------------------------------------------------------------------------

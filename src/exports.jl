@@ -34,6 +34,8 @@ export_LocalUnitaryMeasurementSetting,
 import_LocalUnitaryMeasurementSetting,
 import_MeasurementData,
 export_MeasurementData,
+import_MeasurementGroup,
+export_MeasurementGroup,
 
 #Methods for MeasurementProbability
 

@@ -26,7 +26,7 @@ group = MeasurementGroup([data1, data2])
 """
 function MeasurementGroup(
     measurements::Vector{MeasurementData{T}}
-) where T <: Union{Nothing, AbstractMeasurementSetting}
+) where T<:Union{AbstractMeasurementSetting, Nothing}
     # Infer dimensions from measurements
     NU = length(measurements)
     N = measurements[1].N
@@ -152,4 +152,117 @@ function reduce_to_subsystem(
         reduced_measurements[r] = reduce_to_subsystem(group.measurements[r], subsystem)
     end
     return MeasurementGroup(reduced_measurements)
+end
+
+
+"""
+    export_MeasurementGroup(group::MeasurementGroup{T}, filepath::String)
+
+Export a MeasurementGroup object to an NPZ file.
+
+# Arguments
+- `group::MeasurementGroup{T}`: A MeasurementGroup object where each MeasurementData may have its own measurement setting of type T (with T <: Union{Nothing, LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting}).
+- `filepath::String`: The file path where the NPZ file will be written.
+
+# Details
+- The measurement results from each MeasurementData object (each of shape (NM, N)) are stacked into a 3D array of shape (NU, NM, N),
+  where NU is the number of MeasurementData objects.
+- The measurement settings are exported as a Complex array of size NU x N x 2 x 2 if present.
+"""
+function export_MeasurementGroup(group::MeasurementGroup{T}, filepath::String) where T<:Union{Nothing, LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting}
+    N  = group.N
+    NU = group.NU
+    NM = group.NM
+
+    # Stack measurement results into a 3D array: (NU, NM, N)
+    results_array = zeros(Int, NU, NM, N)
+    for i in 1:NU
+        results_array[i, :, :] = group.measurements[i].measurement_results
+    end
+
+    export_dict = Dict{String,Any}()
+    export_dict["N"] = N
+    export_dict["NU"] = NU
+    export_dict["NM"] = NM
+    export_dict["measurement_results"] = results_array
+
+   # Only export measurement settings if they are not nothing.
+    if T !== Nothing
+        # Preallocate a 4D array of dimensions (NU, N, 2, 2) to hold the local unitaries.
+        settings_array = Array{ComplexF64}(undef, NU, N, 2, 2)
+        for i in 1:NU
+            ms = group.measurements[i].measurement_setting
+            for j in 1:N
+                settings_array[i, j, :, :] = Array(ms.local_unitary[j], ms.site_indices[j]', ms.site_indices[j])
+            end
+        end
+        export_dict["measurement_settings"] = settings_array
+    end
+
+
+    npzwrite(filepath, export_dict)
+end
+
+
+"""
+    import_MeasurementGroup(filepath::String; predefined_settings=nothing, site_indices=nothing) -> MeasurementGroup
+
+Import a MeasurementGroup object from an NPZ file.
+
+# Arguments
+- `filepath::String`: The path to the NPZ file containing the exported MeasurementGroup data.
+- `predefined_settings` (optional): A vector of predefined measurement settings (one per MeasurementData object). If provided, its length must equal the exported NU.
+- `site_indices` (optional): A vector of site indices to use when reconstructing the measurement setting. If not provided, default site indices are generated using `siteinds("Qubit", N)`.
+
+# Returns
+A MeasurementGroup object with:
+- Measurement results reconstructed from a 3D array of shape (NU, NM, N).
+- A measurement setting for each MeasurementData object reconstructed from a 4D array of shape (NU, N, 2, 2) if present, or taken from `predefined_settings` if provided.
+"""
+function import_MeasurementGroup(filepath::String; predefined_settings=nothing, site_indices=nothing)
+    data = npzread(filepath)
+    N  = data["N"]
+    NU = data["NU"]
+    NM = data["NM"]
+    results_array = data["measurement_results"]  # Expected shape: (NU, NM, N)
+
+    # If no site_indices provided, generate default indices.
+    if site_indices === nothing
+        site_indices = siteinds("Qubit", N)
+    end
+
+        # If a vector of predefined settings is provided, check its length and ensure consistency.
+    local T
+    if predefined_settings !== nothing
+        @assert length(predefined_settings) == NU "Expected predefined_settings vector to have length NU = $NU, got $(length(predefined_settings))."
+        T = typeof(predefined_settings[1])
+        for s in predefined_settings
+            @assert typeof(s) == T "Predefined settings must all have the same type; found $(typeof(s)) vs $(T)."
+        end
+    elseif haskey(data, "measurement_settings")
+        # Assume settings from file are of LocalUnitaryMeasurementSetting type.
+        T = LocalUnitaryMeasurementSetting
+    else
+        T = Nothing
+    end
+
+    # Reconstruct MeasurementData objects.
+    measurements = Vector{MeasurementData{T}}(undef, NU)
+    for i in 1:NU
+        # Extract measurement results for this MeasurementData (shape: (NM, N))
+        m_results = results_array[i, :, :]
+        if predefined_settings !== nothing
+            # Use the corresponding predefined setting.
+            ms = predefined_settings[i]
+        elseif haskey(data, "measurement_settings")
+            # Reconstruct from exported settings: assume settings_array is a 4D array (NU, N, 2, 2)
+            local_unitaries = [ITensor(data["measurement_settings"][i, j, :, :], site_indices[j]', site_indices[j]) for j in 1:N]
+            ms = LocalUnitaryMeasurementSetting(N, local_unitaries, site_indices)
+        else
+            ms = nothing
+        end
+        measurements[i] = MeasurementData(m_results; measurement_setting=ms)
+    end
+
+    return MeasurementGroup(measurements)
 end
