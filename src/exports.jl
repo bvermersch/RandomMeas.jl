@@ -66,7 +66,7 @@ get_factorized_shadows,
 convert_to_dense_shadow,
 
 
-#QuantumInformation.jl
+#TensorNetworkUtilities.jl
 get_siteinds,
 get_trace_moment,
 get_trace,

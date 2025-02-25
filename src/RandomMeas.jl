@@ -99,7 +99,7 @@ include("Estimators.jl")
 # These files contain functions to evaluate quantum information properties of
 # MPS/MPO and circuit utilities
 # ---------------------------------------------------------------------------
-include("QuantumInformation.jl")
+include("TensorNetworkUtilities.jl")
 include("Circuits.jl")
 
 # ---------------------------------------------------------------------------
