@@ -16,8 +16,8 @@ Compute the fidelity of two quantum states Tr(ρ1 ρ2)/SROOT(Tr(ρ1^2),Tr(ρ2^2)
 - The computed fidelity.
 """
 function get_fidelity(
-    group_1::MeasurementGroup,
-    group_2::MeasurementGroup,
+    group_1::MeasurementGroup{LocalUnitaryMeasurementSetting},
+    group_2::MeasurementGroup{LocalUnitaryMeasurementSetting},
     subsystem::Vector{Int} = collect(1:group_1.N);
     apply_bias_correction::Bool = false
 )
@@ -227,7 +227,7 @@ Return the linear cross-entropy for the measurement results in `measurement_data
 
 # Arguments:
 - `ψ::MPS`: The theoretical state to compare against.
-- `measurement_data::MeasurementData{LocalUnitaryMeasurementSettings}`: The measurement data object containing results and settings.
+- `measurement_data::MeasurementData`: The measurement data object containing results and settings.
 
 # Returns:
 The linear cross-entropy as a `Float64`.

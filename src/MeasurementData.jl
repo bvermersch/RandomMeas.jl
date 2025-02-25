@@ -184,22 +184,16 @@ data_with_indices = import_measurement_data("data.npz"; site_indices=siteinds("Q
 data = import_measurement_data("data.npz")
 ```
 """
-function import_MeasurementData(filepath::String; predefined_setting=nothing, site_indices=nothing, add_value=0)::MeasurementData
+function import_MeasurementData(filepath::String; predefined_setting=nothing, site_indices=nothing)::MeasurementData
     # Load data from the archive
     data = npzread(filepath)
 
     # Extract measurement results
     measurement_results = data["measurement_results"]  # Shape: NM x N
 
-    # Optionally add a value to all elements
-    if add_value != 0
-        measurement_results .+= add_value
-        @warn "The add_value parameter is $add_value and added to all measurement results. The measurement results contain now only $(Set(measurement_results)) ."
-    end
-
     # Check if 0 is contained and print a message if true
     if 0 in measurement_results
-        @warn "Julia works with indices starting at 1. Binary data should therefore use 1 and 2, not 0 and 1. To fix this, use the add_value parameter."
+        @warn "Julia works with indices starting at 1. Binary data should therefore use 1 and 2, not 0 and 1."
     end
 
     # Determine measurement settings

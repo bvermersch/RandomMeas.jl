@@ -212,7 +212,7 @@ Import a MeasurementGroup object from an NPZ file.
 # Arguments
 - `filepath::String`: The path to the NPZ file containing the exported MeasurementGroup data.
 - `predefined_settings` (optional): A vector of predefined measurement settings (one per MeasurementData object). If provided, its length must equal the exported NU.
-- `site_indices` (optional): A vector of site indices to use when reconstructing the measurement setting. If not provided, default site indices are generated using `siteinds("Qubit", N)`.
+- `site_indices` (optional): A vector of N site indices to use when reconstructing the measurement setting. If not provided, default site indices are generated using `siteinds("Qubit", N)`.
 
 # Returns
 A MeasurementGroup object with:
@@ -221,17 +221,17 @@ A MeasurementGroup object with:
 """
 function import_MeasurementGroup(filepath::String; predefined_settings=nothing, site_indices=nothing)
     data = npzread(filepath)
-    N  = data["N"]
-    NU = data["NU"]
-    NM = data["NM"]
-    results_array = data["measurement_results"]  # Expected shape: (NU, NM, N)
 
-    # If no site_indices provided, generate default indices.
-    if site_indices === nothing
-        site_indices = siteinds("Qubit", N)
+    @show keys(data)
+    measurement_results = data["measurement_results"]  # Expected shape: (NU, NM, N)
+    NU, _, N = size(measurement_results)
+
+    # Check if 0 is contained and print a message if true
+    if 0 in measurement_results
+        @warn "Julia works with indices starting at 1. Binary data should therefore use 1 and 2, not 0 and 1."
     end
 
-        # If a vector of predefined settings is provided, check its length and ensure consistency.
+    # If a vector of predefined settings is provided, check its length and ensure consistency.
     local T
     if predefined_settings !== nothing
         @assert length(predefined_settings) == NU "Expected predefined_settings vector to have length NU = $NU, got $(length(predefined_settings))."
@@ -239,7 +239,7 @@ function import_MeasurementGroup(filepath::String; predefined_settings=nothing, 
         for s in predefined_settings
             @assert typeof(s) == T "Predefined settings must all have the same type; found $(typeof(s)) vs $(T)."
         end
-    elseif haskey(data, "measurement_settings")
+    elseif haskey(data, "local_unitaries")
         # Assume settings from file are of LocalUnitaryMeasurementSetting type.
         T = LocalUnitaryMeasurementSetting
     else
@@ -250,13 +250,16 @@ function import_MeasurementGroup(filepath::String; predefined_settings=nothing, 
     measurements = Vector{MeasurementData{T}}(undef, NU)
     for i in 1:NU
         # Extract measurement results for this MeasurementData (shape: (NM, N))
-        m_results = results_array[i, :, :]
+        m_results = measurement_results[i, :, :]
         if predefined_settings !== nothing
             # Use the corresponding predefined setting.
             ms = predefined_settings[i]
-        elseif haskey(data, "measurement_settings")
+        elseif haskey(data, "local_unitaries")
+            if site_indices === nothing
+                site_indices = siteinds("Qubit", N)
+            end
             # Reconstruct from exported settings: assume settings_array is a 4D array (NU, N, 2, 2)
-            local_unitaries = [ITensor(data["measurement_settings"][i, j, :, :], site_indices[j]', site_indices[j]) for j in 1:N]
+            local_unitaries = [ITensor(data["local_unitaries"][i, j, :, :], site_indices[j]', site_indices[j]) for j in 1:N]
             ms = LocalUnitaryMeasurementSetting(N, local_unitaries, site_indices)
         else
             ms = nothing
