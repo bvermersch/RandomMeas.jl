@@ -10,10 +10,10 @@ Flatten a Matrix Product State (MPS), Matrix Product Operator (MPO), or a vector
 An ITensor representing the product of the individual tensors in `O`.
 
 # Example
-xxx
+```julia
 A = random_mps(siteinds("Qubit", 5))
 flatA = flatten(A)
-yyy
+```
 """
 function flatten(O::Union{MPS,MPO,Vector{ITensor}})
     return reduce(*, O)
@@ -31,9 +31,9 @@ Retrieve the site indices for a quantum state represented as an MPS or MPO.
 A vector of site indices corresponding to the quantum state `ψ`.
 
 # Example
-xxx
+```julia
 ξ = get_siteinds(ψ)
-yyy
+```
 """
 function get_siteinds(ψ::Union{MPS, MPO})
     if isa(ψ, MPS)
@@ -55,9 +55,9 @@ Compute the trace of a Matrix Product Operator (MPO) ρ by contracting each tens
 A scalar representing the trace of ρ.
 
 # Example
-xxx
+```julia
 t = get_trace(ρ)
-yyy
+```
 """
 function get_trace(ρ::MPO)
     s = firstsiteinds(ρ; plev=0)
@@ -118,9 +118,9 @@ Compute the reduced density matrix (as an MPO) for a specified subsystem.
 An MPO representing the reduced density matrix over the sites specified in `subsystem`.
 
 # Example
-xxx
+```julia
 ρ_reduced = reduce_to_subsystem(ρ, [2, 3])
-yyy
+```
 """
 function reduce_to_subsystem(ρ::MPO, subsystem::Vector{Int64})
     n_sites = length(ρ)                        # Total number of sites in ρ
@@ -179,9 +179,9 @@ in `subsystem`.
 An MPO representing the reduced density matrix over the specified subsystem.
 
 # Example
-xxx
+```julia
 ρ_sub = reduce_to_subsystem(ψ, [2, 3])
-yyy
+```
 """
 function reduce_to_subsystem(ψ::MPS, subsystem::Vector{Int64})
     return reduce_to_subsystem(outer(ψ', ψ), subsystem)
@@ -204,9 +204,9 @@ For each site index in the MPO:
 An MPO in which the tensors corresponding to the sites in `subsystem` have been partially transposed.
 
 # Example
-xxx
+```julia
 ρT = partial_transpose(ρ, [2, 3])
-yyy
+```
 """
 function partial_transpose(ρ::MPO, subsystem::Vector{Int})
     ξ = firstsiteinds(ρ; plev=0)
@@ -241,9 +241,9 @@ The returned object `spec` contains the singular values (which are related to th
 - `spec`: An ITensor containing the singular values from the SVD at site `NA`.
 
 # Example
-xxx
+```julia
 spectrum = get_entanglement_spectrum(ψ, 3)
-yyy
+```
 """
 function get_entanglement_spectrum(ψ::MPS, NA::Int64)
     statel = copy(ψ)
@@ -278,9 +278,9 @@ which effectively computes the sum over the kth powers of the squared singular v
 A scalar (Float64) corresponding to the kth moment.
 
 # Example
-xxx
+```julia
 moment = get_trace_moment(spec, 2)
-yyy
+```
 """
 function get_trace_moment(spec::ITensor, k::Int)
     @assert k >= 1 "Only integer valued moments with k ≥ 1 can be computed."
@@ -312,9 +312,9 @@ it computes ρ^k via repeated application of the `apply` function (with a cutoff
 A scalar (Float64) representing the kth trace moment of the reduced density matrix.
 
 # Example
-xxx
+```julia
 moment = get_trace_moment(ψ, 3, [1, 2, 3]; partial_transpose=false)
-yyy
+```
 """
 function get_trace_moment(ψ::Union{MPS, MPO}, k::Int, subsystem::Vector{Int}=collect(1:length(ψ)))
     @assert k >= 1 "k must be at least 1."
@@ -353,9 +353,9 @@ For each moment order `k` in `k_vector`, the function computes the kth trace mom
 A vector of scalars, each being the kth trace moment corresponding to the entries of `k_vector`.
 
 # Example
-xxx
+```julia
 moments = get_trace_moments(ψ, [1, 2, 3], [1, 2, 3])
-yyy
+```
 """
 function get_trace_moments(ψ::Union{MPS, MPO}, k_vector::Vector{Int}, subsystem::Vector{Int}=collect(1:length(ψ)))
     return [get_trace_moment(ψ, k, subsystem) for k in k_vector]
@@ -375,9 +375,9 @@ This function computes the Born probability vector P(s) = ⟨s|ρ|s⟩, where |s
 An MPS representing the Born probability vector.
 
 # Example
-xxx
+```julia
 P = get_Born_MPS(ρ)
-yyy
+```
 """
 function get_Born_MPS(ρ::MPO)
     ξ = firstsiteinds(ρ; plev=0)
@@ -405,9 +405,9 @@ This function computes the probability for each computational basis state by con
 An MPS representing the Born probability vector, where each tensor P[i] corresponds to the probability contribution at site i.
 
 # Example
-xxx
+```julia
 P = get_Born_MPS(ψ)
-yyy
+```
 """
 function get_Born_MPS(ψ::MPS)
     ξ = siteinds(ψ)
@@ -440,9 +440,9 @@ where the sum is over all computational basis states s and N is the number of si
 A scalar (Float64) representing the self-XEB value.
 
 # Example
-xxx
+```julia
 x = get_selfXEB(ψ)
-yyy
+```
 """
 function get_selfXEB(ψ::MPS)
     P0 = get_Born_MPS(ψ)
@@ -471,9 +471,9 @@ which is equivalent to (||σ - ψ||² - ⟨σ|σ⟩).
 An MPS representing the approximate average state with bond dimension χ.
 
 # Example
-xxx
+```julia
 avg_state = get_average_mps(ψ_list, 20, 10)
-yyy
+```
 """
 function get_average_mps(ψ_list::Vector{MPS},χ::Int64,nsweeps::Int64)
     NU = length(ψ_list)

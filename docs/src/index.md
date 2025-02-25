@@ -10,19 +10,27 @@ Documentation for [RandomMeas.jl](https://github.com/bvermersch/RandomMeas.jl): 
 Depth = 2:3
 ```
 
-## Acquisition routines
+## Data acquisition routines
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["Structures.jl","MeasurementSettings.jl"]
+Pages = ["Structures.jl","MeasurementSetting.jl"]
 ```
 
-## Postprocessing routines
+## Data storage and handling routines
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["MeasurementGroup.jl","MeasurementData.jl","MeasurementProbabilities.jl"]
+Pages = ["MeasurementData.jl","MeasurementGroup.jl","MeasurementProbabilities.jl"]
 ```
+
+## Postprocessing routines (excluding classical shadows)
+
+```@autodocs
+Modules = [RandomMeas]
+Pages = ["MeasurementProbabilities.jl", "Estimators.jl"]
+```
+
 ## Postprocessing routines for classical shadows
 
 ```@autodocs
@@ -41,5 +49,5 @@ Pages = ["Circuits.jl"]
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["QuantumInformation.jl"]
+Pages = ["TensorNetworkUtilities.jl"]
 ```

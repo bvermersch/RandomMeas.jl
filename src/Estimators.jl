@@ -19,7 +19,6 @@ function get_fidelity(
     group_1::MeasurementGroup,
     group_2::MeasurementGroup,
     subsystem::Vector{Int} = collect(1:group_1.N);
-    apply_bias_correction::Bool = false
 )
     overlap = get_overlap(group_1,group_2,subsystem)
     purity1 = get_purity(group_1,subsystem)
