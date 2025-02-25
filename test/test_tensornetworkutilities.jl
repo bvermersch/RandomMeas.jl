@@ -10,6 +10,11 @@ N = 4      # Number of qubits
 ϕ = random_mps(ComplexF64,ξ;linkdims=3)
 ρ = 0.7*outer(ψ',ψ)+0.3*outer(ϕ',ϕ)
 
+@testset "Flatten" begin
+    @show flatten(ψ)
+    @show flatten(ρ)
+end
+
 @testset "Full state Trace Moments" begin
     @show get_trace(ρ)
     @show get_trace_moment(ρ,2)
