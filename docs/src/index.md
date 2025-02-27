@@ -51,3 +51,8 @@ Pages = ["Circuits.jl"]
 Modules = [RandomMeas]
 Pages = ["TensorNetworkUtilities.jl"]
 ```
+
+
+## Examples
+
+Please see the [Brydges Notebook example](assets/BrydgesScience2019.html) for details.
