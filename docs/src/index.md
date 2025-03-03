@@ -10,24 +10,32 @@ Documentation for [RandomMeas.jl](https://github.com/bvermersch/RandomMeas.jl): 
 Depth = 2:3
 ```
 
-## Acquisition routines
+## Data acquisition routines
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["Acquisition.jl"]
+Pages = ["Structures.jl","MeasurementSetting.jl"]
 ```
 
-## Postprocessing routines
+## Data storage and handling routines
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["Postprocessing.jl"]
+Pages = ["MeasurementData.jl","MeasurementGroup.jl","MeasurementProbabilities.jl"]
 ```
+
+## Postprocessing routines (excluding classical shadows)
+
+```@autodocs
+Modules = [RandomMeas]
+Pages = ["MeasurementProbabilities.jl", "Estimators.jl"]
+```
+
 ## Postprocessing routines for classical shadows
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["Shadows.jl"]
+Pages = ["Shadows.jl","FactorizedShadows.jl", "DenseShadows.jl","ShallowShadows.jl"]
 ```
 
 ## Routines for simulating quantum circuits
@@ -41,5 +49,10 @@ Pages = ["Circuits.jl"]
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["utils_ITensor.jl"]
+Pages = ["TensorNetworkUtilities.jl"]
 ```
+
+
+## Examples
+
+Please see the [Brydges Notebook example](assets/BrydgesScience2019.html) for details.
