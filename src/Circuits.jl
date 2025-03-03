@@ -32,6 +32,9 @@ Create a random circuit of given depth. Returns the list of gates as a vector of
 function random_circuit(ξ::Vector{Index{Int64}},depth::Int64)
     N = length(ξ)
     circuit = ITensor[]
+    if depth == 0
+        append!(circuit, [op("RandomUnitary", ξ[j]) for j in 1:N])
+    else
     for d in 1:depth
         if d%2==1
             random_layer = [op("RandomUnitary", ξ[j], ξ[j+1]) for j in 1:2:N-1]
@@ -40,43 +43,44 @@ function random_circuit(ξ::Vector{Index{Int64}},depth::Int64)
         end
         append!(circuit, random_layer)
     end
+end
     return circuit
 end
 
-"""
-    random_Pauli_layer(ξ::Vector{Index{Int64}},p::Vector{Float64})
+# """
+#     random_Pauli_layer(ξ::Vector{Index{Int64}},p::Vector{Float64})
 
-Create a layer of stochastic Pauli operations with probability (1-3*p/4,p/4,p/4,p/4)
-(corresponding to local depolarization with probability p)
-"""
-function random_Pauli_layer(ξ::Vector{Index{Int64}},p::Vector{Float64})
-    N = length(ξ)
-    circuit = ITensor[]
-    for i in 1:N
-        if rand()>1-3*p[i]/4
-            a = rand()
-            if a<1/3
-                push!(circuit,op("X",ξ[i]))
-            elseif a<2/3
-                push!(circuit,op("Y",ξ[i]))
-            else
-                push!(circuit,op("Z",ξ[i]))
-            end
-        end
-    end
-    return circuit
-end
+# Create a layer of stochastic Pauli operations with probability (1-3*p/4,p/4,p/4,p/4)
+# (corresponding to local depolarization with probability p)
+# """
+# function random_Pauli_layer(ξ::Vector{Index{Int64}},p::Vector{Float64})
+#     N = length(ξ)
+#     circuit = ITensor[]
+#     for i in 1:N
+#         if rand()>1-3*p[i]/4
+#             a = rand()
+#             if a<1/3
+#                 push!(circuit,op("X",ξ[i]))
+#             elseif a<2/3
+#                 push!(circuit,op("Y",ξ[i]))
+#             else
+#                 push!(circuit,op("Z",ξ[i]))
+#             end
+#         end
+#     end
+#     return circuit
+# end
 
-"""
-    RandomMagneticFieldLayer(ξ::Vector{Index{Int64}},p::Vector{Float64})
+# """
+#     RandomMagneticFieldLayer(ξ::Vector{Index{Int64}},p::Vector{Float64})
 
-Create a layer with Random Rz gates of average angle π p.
-"""
-function random_magnetic_field_layer(ξ::Vector{Index{Int64}},p::Vector{Float64})
-    N = length(ξ)
-    circuit = ITensor[]
-    for i in 1:N
-        push!(circuit,op("Rz",ξ[i];θ=2*π*p[i]*rand()))
-    end
-    return circuit
-end
+# Create a layer with Random Rz gates of average angle π p.
+# """
+# function random_magnetic_field_layer(ξ::Vector{Index{Int64}},p::Vector{Float64})
+#     N = length(ξ)
+#     circuit = ITensor[]
+#     for i in 1:N
+#         push!(circuit,op("Rz",ξ[i];θ=2*π*p[i]*rand()))
+#     end
+#     return circuit
+# end
