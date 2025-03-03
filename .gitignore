@@ -5,3 +5,4 @@
 /docs/build/
 *.backup
 /examples/.ipynb_checkpoints
+*.npy

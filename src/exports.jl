@@ -1,52 +1,101 @@
+"""
+    Exports.jl
+
+This file re-exports the public symbols of the RandomMeas package.
+It uses Reexport.jl to expose selected types and functions from both internal modules
+and external dependencies, forming the public API of RandomMeas.
+"""
+
+using Reexport
+@reexport using ITensors,ITensorMPS,ProgressMeter,OptimKit
+
 export
 
- #Acquisition.jl
+#Structures
+MeasurementSetting,
+LocalMeasurementSetting,
+LocalUnitaryMeasurementSetting,
+ComputationalBasisMeasurementSetting,
+ShallowUnitaryMeasurementSetting,
+
+MeasurementProbability,
+MeasurementData,
+MeasurementGroup,
+
+AbstractShadow,
+FactorizedShadow,
+DenseShadow,
+ShallowShadow,
+
+#Methods for MeasurementSetting
 get_rotation,
-get_rotations,
-get_RandomMeas,
-get_RandomMeas_MPS,
-get_RandomMeas_MPO,
+reduce_to_subsystem,
+export_LocalUnitaryMeasurementSetting,
+import_LocalUnitaryMeasurementSetting,
+import_MeasurementData,
+export_MeasurementData,
+import_MeasurementGroup,
+export_MeasurementGroup,
+
+#Methods for MeasurementProbability
+
+
+#Methods for MeasurementData
+
+#import_measurement_data,
+#export_measurement_data,
+
+#MeasurementGroup
+
+#AbstractShadows
 get_expect_shadow,
-get_XEB,
-get_selfXEB,
-
-#Shadows.jl
-get_shadow,
-get_shadow_factorized,
-get_batch_shadows,
-get_moments,
-
-#utils_ITensor.jl
-flatten,
-get_entropy,
-state_to_dm,
-reduce_dm,
-ITensortoMPO,
-power,
-get_moment,
-get_spectrum,
+get_trace_moment,
+get_trace_moments,
+get_trace_product,
 multiply,
-square,
 trace,
+partial_trace,
+partial_transpose,
 
-#Postprocessing.jl
-get_h_tensor,
-get_overlap,
+#DenseShadows
+get_dense_shadows,
+# get_purity_dense_shadows,
+
+#FactorizedShadows
+get_factorized_shadows,
+convert_to_dense_shadow,
+
+
+#TensorNetworkUtilities.jl
+get_siteinds,
+get_trace_moment,
+get_trace,
 get_Born_MPS,
-get_Born,
-get_purity_estimate,
-get_purity_shadows,
-get_purity_hamming,
-get_purity,
+get_selfXEB,
+partial_transpose,
+flatten,
+get_average_mps,
+
+
+#Estimators.jl
+ get_h_tensor,
+ get_fidelity,
+ get_overlap,
+ get_purity,
+ get_XEB,
+
 
 #Circuits.jl
 apply_depo_channel,
 random_circuit,
-random_Pauli_layer,
-random_magnetic_field_layer,
+# random_Pauli_layer,
+# random_magnetic_field_layer,
 
-#ShallowShadows.jl
-get_depolarization_vectors,
-fit_depolarization_vector,
-get_inverse_depolarization_vector,
-apply_inverse_channel
+#ShallowShadows.jl,
+get_shallow_depolarization_mps,
+get_depolarization_map,
+loss_inverse_depolarization_map,
+apply_map,
+get_shallow_shadows
+# get_inverse_depolarization_vector,
+# apply_inverse_channel

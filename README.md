@@ -18,6 +18,9 @@ In a Julia terminal, install the package RandomMeas
 julia> ]
 pkg> add RandomMeas
 ```
+## Structure
+
+![Image](StructureRandomMeas.drawio.svg)
 
 ## Documentation
 
@@ -40,9 +43,9 @@ pkg> add RandomMeas
  data = zeros(Int8,(nu,NM,N))
  for r in 1:nu
      #generate Haar-random single qubit rotations
-     u = get_rotations(ξ,1)
+     u = get_rotations(ξ,"Haar")
      #acquire RM measurements
-     data[r,:,:] = get_RandomMeas(ρ,u,NM)
+     data[r,:,:] = get_RandomMeas(ρ,u,NM,"dense")
  end
  ```
 
@@ -95,3 +98,7 @@ pkg> add RandomMeas
 13) [Noisy circuit simulations with tensor networks](examples/CircuitNoiseSimulations.ipynb)
 
 14) [Estimating statistical error bars via Jackknife resampling](examples/ErrorBars.ipynb)
+
+15) [Executing randomized measurements on IBM's quantum computers](examples/RandomizedMeasurementsQiskit.ipynb)
+
+16) [Postprocessing randomized measurements from IBM's quantum computers](examples/RandomizedMeasurementsQiskitPostprocessing.ipynb)
