@@ -22,7 +22,7 @@ measurement_data = MeasurementData(measurement_results; measurement_setting=meas
 
             # Construct FactorizedShadow
             shadow = FactorizedShadow(data, local_unitary)
-            @show shadow.N == N
+            @test shadow.N == N
             @test length(shadow.shadow_data) == N
         end
 end

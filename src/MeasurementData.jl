@@ -263,7 +263,7 @@ function export_MeasurementData(data::MeasurementData{T}, filepath::String) wher
         N = data.measurement_setting.N
         local_unitaries = Array{ComplexF64}(undef, N, 2, 2)
         for n in 1:N
-            local_unitaries[n, :, :] = Array(data.measurement_setting.local_unitary[r, n],data.measurement_setting.site_indices[n]',data.measurement_setting.site_indices[n])
+            local_unitaries[n, :, :] = Array(data.measurement_setting.local_unitary[n],data.measurement_setting.site_indices[n]',data.measurement_setting.site_indices[n])
         end
         export_dict["local_unitaries"] = local_unitaries
     end

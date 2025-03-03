@@ -48,7 +48,7 @@ using Test
         println("inversing shallow map")
         v = siteinds("Qubit", N)  # Virtual Site indices
 
-        inverse_depolarization_mps_data_init = randomMPS(Float64,v;linkdims=χ).data
+        inverse_depolarization_mps_data_init = random_mps(Float64,v;linkdims=χ).data
         #loss = loss_inverse_depolarization_map(inverse_depolarization_mps,shallow_map,s,ξ)
         loss(x) = loss_inverse_depolarization_map(x,shallow_map,v,s,ξ)
         println("initial loss ",loss(inverse_depolarization_mps_data_init))
