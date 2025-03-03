@@ -55,4 +55,40 @@ Pages = ["TensorNetworkUtilities.jl"]
 
 ## Examples
 
-Please see the [Brydges Notebook example](assets/BrydgesScience2019.html) for details.
+### Classical shadows
+
+1) [Energy/Energy variance measurements with classical shadows](examples/EnergyVarianceMeasurements.ipynb)
+
+2) [Robust Shadow tomography](examples/RobustShadowTomography.ipynb)
+
+3) [Process Shadow tomography](examples/ProcessShadowTomography.ipynb)
+
+4) [Classical shadows with shallow circuits](examples/ShallowShadows.ipynb)
+
+5) [Virtual distillation](examples/VirtualDistillation.ipynb)
+
+### Quantum benchmark
+
+6) [Cross-Entropy/Self-Cross entropy benchmarking](examples/CrossEntropyBenchmarking.ipynb)
+
+7) [Fidelities from common randomized measurements](examples/FidelityCommonRandomizedMeasurements.ipynb)
+
+8) [Cross-Platform verification](examples/CrossPlatform.ipynb)
+
+### Entanglement
+
+9) [Entanglement entropy of pure states"](examples/PureStateEntanglement.ipynb)
+
+10) [Analyzing the experimental data of Brydges et al, Science 2019](examples/BrydgesScience2019.ipynb)
+
+11) [Surface code and the measurement of the topological entanglement entropy](examples/EntanglementSurfaceCode.ipynb)
+
+12) [Mixed-state entanglement: The p3-PPT condition and batch shadows](examples/MixedStateEntanglement.ipynb)
+
+### Miscellanous
+
+13) [Noisy circuit simulations with tensor networks](examples/CircuitNoiseSimulations.ipynb)
+
+14) [Estimating statistical error bars via Jackknife resampling](examples/ErrorBars.ipynb)
+
+15) [Executing randomized measurements on IBM's quantum computers](examples/RandomizedMeasurementsQiskit.ipynb)
