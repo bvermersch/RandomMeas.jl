@@ -1,9 +1,7 @@
 using RandomMeas
 using Test
 
-filenames = ["test_simple.jl",
-  "test_examples.jl"
-]
+filenames = filter(x->occursin("test_",x), readdir())
 
 @testset "RandomMeas.jl" begin
     @testset "$filename" for filename in filenames

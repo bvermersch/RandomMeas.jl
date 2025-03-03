@@ -1,38 +1,35 @@
+using RandomMeas
 using Test
-using ITensors
-using StatsBase
-
-include("../src/MeasurementSettings.jl")
-include("../src/MeasurementData.jl")
-include("../src/AbstractShadows.jl")
-include("../src/DenseShadows.jl")
-
-
-include("../src/Shadows.jl")      # Path to Shadows_Struct.jl
-include("../src/Postprocessing.jl")      # Path to Postprocessing.jl
 
 @testset "DenseShadow Tests" begin
     # Define parameters
     N = 4  # Number of qubits/sites
-    ξ = siteinds("Qubit", N)  # Site indices
-    local_unitaries = [op("RandomUnitary", ξ[i]) for i in 1:N]  # Generate random unitaries
-    measurement_results = rand(1:2, 10, N)  # Simulated binary results (1, 2 for Julia indexing)
-    P = get_Born(measurement_results, ξ)  # Compute Born probabilities
+    NM = 10 # Number of projective measurements
+    site_indices = siteinds("Qubit", N)  # Site indices
+    #P = get_Born(measurement_results, ξ)  # Compute Born probabilities
     G = [1.2, 0.8, 1.5, 1.0]  # Example G values for robustness
+    measurement_results = rand(1:2, NM, N)
 
-    # Test DenseShadow constructor with ITensor P
-    @testset "Constructor with ITensor P" begin
-        shadow = DenseShadow(P, local_unitaries; G=G)
+    # Generate random local unitary measurement setting
+    measurement_setting = LocalUnitaryMeasurementSetting(N;site_indices=site_indices)
+    # Create MeasurementData
+    measurement_data = MeasurementData(measurement_results; measurement_setting=measurement_setting)
+    measurement_probability = MeasurementProbability(measurement_data)
+
+    # Constructor 1: From MeasurementData
+    # Test DenseShadow constructor with measurement_probability
+    @testset "Constructor with measurement_probability" begin
+        shadow = DenseShadow(measurement_probability; G=G)
         @test shadow.N == N
-        @test shadow.ξ == ξ
+        @test shadow.site_indices == site_indices
         @test isa(shadow.shadow_data, ITensor)
     end
 
-    # Test DenseShadow constructor with measurement_results
+    # Test DenseShadow constructor with measurement_data
     @testset "Constructor with measurement_results" begin
-        shadow = DenseShadow(measurement_results, local_unitaries; G=G)
+        shadow = DenseShadow(measurement_data; G=G)
         @test shadow.N == N
-        @test shadow.ξ == ξ
+        @test shadow.site_indices == site_indices
         @test isa(shadow.shadow_data, ITensor)
     end
 
@@ -40,57 +37,24 @@ include("../src/Postprocessing.jl")      # Path to Postprocessing.jl
     @testset "Batched Dense Shadows" begin
         NU = 10  # Number of random unitaries
         NM = 5   # Number of projective measurements per unitary
-        measurement_data = MeasurementData(
-            rand(1:2, NU, NM, N),
-            measurement_settings=LocalUnitaryMeasurementSettings(N, NU)
-        )
+        measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
+        for r in 1:NU
+            measurement_results = rand(1:2, NM, N)
+            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=site_indices,ensemble="Haar")
+            measurements[r] = MeasurementData(measurement_results; measurement_setting=measurement_setting)
+        end
+        measurement_group = MeasurementGroup(measurements)
+
         batched_shadows = get_dense_shadows(
-            measurement_data;
+            measurement_group;
             G=G,
-            number_of_ru_batches=3,
-            number_of_projective_measurement_batches=2
+            number_of_ru_batches=3
         )
 
-        @test size(batched_shadows) == (3, 2)
+        @test length(batched_shadows) == 3
         for shadow_batch in batched_shadows
             @test isa(shadow_batch, DenseShadow)
             @test shadow_batch.N == N
         end
-    end
-end
-
-
-@testset "Dense Shadows Comparison Tests" begin
-    # Parameters
-    N = 4   # Number of qubits/sites
-    NU = 5  # Number of random unitaries
-    NM = 10 # Number of projective measurements
-    G = fill(1.0, N) # G values (no measurement errors)
-
-    # Generate measurement settings
-    measurement_settings = LocalUnitaryMeasurementSettings(N, NU, ensemble="Haar")
-
-    # Simulate measurement results
-    ξ = measurement_settings.site_indices
-    local_unitaries = measurement_settings.local_unitaries
-    measurement_results = rand(0:1, NU, NM, N) .+ 1 # Ensure 1, 2 indexing
-    measurement_data = MeasurementData(measurement_results; measurement_settings=measurement_settings)
-
-    # Compute dense shadows using the new method
-    dense_shadows = get_dense_shadows(measurement_data; G=G)
-
-    # Compare with old method for each unitary
-    for r in 1:NU
-        # Compute P as the average over all projective measurements
-        P = get_Born(measurement_results[r, :, :], ξ)
-
-        # Compute shadow using the old method
-        old_shadow = get_shadow(P, ξ, local_unitaries[r, :]; G=G)
-
-        # Extract shadow from the new method
-        new_shadow = dense_shadows[r, 1].shadow_data
-
-        # Compare the two shadows
-        @test isapprox(new_shadow, old_shadow, atol=1e-10)
     end
 end

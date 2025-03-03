@@ -1,34 +1,28 @@
+using RandomMeas
 using Test
-using ITensors
-using Combinatorics
-# Include necessary files for Shadows module
-
-include("../src/MeasurementSettings.jl")
-include("../src/MeasurementData.jl")
-include("../src/Postprocessing.jl")
-
-include("../src/AbstractShadows.jl")
-include("../src/DenseShadows.jl")
-include("../src/FactorizedShadows.jl")
 
 # Test parameters
 N = 4         # Number of qubits
 NU = 5        # Number of unitaries
 NM = 6       # Number of measurements per unitary
 k_values = 1:4  # Trace moments to test
-site_indices = siteinds("Qubit", N)
+ξ = siteinds("Qubit", N)
 
 # Generate measurement settings and data
-measurement_settings = LocalUnitaryMeasurementSettings(N, NU; site_indices=site_indices)
-measurement_results = rand(1:2, NU, NM, N)  # Random binary measurement results
-measurement_data = MeasurementData(measurement_results; measurement_settings=measurement_settings)
+ψ1 = random_mps(ξ)
+measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
+for r in 1:NU
+    measurement_setting_r = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
+    measurements[r] = MeasurementData(ψ1,NM,measurement_setting_r;mode="dense")
+end
+measurement_group = MeasurementGroup(measurements)
 
 @testset "Trace Moments Tests" begin
     # Compute dense shadows
-    dense_shadows_4_batches = get_dense_shadows(measurement_data, number_of_ru_batches=4)
-    dense_shadows_nu_batches = get_dense_shadows(measurement_data, number_of_ru_batches=NU)
+    dense_shadows_4_batches = get_dense_shadows(measurement_group, number_of_ru_batches=4)
+    dense_shadows_nu_batches = get_dense_shadows(measurement_group, number_of_ru_batches=NU)
     # Compute factorized shadows
-    factorized_shadows = get_factorized_shadows(measurement_data)
+    factorized_shadows = get_factorized_shadows(measurement_group)
 
     # Test for each moment k
     for k in k_values

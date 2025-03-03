@@ -1,65 +1,28 @@
-# Factorized Classical Shadow Constructor
-"""
-    FactorizedShadow
-
-A struct representing a factorized classical shadow for a quantum system.
-
-# Fields
-- `shadow_data::Vector{ITensor}`: Array of `N` ITensors, each 2x2, representing the factorized shadow for each qubit/site.
-- `N::Int`: Number of qubits/sites.
-- `ξ::Vector{Index{Int64}}`: Vector of site indices corresponding to the qubits/sites.
-
-# Constructor
-`FactorizedShadow(shadow_data::Vector{ITensor}, N::Int, ξ::Vector{Index{Int64}})`
-"""
-struct FactorizedShadow <: AbstractShadow
-    shadow_data::Vector{ITensor}  # Array of N ITensors, each 2x2
-    N::Int                             # Number of qubits/sites
-    ξ::Vector{Index{Int64}}            # Vector of site indices
-
-    """
-    Create a `FactorizedShadow` object with validation.
-
-    # Arguments
-    - `shadow_data::Vector{ITensor}`: Array of ITensors representing the factorized shadow for each qubit/site.
-    - `N::Int`: Number of qubits/sites.
-    - `ξ::Vector{Index{Int64}}`: Vector of site indices corresponding to the qubits/sites.
-
-    # Throws
-    - `AssertionError` if the dimensions of `shadow_data`, `ξ` do not match `N`.
-    """
-    function FactorizedShadow(shadow_data::Vector{ITensor}, N::Int, ξ::Vector{Index{Int64}})
-        @assert length(shadow_data) == N "Length of shadow_data must match N."
-        @assert length(ξ) == N "Length of site indices ξ must match N."
-        new(shadow_data, N, ξ)
-    end
-end
-
 # Constructor for FactorizedShadow from raw measurement results and unitaries
 """
-    FactorizedShadow(measurement_results::Vector{Int}, local_unitaries::Vector{ITensor};
-                     G::Vector{Float64} = fill(1.0, length(local_unitaries)))
+    FactorizedShadow(measurement_results::Vector{Int}, local_unitary::Vector{ITensor};
+                     G::Vector{Float64} = fill(1.0, length(local_unitary)))
 
 Construct a `FactorizedShadow` object from raw measurement results and unitary transformations.
 
 # Arguments
 - `measurement_results::Vector{Int}`: Vector of binary measurement results for each qubit/site.
-- `local_unitaries::Vector{ITensor}`: Vector of local unitary transformations applied during the measurement.
+- `local_unitary::Vector{ITensor}`: Vector of local unitary transformations applied during the measurement.
 - G::Vector{Float64}` (optional): Vector of `G` values for measurement error correction (default: 1.0 for all sites).
 
 # Returns
 A `FactorizedShadow` object.
 """
-function FactorizedShadow(measurement_results::Vector{Int}, local_unitaries::Vector{ITensor}; G::Vector{Float64} = fill(1.0, length(local_unitaries)))
+function FactorizedShadow(measurement_results::Vector{Int}, local_unitary::Vector{ITensor}; G::Vector{Float64} = fill(1.0, length(local_unitary)))
     # Number of qubits/sites
-    N = length(local_unitaries)
+    N = length(local_unitary)
 
     # Validate dimensions
     @assert length(G) == N "Length of G ($length(G)) must match the number of qubits/sites (N = $N)."
     @assert length(measurement_results) == N "Length of measurement_results ($length(measurement_results)) must match the number of qubits/sites (N = $N)."
 
     # Extract site indices from local unitaries
-    ξ = [noprime(first(inds(u))) for u in local_unitaries]
+    ξ = [noprime(first(inds(u))) for u in local_unitary]
 
     # Construct the factorized shadow for each qubit/site
     shadow_data = Vector{ITensor}(undef, N)
@@ -69,7 +32,7 @@ function FactorizedShadow(measurement_results::Vector{Int}, local_unitaries::Vec
         β = (G[i] - 2.0) / (2.0 * G[i] - 1.0)
 
         # Construct the shadow ITensor
-        ψ = dag(local_unitaries[i]) * onehot(ξ[i]' => measurement_results[i])  # State vector after measurement
+        ψ = dag(local_unitary[i]) * onehot(ξ[i]' => measurement_results[i])  # State vector after measurement
         shadow = α * ψ' * dag(ψ) + β * δ(ξ[i], ξ[i]')  # Weighted sum of rank-1 projector and identity
         shadow_data[i] = shadow
 
@@ -80,34 +43,55 @@ end
 
 # Factorized Shadows
 """
-    get_factorized_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSettings};
+    get_factorized_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting};
                            G::Vector{Float64} = fill(1.0, measurement_data.N))
 
 Compute factorized shadows for all measurement results in the provided `MeasurementData`.
 
 # Arguments
-- `measurement_data::MeasurementData{LocalUnitaryMeasurementSettings}`: Measurement data object containing measurement results and settings.
+- `measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}`: Measurement data object containing measurement results and settings.
 - `G::Vector{Float64}` (optional): Vector of `G` values for measurement error correction (default: 1.0 for all sites).
 
 # Returns
-A 2D array of `FactorizedShadow` objects with dimensions `(NU, NM)`.
+A Vector of NM `FactorizedShadow` objects with dimensions.
 """
-function get_factorized_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSettings}; G::Vector{Float64} = fill(1.0, measurement_data.N))
+function get_factorized_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, measurement_data.N))
     # Extract dimensions from measurement data
-    NU, NM, _ = size(measurement_data.measurement_results)
-    shadows = Array{FactorizedShadow}(undef, NU, NM)
+    NM = measurement_data.NM
+    shadows = Vector{FactorizedShadow}(undef, NM)
+    local_unitary = measurement_data.measurement_setting.local_unitary
 
-    for r in 1:NU
         for m in 1:NM
-            # Extract local unitary transformations and measurement results for this RU/shot
-            local_unitaries = measurement_data.measurement_settings.local_unitaries[r, :]
-            data = measurement_data.measurement_results[r, m, :]
+            # Extract local unitary transformations and measurement results for this shot
+            data = measurement_data.measurement_results[m, :]
 
-            # Construct a FactorizedShadow for this RU/shot
-            shadows[r, m] = FactorizedShadow(data, local_unitaries; G = G)
+            # Construct a FactorizedShadow for this shot
+            shadows[m] = FactorizedShadow(data, local_unitary; G = G)
         end
-    end
+    return shadows
+end
 
+"""
+    get_factorized_shadows(measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting};
+                           G::Vector{Float64} = fill(1.0, measurement_group.N))
+
+Compute factorized shadows for all measurement results in the provided `MeasurementGroup`.
+
+# Arguments
+- `measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}`: Measurement data object containing measurement results and settings.
+- `G::Vector{Float64}` (optional): Vector of `G` values for measurement error correction (default: 1.0 for all sites).
+
+# Returns
+A Array of NU*NM `FactorizedShadow` objects with dimensions.
+"""
+function get_factorized_shadows(measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, measurement_group.N))
+    # Extract dimensions from measurement data
+    NM = measurement_group.NM
+    NU = measurement_group.NU
+    shadows = Array{FactorizedShadow}(undef, NU, NM)
+    for r in 1:NU
+        shadows[r,:] = get_factorized_shadows(measurement_group.measurements[r];G=G)
+    end
     return shadows
 end
 
@@ -128,7 +112,7 @@ The expectation value as a `ComplexF64` (or `Float64` if purely real).
 """
 function get_expect_shadow(O::MPO, shadow::FactorizedShadow)
     N = shadow.N
-    ξ = shadow.ξ
+    ξ = shadow.site_indices
     X = 1
     for i in 1:N
         s = ξ[i]
@@ -156,7 +140,7 @@ A new `FactorizedShadow` object representing the element-wise product of the two
 """
 function multiply(shadow1::FactorizedShadow, shadow2::FactorizedShadow)
     @assert shadow1.N == shadow2.N "Number of qubits/sites must match."
-    @assert shadow1.ξ == shadow2.ξ "Site indices must match."
+    @assert shadow1.site_indices == shadow2.site_indices "Site indices must match."
 
     # Perform element-wise multiplication of the shadows with mapprime
     combined_shadows = Vector{ITensor}(undef, shadow1.N)
@@ -165,7 +149,7 @@ function multiply(shadow1::FactorizedShadow, shadow2::FactorizedShadow)
     end
 
     # Return the new FactorizedShadow
-    return FactorizedShadow(combined_shadows, shadow1.N, shadow1.ξ)
+    return FactorizedShadow(combined_shadows, shadow1.N, shadow1.site_indices)
 end
 
 
@@ -190,7 +174,7 @@ function trace(shadow::FactorizedShadow)
 
     # Compute the product of traces of individual tensors
     for i in 1:shadow.N
-        tensor_trace = scalar(shadow.shadow_data[i] * δ(shadow.ξ[i], prime(shadow.ξ[i])))
+        tensor_trace = scalar(shadow.shadow_data[i] * δ(shadow.site_indices[i], prime(shadow.site_indices[i])))
         total_trace *= tensor_trace
     end
 
@@ -222,7 +206,7 @@ function partial_trace(shadow::FactorizedShadow, subsystem::Vector{Int}; assume_
 
     # Extract tensors and site indices for the subsystem
     reduced_shadow_data = shadow.shadow_data[subsystem]
-    reduced_ξ = shadow.ξ[subsystem]
+    reduced_ξ = shadow.site_indices[subsystem]
 
     if !assume_unit_trace
 
@@ -232,7 +216,7 @@ function partial_trace(shadow::FactorizedShadow, subsystem::Vector{Int}; assume_
         # Iterate over sites not in the subsystem and compute the trace
         for i in setdiff(1:shadow.N, subsystem)
             tensor = shadow.shadow_data[i]
-            trace_value = scalar(tensor * δ(shadow.ξ[i], prime(shadow.ξ[i])))
+            trace_value = scalar(tensor * δ(shadow.site_indices[i], prime(shadow.site_indices[i])))
             trace_product *= trace_value
         end
 
@@ -274,11 +258,11 @@ function partial_transpose(shadow::FactorizedShadow, subsystem::Vector{Int})::Fa
     # Create a new vector for the ITensor views.
     new_shadow_data = copy(shadow.shadow_data)
     for i in subsystem
-        a = shadow.ξ[i]      # unprimed index for site i
+        a = shadow.site_indices[i]      # unprimed index for site i
         b = prime(a)         # its primed partner
         new_shadow_data[i] = swapind(new_shadow_data[i], a, b)
     end
-    return FactorizedShadow(new_shadow_data, shadow.N, shadow.ξ)
+    return FactorizedShadow(new_shadow_data, shadow.N, shadow.site_indices)
 end
 
 """
@@ -294,7 +278,7 @@ A `DenseShadow` object with the combined ITensor.
 """
 function convert_to_dense_shadow(factorized_shadow::FactorizedShadow)::DenseShadow
     N = factorized_shadow.N
-    ξ = factorized_shadow.ξ
+    ξ = factorized_shadow.site_indices
 
     # Start with the first shadow tensor
     dense_tensor = factorized_shadow.shadow_data[1]
