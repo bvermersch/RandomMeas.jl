@@ -1,3 +1,7 @@
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# SPDX-License-Identifier: Apache-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 """
     RandomMeas
 
@@ -48,10 +52,6 @@ using RandomMeas
 This gives you access to functionality for creating measurement settings, acquiring data,
 computing shadows, and performing quantum state estimation.
 
-# Authors and License
-
-- **Authors:** Benoit Vermersch and Andreas Elben
-- **License:** Apache 2.0
 
 For further details and examples, please refer to the package’s documentation.
 """

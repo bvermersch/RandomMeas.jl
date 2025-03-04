@@ -1,3 +1,7 @@
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# SPDX-License-Identifier: Apache-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 # Constructor with a precomputed probability tensor `P`
 """
     DenseShadow(measurement_probability::MeasurementProbability; G::Vector{Float64} = fill(1.0, length(u)))

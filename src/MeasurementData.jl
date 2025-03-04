@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# SPDX-License-Identifier: Apache-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 
 """
     MeasurementData(measurement_results::Array{Int, 2}; measurement_setting::Union{T, Nothing} = nothing)

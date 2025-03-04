@@ -9,35 +9,48 @@ Documentation for [RandomMeas.jl](https://github.com/bvermersch/RandomMeas.jl): 
 ```@contents
 Depth = 2:3
 ```
-## Structures
+
+## Data acquisition
+
+### Data acquisition types
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["MeasurementStructures.jl","ShadowStructures.jl"]
+Pages = ["MeasurementStructures.jl"]
 ```
 
-## Data acquisition routines
+### Data acquisition routines
 
 ```@autodocs
 Modules = [RandomMeas]
-Pages = ["MeasurementStructures.jl","ShadowStructures.jl","MeasurementSetting.jl","MeasurementData.jl","MeasurementGroup.jl","MeasurementProbability.jl"]
+Pages = ["MeasurementSetting.jl","MeasurementData.jl","MeasurementGroup.jl","MeasurementProbability.jl"]
 ```
 
-## Postprocessing routines (excluding classical shadows)
+
+## Postprocessing (excluding classical shadows)
 
 ```@autodocs
 Modules = [RandomMeas]
 Pages = ["Estimators.jl"]
 ```
 
-## Postprocessing routines for classical shadows
+## Postprocessing for classical shadows
+
+### Classical shadow types
+
+```@autodocs
+Modules = [RandomMeas]
+Pages = ["ShadowStructures.jl"]
+```
+
+### Classical shadow routines
 
 ```@autodocs
 Modules = [RandomMeas]
 Pages = ["AbstractShadows.jl","FactorizedShadows.jl", "DenseShadows.jl","ShallowShadows.jl"]
 ```
 
-## Routines for simulating quantum circuits
+## Simulating quantum circuits
 
 ```@autodocs
 Modules = [RandomMeas]
