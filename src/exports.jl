@@ -88,8 +88,8 @@ get_average_mps,
 #Circuits.jl
 apply_depo_channel,
 random_circuit,
-# random_Pauli_layer,
-# random_magnetic_field_layer,
+random_Pauli_layer,
+random_magnetic_field_layer,
 
 #ShallowShadows.jl,
 get_shallow_depolarization_mps,
