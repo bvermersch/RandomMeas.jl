@@ -12,7 +12,7 @@ quantum many-body states and processes.
    Loads external dependencies and global utilities from `imports.jl`.
 
 2. **Core Structures:**
-   Defines fundamental types and data structures (in `Structures.jl`).
+   Defines fundamental types and data structures (in `MeasurementsStructures.jl` and `ShadowStructures.jl`).
 
 3. **Measurement Modules:**
    - `MeasurementSetting.jl`
@@ -25,13 +25,13 @@ quantum many-body states and processes.
    - `AbstractShadows.jl`
    - `FactorizedShadows.jl`
    - `DenseShadows.jl`
+   - `ShallowShadows.jl`
    Implements classical shadow techniques.
 
 5. **Additional Functionality:**
    - `Estimators.jl`
    - `TensorNetworkUtilities.jl`
    - `Circuits.jl`
-   - `ShallowShadows.jl`
    Provide estimation functions (not involving classical shadows), utilities for tensor network states, circuit tools, and protocols for shallow shadows.
 
 6. **Exports:**
@@ -51,7 +51,7 @@ computing shadows, and performing quantum state estimation.
 # Authors and License
 
 - **Authors:** Benoit Vermersch and Andreas Elben
-- **License:** TODO [Your License, e.g., MIT License]
+- **License:** Apache 2.0
 
 For further details and examples, please refer to the package’s documentation.
 """
@@ -66,7 +66,9 @@ include("imports.jl")
 # ---------------------------------------------------------------------------
 # Load Core Data Structures and Types.
 # ---------------------------------------------------------------------------
-include("Structures.jl")
+include("MeasurementStructures.jl")
+include("ShadowStructures.jl")
+
 
 # ---------------------------------------------------------------------------
 # Load Measurement Modules.
