@@ -91,23 +91,23 @@ function random_circuit(ξ::Vector{Index{Int64}}, depth::Int64)
 end
 
 
-r"""
+"""
     random_Pauli_layer(ξ::Vector{Index{Int64}}, p::Vector{Float64})
 
 Construct a layer of random single-qubit Pauli operations to simulate local depolarization. Upon avereraging, this corresponds to the local depolarization channel with strength p.
 
-For each qubit (with index \(i\)), a random Pauli operation is applied with the following probabilities:
-- With probability \(1 - \tfrac{3p_i}{4}\): No operation is applied (the qubit remains unchanged).
-- With probability \(\tfrac{p_i}{4}\) each: Apply the \(X\), \(Y\), or \(Z\) gate.
+For each qubit (with index i), a random Pauli operation is applied with the following probabilities:
+- With probability 1 - 3p_i/4: No operation is applied (the qubit remains unchanged).
+- With probability p_i/4} each: Apply the X, Y, or Z gate.
 
-Here, \(p_i\) is the depolarization probability for qubit \(i\).
+Here, p_i is the depolarization probability for qubit i.
 
 # Arguments
 - `ξ::Vector{Index{Int64}}`: A vector of ITensor indices representing the qubit sites.
 - `p::Vector{Float64}`: A vector of depolarization probabilities (one per qubit).
 
 # Returns
-A vector of ITensors representing the applied Pauli gates. If no gate is applied on a site (with probability \(1 - \tfrac{3p_i}{4}\)), that site is omitted from the returned circuit.
+A vector of ITensors representing the applied Pauli gates. If no gate is applied on a site (with probability 1 - 3p_i/4, that site is omitted from the returned circuit.
 
 # Example
 ```julia
@@ -132,13 +132,13 @@ function random_Pauli_layer(ξ::Vector{Index{Int64}}, p::Vector{Float64})
     return circuit
 end
 
-r"""
+"""
     random_magnetic_field_layer(ξ::Vector{Index{Int64}}, p::Vector{Float64})
 
 Construct a layer of random Rz gates representing a random magnetic field along the z-axis.
 
-For each qubit \(i\), a random rotation \(Rz\) is applied with a rotation angle drawn uniformly from \([0, 2\pi p_i)\).
-This gives an average rotation angle of \(\pi p_i\) on each site.
+For each qubit i, a random rotation Rz is applied with a rotation angle drawn uniformly from [0, 2 pi p_i).
+This gives an average rotation angle of pi p_i on each site.
 
 # Arguments
 - `ξ::Vector{Index{Int64}}`: A vector of ITensor indices corresponding to the qubit sites.
