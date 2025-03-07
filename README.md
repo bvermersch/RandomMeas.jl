@@ -101,4 +101,4 @@ println("estimated purities ",ps);
 
 ## Acknowledgments
 
-The development of this code has been supported by University Grenoble Alpes, CNRS, Agence National de la Recherche (ANR) under the programs QRand (ANR-20-CE47-0005), and via the research programs Plan France 2030 EPIQ (ANR-22-PETQ-0007), QUBITAF (ANR-22-PETQ-0004) and HQI (ANR-22-PNCQ-0002), and Quobly.
+The development of this code has been supported by University Grenoble Alpes, CNRS, Agence National de la Recherche (ANR) under the programs QRand (ANR-20-CE47-0005), and via the research programs Plan France 2030 EPIQ (ANR-22-PETQ-0007), QUBITAF (ANR-22-PETQ-0004) and HQI (ANR-22-PNCQ-0002), and Quobly. Furthermore, we acknowledge support from the Walter Burke Institue and the ETHZ-PSI Quantum Computing Hub.
