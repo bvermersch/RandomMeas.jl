@@ -6,7 +6,7 @@
 
 This package presents efficient routines for testing and postprocessing randomized measurements, in order to estimate physical properties in quantum computers.
 
-RandomMeas relies heavily on ITensors. Some examples use the packages PastaQ and MAT
+RandomMeas relies heavily on ITensors.
 
 <img src="Pics/RandomMeas.png" alt="drawing" width="500"/>.
 
@@ -33,28 +33,24 @@ pkg> add RandomMeas
  ```julia
  using ITensors,ITensorMPS
  using RandomMeas
- N  = 2
- ψ = random_mps(siteinds("Qubit", 2*N); linkdims=2^N);
- ρ,ξ = reduce_dm(ψ,1,N)
+N = 2#number of qubits
+χ = 2 #bon dimension of a Matrix-Product-State
+ξ = siteinds("Qubit", N)
+ψ = random_mps(ξ; linkdims=χ);
  
-
- nu=100 #number of random unitaries
- NM=100 #number of projective measurements
- data = zeros(Int8,(nu,NM,N))
- for r in 1:nu
-     #generate Haar-random single qubit rotations
-     u = get_rotations(ξ,"Haar")
-     #acquire RM measurements
-     data[r,:,:] = get_RandomMeas(ρ,u,NM,"dense")
- end
+NU=100
+NM=100
+measurement_group = MeasurementGroup(ψ,NU,NM;mode="dense");
  ```
 
 2) Postprocessing routines for randomized measurements, eg to get the purity
 
  ```julia
- purity_e = get_purity_hamming(data,ξ)
-    println("estimated purity ", purity_e)
-    println("exact purity ", get_purity(ρ))
+ps = zeros(N)
+for NA in 1:N
+        ps[NA] = get_purity(measurement_group, collect(1:NA))
+end
+println("estimated purities ",ps);
  ```
 
 3) Interface with matrix-product-states simulations with ITensors.jl to simulate large-scale randomized measurements protocols.
@@ -77,7 +73,7 @@ pkg> add RandomMeas
 
 ### Quantum benchmark
 
-6) [Cross-Entropy/Self-Cross entropy benchmarking](examples/CrossEntropy.ipynb)
+6) [Cross-Entropy/Self-Cross entropy benchmarking](examples/CrossEntropyBenchmarking.ipynb)
 
 7) [Fidelities from common randomized measurements](examples/FidelityCommonRandomizedMeasurements.ipynb)
 
@@ -102,3 +98,7 @@ pkg> add RandomMeas
 15) [Executing randomized measurements on IBM's quantum computers](examples/RandomizedMeasurementsQiskit.ipynb)
 
 16) [Postprocessing randomized measurements from IBM's quantum computers](examples/RandomizedMeasurementsQiskitPostprocessing.ipynb)
+
+## Acknowledgments
+
+The development of this code has been supported by University Grenoble Alpes, CNRS, Agence National de la Recherche (ANR) under the programs QRand (ANR-20-CE47-0005), and via the research programs Plan France 2030 EPIQ (ANR-22-PETQ-0007), QUBITAF (ANR-22-PETQ-0004) and HQI (ANR-22-PNCQ-0002), and Quobly. Furthermore, we acknowledge support from the Walter Burke Institue and the ETHZ-PSI Quantum Computing Hub.
