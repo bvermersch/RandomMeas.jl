@@ -1,0 +1,1 @@
+This data corresponds to the experiment performed in Probing Rényi Entanglement Entropies via Randomized Measurements, Science 2019, and which had been made available in https://zenodo.org/doi/10.5281/zenodo.1445994
