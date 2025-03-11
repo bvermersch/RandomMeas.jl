@@ -187,7 +187,7 @@
       identification within third-party archives.
 
 
-   Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+   Copyright (c) 2025 Paul Scherrer Institute (PSI) and Université Grenoble Alpes (UGA)
    
 
    Licensed under the Apache License, Version 2.0 (the "License");
