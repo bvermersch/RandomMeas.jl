@@ -1,0 +1,13 @@
+Open Source Software Attribution Notice for RandomMeas.jl
+ 
+This software includes the following open source components:
+ 
+1. RandomMeas.jl
+   Authors: Benoit Vermersch, Andreas Elben
+   Copyright (c) 2025 Paul Scherrer Institute (PSI) and Université Grenoble Alpes (UGA)
+   License: Apache 2.0
+   https://github.com/bvermersch/RandomMeas.jl/
+ 
+Full license texts for these components are included in the 'LICENSE.txt' file of this software package.
+ 
+This attribution notice is provided for informational purposes only and does not modify any license terms.
