@@ -30,12 +30,13 @@ pkg> add RandomMeas
  ```julia
  using ITensors,ITensorMPS
  using RandomMeas
-N = 2#number of qubits
+N = 3#number of qubits
 χ = 2 #bon dimension of a Matrix-Product-State
 ξ = siteinds("Qubit", N)
 ψ = random_mps(ξ; linkdims=χ);
+
  
-NU=100 #Number of measurement settings
+NU=200 #Number of measurement settings
 NM=100 #Number of projective measurements per setting
 measurement_group = MeasurementGroup(ψ,NU,NM;mode="dense");
  ```
@@ -43,11 +44,14 @@ measurement_group = MeasurementGroup(ψ,NU,NM;mode="dense");
 2) Postprocessing routines for randomized measurements, eg to get the purity
 
  ```julia
-ps = zeros(N)
+p_estimated = zeros(N)
+p_exact = zeros(N)
 for NA in 1:N
-        ps[NA] = get_purity(measurement_group, collect(1:NA))
+        p_estimated[NA] = get_purity(measurement_group, collect(1:NA)) #Estimated value
+        p_exact[NA] = get_trace_moment(ψ,2,collect(1:NA)) #Exact value
 end
-println("estimated purities ",ps);
+println("Exact purities ", p_estimated);
+println("Estimated purities ",p_exact);
  ```
 
 3) Interface with matrix-product-states simulations with ITensors.jl to simulate large-scale randomized measurements protocols.
