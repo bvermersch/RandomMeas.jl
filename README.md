@@ -18,9 +18,6 @@ In a Julia terminal, install the package RandomMeas
 julia> ]
 pkg> add RandomMeas
 ```
-## Structure
-
-![Image](StructureRandomMeas.drawio.svg)
 
 ## Documentation
 
@@ -38,8 +35,8 @@ N = 2#number of qubits
 ξ = siteinds("Qubit", N)
 ψ = random_mps(ξ; linkdims=χ);
  
-NU=100
-NM=100
+NU=100 #Number of measurement settings
+NM=100 #Number of projective measurements per setting
 measurement_group = MeasurementGroup(ψ,NU,NM;mode="dense");
  ```
 

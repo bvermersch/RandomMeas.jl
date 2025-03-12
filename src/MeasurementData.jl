@@ -139,6 +139,7 @@ A new `MeasurementData{T}` object with:
 # Suppose `data` is a MeasurementData object with N = 4.
 # To retain only sites 1 and 3:
 reduced_data = reduce_to_subsystem(data, [1, 3])
+```
 """
 function reduce_to_subsystem(data::MeasurementData{T}, subsystem::Vector{Int})::MeasurementData{T} where T <: Union{Nothing, LocalMeasurementSetting}
     # Validate that each index in the subsystem is in the valid range.
