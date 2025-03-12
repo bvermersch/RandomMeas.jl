@@ -1,3 +1,7 @@
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# SPDX-License-Identifier: Apache-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 """
     MeasurementGroup(measurements::Vector{MeasurementData{T}}) where {T <: Union{Nothing, AbstractMeasurementSetting}}
 
@@ -37,18 +41,18 @@ function MeasurementGroup(
 end
 
 """
-MeasurementGroup(ψ::Union{MPO, MPS}, NU::Int, NM::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
+    MeasurementGroup(ψ::Union{MPO, MPS}, NU::Int, NM::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
 ::MeasurementGroup{LocalUnitaryMeasurementSetting}
 
-Construct a MeasurementGroup from a quantum state ψ by generating NU local measurement settings and simulating NM
+Construct a MeasurementGroup from a quantum state `ψ` by generating `NU` local measurement settings and simulating `NM`
 projective measurements per setting.
 
 # Arguments
-	-  ψ::Union{MPO, MPS}: The quantum state.
-	-	NU::Int: Number of measurement data objects to generate.
-	-	NM::Int: Number of measurements per setting.
-	-	mode::String: Simulation mode; defaults to “MPS/MPO”.
-	-	progress_bar::Bool: Whether to show a progress bar.
+- `ψ::Union{MPO, MPS}`: The quantum state.
+- `NU::Int`: Number of measurement data objects to generate.
+- `NM::Int`: Number of measurements per setting.
+- `mode::String`: Simulation mode; defaults to “MPS/MPO”.
+- `progress_bar::Bool`: Whether to show a progress bar.
 
 # Returns
 A MeasurementGroup{LocalUnitaryMeasurementSetting} object.
@@ -80,19 +84,19 @@ function MeasurementGroup(
 end
 
 """
-MeasurementGroup(ψ::Union{MPO, MPS}, NU::Int, NM::Int, depth::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
+    MeasurementGroup(ψ::Union{MPO, MPS}, NU::Int, NM::Int, depth::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
 ::MeasurementGroup{ShallowUnitaryMeasurementSetting}
 
-Construct a MeasurementGroup from a quantum state ψ by generating NU shallow measurement settings and simulating
-NM measurements per unitary.
+Construct a MeasurementGroup from a quantum state `ψ` by generating `NU` shallow measurement settings and simulating
+`NM` measurements per unitary.
 
 # Arguments
-	-  ψ::Union{MPO, MPS}: The quantum state.
-	-	NU::Int: Number of measurement data objects to generate.
-	-	NM::Int: Number of measurements per setting.
-    -   depth::Int: Circuit depth for shallow settings.
-	-	mode::String: Simulation mode; defaults to “MPS/MPO”.
-	-	progress_bar::Bool: Whether to show a progress bar.
+- `ψ::Union{MPO, MPS}`: The quantum state.
+- `NU::Int`: Number of measurement data objects to generate.
+- `NM::Int`: Number of measurements per setting.
+- `depth::Int`: Circuit depth for shallow settings.
+- `mode::String`: Simulation mode; defaults to “MPS/MPO”.
+- `progress_bar`::Bool: Whether to show a progress bar.
 # Returns
 
 A MeasurementGroup{ShallowUnitaryMeasurementSetting} object.

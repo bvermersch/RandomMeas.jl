@@ -1,3 +1,7 @@
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
+# SPDX-License-Identifier: Apache-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 """
     get_fidelity(
         group_1::MeasurementGroup,

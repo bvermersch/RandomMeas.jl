@@ -1,3 +1,7 @@
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# SPDX-License-Identifier: Apache-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 # Constructor with a precomputed probability tensor `P`
 """
     DenseShadow(measurement_probability::MeasurementProbability; G::Vector{Float64} = fill(1.0, length(u)))
@@ -247,57 +251,4 @@ function partial_transpose(shadow::DenseShadow, subsystem::Vector{Int})::DenseSh
         A = swapind(A, a, b)  # swap the indices; swapind returns a view
     end
     return DenseShadow(A, shadow.N, shadow.site_indices)
-end
-
-############
-
-
-"""
-    get_purity_dense_shadows(measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}, subsystem::Vector{Int} = collect(1:data.N))
-
-Compute the purity (second trace moment) using dense shadows.
-# Arguments:
-- `measurement_data::MeasurementGroup{LocalUnitaryMeasurementSettings}`: The measurement data object containing results, settings, and site indices.
-
-# Returns:
-The purity (second trace moment) as a `Float64`.
-
-# Notes:
-This function is specifically optimized fork = 2, providing significant speed-up for large datasets:
-- **Linear Scaling:** The method scales linearly in the number of unitaries ( NU ), as opposed to the quadratic scaling of general trace moment estimators.
-- **No Batching:** All measurement results are processed without dividing into batches, ensuring smallest statistical errors.
-
-"""
-function get_purity_dense_shadows(measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}, subsystem::Vector{Int} = collect(1:data.N))
-
-    #TODO  "This function is not yet optimized for k=2. Instead, it use standard dense batch shadows to compute the purity."
-
-    reduced_group = reduce_to_subsystem(measurement_group, subsystem)
-
-    dense_shadows = get_dense_shadows(reduced_group,number_of_ru_batches=2)
-
-    return get_trace_moment(dense_shadows,2)
-
-    # NU, NM, N = measurement_data.NU, measurement_data.NM, measurement_data.N
-    # ξ = measurement_data.measurement_settings.site_indices
-    # u = measurement_data.measurement_settings.local_unitaries
-    # data = measurement_data.measurement_results
-
-    # # Initialize accumulators for mean shadow and mean squared shadow
-    # shadow_mean = ITensor(vcat(ξ, prime(ξ)))  # Mean shadow
-    # shadow2_mean = ITensor(vcat(ξ, prime(ξ)))  # Mean squared shadow
-
-    # # Accumulate shadows and squared shadows
-    # for r in 1:NU
-    #     # Construct the DenseShadow for each random unitary
-    #     shadow_temp = DenseShadow(data[r, :, :], u[r, :]).dense_shadow
-
-    #     # Update accumulators
-    #     shadow_mean += shadow_temp
-    #     shadow2_mean += power(shadow_temp, 2)  # Compute squared shadow
-    # end
-
-    # # Compute the purity using the trace
-    # purity = real(trace(power(shadow_mean, 2), ξ) - trace(shadow2_mean, ξ)) / (NU * (NU - 1))
-    # return purity
 end
