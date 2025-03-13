@@ -28,8 +28,7 @@ pkg> add RandomMeas
 1) Routines to prepare on QPUs/simulate the data acquisition
 
  ```julia
- using ITensors,ITensorMPS
- using RandomMeas
+using RandomMeas
 N = 3#number of qubits
 χ = 2 #bon dimension of a Matrix-Product-State
 ξ = siteinds("Qubit", N)
