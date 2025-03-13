@@ -4,7 +4,7 @@
 [![Build Status](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-This package presents efficient routines for testing and postprocessing randomized measurements, in order to estimate physical properties in quantum computers.
+This package presents efficient routines for sampling, simulating, and postprocessing randomized measurements, for instance via classical shadows, to learn properties of many-body quantum states and processes.
 
 RandomMeas relies heavily on ITensors.
 
