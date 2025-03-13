@@ -1,4 +1,4 @@
-# RandomMeas: The randomized measurements toolbox in julia
+# RandomMeas: The randomized measurement toolbox in Julia
 
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bvermersch.github.io/RandomMeas.jl/dev/)
 [![Build Status](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml?query=branch%3Amain)
