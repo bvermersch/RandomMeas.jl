@@ -1,0 +1,80 @@
+classDiagram
+    %% Abstract Measurement Settings
+    class AbstractMeasurementSetting {
+      <<abstract>>
+    }
+    class LocalMeasurementSetting {
+      <<abstract>>
+    }
+    AbstractMeasurementSetting <|-- LocalMeasurementSetting
+
+    %% Concrete Measurement Settings
+    class LocalUnitaryMeasurementSetting {
+      +N : Int
+      +local_unitary : Vector(ITensor)
+      +site_indices : Vector(Index(Int64))
+    }
+    LocalMeasurementSetting <|-- LocalUnitaryMeasurementSetting
+
+    class ComputationalBasisMeasurementSetting {
+      +N : Int
+      +local_unitary : Vector(ITensor)
+      +site_indices : Vector(Index(Int64))
+    }
+    LocalMeasurementSetting <|-- ComputationalBasisMeasurementSetting
+
+    class ShallowUnitaryMeasurementSetting {
+      N : Int
+      K : Int
+      local_unitary : Vector(ITensor)
+      site_indices : Vector(Index(Int64))
+    }
+    AbstractMeasurementSetting <|-- ShallowUnitaryMeasurementSetting
+
+    %% Measurement Data Structures
+    class MeasurementData {
+      +N : Int
+      +NM : Int
+      +measurement_results : Array(Int,2)
+      +measurement_setting : T
+    }
+    class MeasurementProbability {
+      +N : Int
+      +measurement_probability : ITensor
+      +measurement_setting : T
+      +site_indices : Vector(Index(Int64))
+    }
+    class MeasurementGroup {
+      +N : Int
+      +NU : Int
+      +NM :  Int
+      +measurements : Vector(MeasurementData(T))
+    }
+
+    %% Classical Shadows
+    class AbstractShadow {
+      <<abstract>>
+    }
+    class DenseShadow {
+      shadow_data::ITensor
+      N::Int                             
+      site_indices::Vector(Index(Int64)) 
+    }
+    class FactorizedShadow {
+      shadow_data::Vector(ITensor)
+      N::Int                             
+      site_indices::Vector(Index(Int64)) 
+    }
+    class ShallowShadow {
+      shadow_data::MPO
+      N::Int                             
+      site_indices::Vector(Index(Int64)) 
+    }
+    AbstractShadow <|-- DenseShadow
+    AbstractShadow <|-- FactorizedShadow
+    AbstractShadow <|-- ShallowShadow
+
+    %% Relationships between Data Structures and Settings
+    MeasurementData --> AbstractMeasurementSetting 
+    MeasurementProbability --> AbstractMeasurementSetting 
+    MeasurementGroup o-- MeasurementData
