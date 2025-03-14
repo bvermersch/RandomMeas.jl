@@ -4,7 +4,7 @@ CurrentModule = RandomMeas
 
 # RandomMeas
 
-Documentation for [RandomMeas.jl](https://github.com/bvermersch/RandomMeas.jl): The randomized measurements toolbox in julia
+Documentation for [RandomMeas.jl](https://github.com/bvermersch/RandomMeas.jl): The randomized measurement toolbox in Julia
 
 ```@contents
 Depth = 2:3
