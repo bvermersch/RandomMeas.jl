@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -94,6 +94,9 @@ function MeasurementData(
         data = zeros(Int,NM,N)
         ξ = measurement_setting.site_indices
         u = measurement_setting.local_unitary
+
+        @assert length(ψ) == N "The number of sites of the MPS/MPO ψ and the MeasurementSettings Object do not match."
+
         if isa(ψ,MPS)
             ψu = apply(reverse(u),ψ) #using reverse allows us to maintain orthocenter(ψ)=1 ;)
             orthogonalize!(ψu,1)
