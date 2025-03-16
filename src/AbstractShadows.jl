@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -99,13 +99,13 @@ moment1 = get_trace_moment(shadows, 1)
 moment2 = get_trace_moment(shadows, 2; O=my_operator)
 ```
 """
-function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing)
+function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing,compute_sem = false)
     n_ru, n_m = size(shadows)
     n_shadows = n_ru * n_m
 
     # Validate kth_moment
     @assert kth_moment >= 1 "Only integer valued moments Tr[ρ^k] with k >= 1 can be computed."
-    @assert kth_moment <= n_shadows "The number of shadows must be >= the largest moment k."
+    @assert kth_moment <= n_shadows "The number of shadows $n_shadows  must be >= the moment $kth_moment. "
 
     # Precompute total evaluations (for a warning only)
     num_permutations = prod(n_ru - i for i in 0:(kth_moment - 1))
@@ -125,7 +125,14 @@ function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; 
         end
     end
 
-    return mean(est)
+    if compute_sem
+        # Compute standard error of the mean (SEM)
+        sem_value = std(est) / sqrt(length(est))
+        return mean(est), sem_value
+    else
+        return mean(est)
+    end
+
 end
 
 
@@ -147,8 +154,8 @@ The computed trace moment as a scalar.
 moment = get_trace_moment(shadows_vector, 2; O=my_operator)
 ```
 """
-function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing)
-    return get_trace_moment(reshape(shadows, :, 1), kth_moment; O=O)
+function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing, compute_sem = false)
+    return get_trace_moment(reshape(shadows, :, 1), kth_moment; O=O, compute_sem = compute_sem)
 end
 
 """
@@ -169,8 +176,8 @@ A vector of trace moments corresponding to each moment in `kth_moments`.
 moments = get_trace_moments(shadows_array, [1, 2, 3])
 ```
 """
-function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
-    return [get_trace_moment(shadows, k; O=O) for k in kth_moments]
+function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing , compute_sem::Bool = false )
+    return [get_trace_moment(shadows, k; O=O, compute_sem = compute_sem) for k in kth_moments]
 end
 
 """
@@ -192,7 +199,7 @@ moments = get_trace_moments(shadows_vector, [1, 2, 3])
 ```
 """
 function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
-    return get_trace_moments(reshape(shadows, :, 1), kth_moments; O=O)
+    return get_trace_moments(reshape(shadows, :, 1), kth_moments; O=O, compute_sem = compute_sem)
 end
 
 
