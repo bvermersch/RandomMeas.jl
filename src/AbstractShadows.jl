@@ -99,7 +99,7 @@ moment1 = get_trace_moment(shadows, 1)
 moment2 = get_trace_moment(shadows, 2; O=my_operator)
 ```
 """
-function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing,compute_sem = false)
+function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing,compute_sem::Bool = false)
     n_ru, n_m = size(shadows)
     n_shadows = n_ru * n_m
 
@@ -116,22 +116,57 @@ function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; 
         @warn "Total number of trace product evaluations to estimate moment $kth_moment equals $total_evaluations."
     end
 
-    # Loop over all combinations: permutations over rows and Cartesian product over columns
-    est = ComplexF64[]
-    for r in permutations(1:n_ru, kth_moment)
-        for m in CartesianIndices(ntuple(_ -> 1:n_m, kth_moment))
-            trace_prod = get_trace_product((shadows[r[i], m[i]] for i in 1:kth_moment)...; O=O)
-            push!(est, real(trace_prod))
+    # Precompute all permutations (rows) and the Cartesian product (columns) indices.
+    all_perms = collect(permutations(1:n_ru, kth_moment))
+    cart_prod = collect(CartesianIndices(ntuple(_ -> 1:n_m, kth_moment)))
+
+    # Precompute contributions for each permutation (averaged over the Cartesian product).
+    perm_avg = Dict{Tuple{Vararg{Int}}, Float64}()
+    for r in all_perms
+        contributions = Float64[]
+        for m in cart_prod
+            # Compute the trace product for the given combination of shadows.
+            val = real(get_trace_product((shadows[r[i], m[i]] for i in 1:kth_moment)...; O=O))
+            push!(contributions, val)
         end
+        # Average over all m combinations for this permutation r.
+        perm_avg[Tuple(r)] = mean(contributions)
     end
 
-    if compute_sem
-        # Compute standard error of the mean (SEM)
-        sem_value = std(est) / sqrt(length(est))
-        return mean(est), sem_value
+    # Full U-statistic estimator: average over all permutations.
+    θ_est = mean(collect(values(perm_avg)))
+
+    if !compute_sem
+        return θ_est
     else
-        return mean(est)
+        # Jackknife: for each sample i, compute the average over all permutations that do NOT include i.
+        jack_vals = zeros(Float64, n_ru)
+        for i in 1:n_ru
+            filtered_vals = [v for (r, v) in perm_avg if !(i in r)]
+            jack_vals[i] = mean(filtered_vals)
+        end
+        # Jackknife variance: (n_ru - 1)^2/n_ru * var(jack_vals)
+        var_est = (n_ru - 1)^2 / n_ru * var(jack_vals)
+        se = sqrt(var_est)
+        return θ_est, se
     end
+
+    # # Loop over all combinations: permutations over rows and Cartesian product over columns
+    # est = ComplexF64[]
+    # for r in permutations(1:n_ru, kth_moment)
+    #     for m in CartesianIndices(ntuple(_ -> 1:n_m, kth_moment))
+    #         trace_prod = get_trace_product((shadows[r[i], m[i]] for i in 1:kth_moment)...; O=O)
+    #         push!(est, real(trace_prod))
+    #     end
+    # end
+
+    # if compute_sem
+    #     # Compute standard error of the mean (SEM)
+    #     sem_value = std(est) / sqrt(length(est))
+    #     return mean(est), sem_value
+    # else
+    #     return mean(est)
+    # end
 
 end
 
@@ -198,7 +233,7 @@ A vector of trace moments.
 moments = get_trace_moments(shadows_vector, [1, 2, 3])
 ```
 """
-function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
+function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing, compute_sem::Bool = false)
     return get_trace_moments(reshape(shadows, :, 1), kth_moments; O=O, compute_sem = compute_sem)
 end
 
