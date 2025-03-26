@@ -99,7 +99,7 @@ moment1 = get_trace_moment(shadows, 1)
 moment2 = get_trace_moment(shadows, 2; O=my_operator)
 ```
 """
-function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing,compute_sem::Bool = false)
+function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing,compute_sem::Bool = false,compute_renyi::Bool = false)
     n_ru, n_m = size(shadows)
     n_shadows = n_ru * n_m
 
@@ -120,35 +120,50 @@ function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; 
     all_perms = collect(permutations(1:n_ru, kth_moment))
     cart_prod = collect(CartesianIndices(ntuple(_ -> 1:n_m, kth_moment)))
 
+    n_perm = length(all_perms)
+    perm_avgs = zeros(Float64, n_perm)
+
+
     # Precompute contributions for each permutation (averaged over the Cartesian product).
-    perm_avg = Dict{Tuple{Vararg{Int}}, Float64}()
-    for r in all_perms
+    for idx in 1:n_perm
+        r = all_perms[idx]
         contributions = Float64[]
         for m in cart_prod
-            # Compute the trace product for the given combination of shadows.
             val = real(get_trace_product((shadows[r[i], m[i]] for i in 1:kth_moment)...; O=O))
             push!(contributions, val)
         end
-        # Average over all m combinations for this permutation r.
-        perm_avg[Tuple(r)] = mean(contributions)
+        perm_avgs[idx] = mean(contributions)
     end
 
-    # Full U-statistic estimator: average over all permutations.
-    θ_est = mean(collect(values(perm_avg)))
+    # Full U-statistic estimator: average over all permutation averages.
+    averaging(x) = compute_renyi ? 1/(1 - kth_moment)*log2(mean(x)) : mean(x)
+
+    θ_est = averaging(perm_avgs)
 
     if !compute_sem
         return θ_est
     else
-        # Jackknife: for each sample i, compute the average over all permutations that do NOT include i.
+        # Precompute jackknife groups: for each sample i, collect indices of permutations that do NOT include i.
+        jackknife_groups = Vector{Vector{Int}}(undef, n_ru)
+        for i in 1:n_ru
+            jackknife_groups[i] = [j for j in 1:n_perm if !(i in all_perms[j])]
+        end
+
+        # Compute jackknife estimates using the precomputed groups.
         jack_vals = zeros(Float64, n_ru)
         for i in 1:n_ru
-            filtered_vals = [v for (r, v) in perm_avg if !(i in r)]
-            jack_vals[i] = mean(filtered_vals)
+            # Directly use the precomputed indices for sample i.
+            filtered_vals = perm_avgs[jackknife_groups[i]]
+            jack_vals[i] = averaging(filtered_vals)
         end
+
+        # Jacknife unbiased estimate
+        θ_jack = n_ru * θ_est - (n_ru - 1) * mean(jack_vals)
+
         # Jackknife variance: (n_ru - 1)^2/n_ru * var(jack_vals)
         var_est = (n_ru - 1)^2 / n_ru * var(jack_vals)
         se = sqrt(var_est)
-        return θ_est, se
+        return θ_jack, se
     end
 
     # # Loop over all combinations: permutations over rows and Cartesian product over columns
@@ -189,8 +204,8 @@ The computed trace moment as a scalar.
 moment = get_trace_moment(shadows_vector, 2; O=my_operator)
 ```
 """
-function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing, compute_sem = false)
-    return get_trace_moment(reshape(shadows, :, 1), kth_moment; O=O, compute_sem = compute_sem)
+function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing, compute_sem::Bool = false,compute_renyi::Bool = false)
+    return get_trace_moment(reshape(shadows, :, 1), kth_moment; O=O, compute_sem = compute_sem, compute_renyi = compute_renyi)
 end
 
 """
@@ -211,8 +226,8 @@ A vector of trace moments corresponding to each moment in `kth_moments`.
 moments = get_trace_moments(shadows_array, [1, 2, 3])
 ```
 """
-function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing , compute_sem::Bool = false )
-    return [get_trace_moment(shadows, k; O=O, compute_sem = compute_sem) for k in kth_moments]
+function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing , compute_sem::Bool = false,compute_renyi::Bool = false )
+    return [get_trace_moment(shadows, k; O=O, compute_sem = compute_sem, compute_renyi = compute_renyi) for k in kth_moments]
 end
 
 """
@@ -233,8 +248,8 @@ A vector of trace moments.
 moments = get_trace_moments(shadows_vector, [1, 2, 3])
 ```
 """
-function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing, compute_sem::Bool = false)
-    return get_trace_moments(reshape(shadows, :, 1), kth_moments; O=O, compute_sem = compute_sem)
+function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing, compute_sem::Bool = false ,compute_renyi::Bool = false)
+    return get_trace_moments(reshape(shadows, :, 1), kth_moments; O=O, compute_sem = compute_sem, compute_renyi = compute_renyi)
 end
 
 
