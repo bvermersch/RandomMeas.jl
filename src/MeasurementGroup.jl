@@ -41,6 +41,45 @@ function MeasurementGroup(
 end
 
 """
+    MeasurementGroup(ψ::Union{MPO, MPS}, measurement_settings::Vector{AbstractMeasurementSetting}, NM::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
+    ::MeasurementGroup{T} where T <: AbstractMeasurementSetting
+
+Construct a MeasurementGroup from a quantum state `ψ` by generating `NU` local measurement settings and simulating `NM`
+projective measurements per setting.
+
+# Arguments
+- `ψ::Union{MPO, MPS}`: The quantum state.
+- `measurement_settings::Vector{AbstractMeasurementSetting}`: A vector with measurement settings
+- `NM::Int`: Number of measurements per setting.
+- `mode::String`: Simulation mode; defaults to “MPS/MPO”.
+- `progress_bar::Bool`: Whether to show a progress bar.
+
+# Returns
+A MeasurementGroup{T} object.
+
+"""
+function MeasurementGroup(
+    ψ::Union{MPO, MPS},
+    measurement_settings::Vector{T},
+    NM::Int;
+    mode::String = "MPS/MPO",
+    progress_bar::Bool=false
+)::MeasurementGroup{T} where T <: AbstractMeasurementSetting
+    NU = length(measurement_settings)
+    measurements = Vector{MeasurementData{T}}(undef,NU)
+    if progress_bar==true
+        @showprogress dt=1 for r in 1:NU
+            measurements[r] = MeasurementData(ψ,NM,measurement_settings[r];mode=mode)
+        end
+    else
+        for r in 1:NU
+            measurements[r] = MeasurementData(ψ,NM,measurement_settings[r];mode=mode)
+        end
+    end
+    return MeasurementGroup(measurements)
+end
+
+"""
     MeasurementGroup(ψ::Union{MPO, MPS}, NU::Int, NM::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
 ::MeasurementGroup{LocalUnitaryMeasurementSetting}
 
@@ -78,46 +117,6 @@ function MeasurementGroup(
         for r in 1:NU
             measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
             measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode=mode)
-        end
-    end
-    return MeasurementGroup(measurements)
-end
-
-
-"""
-    MeasurementGroup(ψ::Union{MPO, MPS}, measurement_settings::Vector{AbstractMeasurementSetting}, NM::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
-    ::MeasurementGroup{T} where T <: AbstractMeasurementSetting
-
-Construct a MeasurementGroup from a quantum state `ψ` by generating `NU` local measurement settings and simulating `NM`
-projective measurements per setting.
-
-# Arguments
-- `ψ::Union{MPO, MPS}`: The quantum state.
-- `measurement_settings::Vector{AbstractMeasurementSetting}`: A vector with measurement settings
-- `NM::Int`: Number of measurements per setting.
-- `mode::String`: Simulation mode; defaults to “MPS/MPO”.
-- `progress_bar::Bool`: Whether to show a progress bar.
-
-# Returns
-A MeasurementGroup{T} object.
-
-"""
-function MeasurementGroup(
-    ψ::Union{MPO, MPS},
-    measurement_settings::Vector{T},
-    NM::Int;
-    mode::String = "MPS/MPO",
-    progress_bar::Bool=false
-)::MeasurementGroup{T} where T <: AbstractMeasurementSetting
-    NU = length(measurement_settings)
-    measurements = Vector{MeasurementData{T}}(undef,NU)
-    if progress_bar==true
-        @showprogress dt=1 for r in 1:NU
-            measurements[r] = MeasurementData(ψ,NM,measurement_settings[r];mode=mode)
-        end
-    else
-        for r in 1:NU
-            measurements[r] = MeasurementData(ψ,NM,measurement_settings[r];mode=mode)
         end
     end
     return MeasurementGroup(measurements)

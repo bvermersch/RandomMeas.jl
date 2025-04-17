@@ -112,7 +112,7 @@ function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; 
     num_cartesian_products = n_m^kth_moment
     total_evaluations = num_permutations * num_cartesian_products
 
-    if total_evaluations > 10000
+    if total_evaluations > 100000
         @warn "Total number of trace product evaluations to estimate moment $kth_moment equals $total_evaluations."
     end
 

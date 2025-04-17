@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -126,7 +126,7 @@ An MPO representing the reduced density matrix over the sites specified in `subs
 ρ_reduced = reduce_to_subsystem(ρ, [2, 3])
 ```
 """
-function reduce_to_subsystem(ρ::MPO, subsystem::Vector{Int64})
+function reduce_to_subsystem(ρ::MPO, subsystem::Vector{Int64}, renormalize = false)
     n_sites = length(ρ)                        # Total number of sites in ρ
     n_subsys = length(subsystem)               # Number of sites in the subsystem
     s_full = firstsiteinds(ρ; plev=0)            # Full vector of site indices for ρ
