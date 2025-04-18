@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -86,14 +86,41 @@ function MeasurementData(
     measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting};
     mode::String = "MPS/MPO",
 )
+
+    N = measurement_setting.N
+    @assert length(ψ) == N "The number of sites of the MPS/MPO ψ and the MeasurementSettings Object do not match."
+
+    ψ_indices = vcat(siteinds(ψ, plev=0)...)
+    site_indices = measurement_setting.site_indices
+    if site_indices != ψ_indices
+        # Build a map old→new (and old′→new′)
+        repl = Dict{Index,Index}()
+        for (old, new) in zip(site_indices, ψ_indices)
+            repl[ old        ] = new
+            repl[ prime(old) ] = prime(new)
+        end
+
+        # Rename every gate tensor in one shot
+        u_old = measurement_setting.local_unitary
+        u_new = [ replaceinds(ui, pairs(repl)...) for ui in u_old ]
+
+        # Rebuild the same concrete setting with updated indices
+        T = typeof(measurement_setting)
+        measurement_setting = T(
+          measurement_setting;
+          local_unitary = u_new,
+          site_indices  = ψ_indices,
+        )
+    end
+
+    u=measurement_setting.local_unitary
     if mode=="dense"
         measurement_probability = MeasurementProbability(ψ,measurement_setting)
         return MeasurementData(measurement_probability,NM)
     elseif mode == "MPS/MPO"
-        N = measurement_setting.N
         data = zeros(Int,NM,N)
         ξ = measurement_setting.site_indices
-        u = measurement_setting.local_unitary
+
         if isa(ψ,MPS)
             ψu = apply(reverse(u),ψ) #using reverse allows us to maintain orthocenter(ψ)=1 ;)
             orthogonalize!(ψu,1)

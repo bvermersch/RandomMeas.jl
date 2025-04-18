@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -99,33 +99,90 @@ moment1 = get_trace_moment(shadows, 1)
 moment2 = get_trace_moment(shadows, 2; O=my_operator)
 ```
 """
-function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing)
+function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing,compute_sem::Bool = false,compute_renyi::Bool = false)
     n_ru, n_m = size(shadows)
     n_shadows = n_ru * n_m
 
     # Validate kth_moment
     @assert kth_moment >= 1 "Only integer valued moments Tr[ρ^k] with k >= 1 can be computed."
-    @assert kth_moment <= n_shadows "The number of shadows must be >= the largest moment k."
+    @assert kth_moment <= n_shadows "The number of shadows $n_shadows  must be >= the moment $kth_moment. "
 
     # Precompute total evaluations (for a warning only)
     num_permutations = prod(n_ru - i for i in 0:(kth_moment - 1))
     num_cartesian_products = n_m^kth_moment
     total_evaluations = num_permutations * num_cartesian_products
 
-    if total_evaluations > 10000
+    if total_evaluations > 100000
         @warn "Total number of trace product evaluations to estimate moment $kth_moment equals $total_evaluations."
     end
 
-    # Loop over all combinations: permutations over rows and Cartesian product over columns
-    est = ComplexF64[]
-    for r in permutations(1:n_ru, kth_moment)
-        for m in CartesianIndices(ntuple(_ -> 1:n_m, kth_moment))
-            trace_prod = get_trace_product((shadows[r[i], m[i]] for i in 1:kth_moment)...; O=O)
-            push!(est, real(trace_prod))
+    # Precompute all permutations (rows) and the Cartesian product (columns) indices.
+    all_perms = collect(permutations(1:n_ru, kth_moment))
+    cart_prod = collect(CartesianIndices(ntuple(_ -> 1:n_m, kth_moment)))
+
+    n_perm = length(all_perms)
+    perm_avgs = zeros(Float64, n_perm)
+
+
+    # Precompute contributions for each permutation (averaged over the Cartesian product).
+    for idx in 1:n_perm
+        r = all_perms[idx]
+        contributions = Float64[]
+        for m in cart_prod
+            val = real(get_trace_product((shadows[r[i], m[i]] for i in 1:kth_moment)...; O=O))
+            push!(contributions, val)
         end
+        perm_avgs[idx] = mean(contributions)
     end
 
-    return mean(est)
+    # Full U-statistic estimator: average over all permutation averages.
+    averaging(x) = compute_renyi ? 1/(1 - kth_moment)*log2(mean(x)) : mean(x)
+
+    θ_est = averaging(perm_avgs)
+
+    if !compute_sem
+        return θ_est
+    else
+        # Precompute jackknife groups: for each sample i, collect indices of permutations that do NOT include i.
+        jackknife_groups = Vector{Vector{Int}}(undef, n_ru)
+        for i in 1:n_ru
+            jackknife_groups[i] = [j for j in 1:n_perm if !(i in all_perms[j])]
+        end
+
+        # Compute jackknife estimates using the precomputed groups.
+        jack_vals = zeros(Float64, n_ru)
+        for i in 1:n_ru
+            # Directly use the precomputed indices for sample i.
+            filtered_vals = perm_avgs[jackknife_groups[i]]
+            jack_vals[i] = averaging(filtered_vals)
+        end
+
+        # Jacknife unbiased estimate
+        θ_jack = n_ru * θ_est - (n_ru - 1) * mean(jack_vals)
+
+        # Jackknife variance: (n_ru - 1)^2/n_ru * var(jack_vals)
+        var_est = (n_ru - 1)^2 / n_ru * var(jack_vals)
+        se = sqrt(var_est)
+        return θ_jack, se
+    end
+
+    # # Loop over all combinations: permutations over rows and Cartesian product over columns
+    # est = ComplexF64[]
+    # for r in permutations(1:n_ru, kth_moment)
+    #     for m in CartesianIndices(ntuple(_ -> 1:n_m, kth_moment))
+    #         trace_prod = get_trace_product((shadows[r[i], m[i]] for i in 1:kth_moment)...; O=O)
+    #         push!(est, real(trace_prod))
+    #     end
+    # end
+
+    # if compute_sem
+    #     # Compute standard error of the mean (SEM)
+    #     sem_value = std(est) / sqrt(length(est))
+    #     return mean(est), sem_value
+    # else
+    #     return mean(est)
+    # end
+
 end
 
 
@@ -147,8 +204,8 @@ The computed trace moment as a scalar.
 moment = get_trace_moment(shadows_vector, 2; O=my_operator)
 ```
 """
-function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing)
-    return get_trace_moment(reshape(shadows, :, 1), kth_moment; O=O)
+function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing, compute_sem::Bool = false,compute_renyi::Bool = false)
+    return get_trace_moment(reshape(shadows, :, 1), kth_moment; O=O, compute_sem = compute_sem, compute_renyi = compute_renyi)
 end
 
 """
@@ -169,8 +226,8 @@ A vector of trace moments corresponding to each moment in `kth_moments`.
 moments = get_trace_moments(shadows_array, [1, 2, 3])
 ```
 """
-function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
-    return [get_trace_moment(shadows, k; O=O) for k in kth_moments]
+function get_trace_moments(shadows::Array{<:AbstractShadow, 2}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing , compute_sem::Bool = false,compute_renyi::Bool = false )
+    return [get_trace_moment(shadows, k; O=O, compute_sem = compute_sem, compute_renyi = compute_renyi) for k in kth_moments]
 end
 
 """
@@ -191,8 +248,8 @@ A vector of trace moments.
 moments = get_trace_moments(shadows_vector, [1, 2, 3])
 ```
 """
-function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing)
-    return get_trace_moments(reshape(shadows, :, 1), kth_moments; O=O)
+function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing, compute_sem::Bool = false ,compute_renyi::Bool = false)
+    return get_trace_moments(reshape(shadows, :, 1), kth_moments; O=O, compute_sem = compute_sem, compute_renyi = compute_renyi)
 end
 
 

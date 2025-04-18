@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -61,6 +61,25 @@ struct LocalUnitaryMeasurementSetting <: LocalMeasurementSetting
         return new(N, local_unitary, site_indices)
     end
 end
+"""
+    LocalUnitaryMeasurementSetting(ms::LocalUnitaryMeasurementSetting;
+                                    N=ms.N,
+                                    local_unitary=ms.local_unitary,
+                                    site_indices=ms.site_indices)
+
+Make a new `LocalUnitaryMeasurementSetting` by copying fields from `ms`,
+but overriding any that you pass by keyword.
+"""
+function LocalUnitaryMeasurementSetting(
+    ms::LocalUnitaryMeasurementSetting;
+    N             = ms.N,
+    local_unitary = ms.local_unitary,
+    site_indices  = ms.site_indices,
+)
+    return LocalUnitaryMeasurementSetting(N, local_unitary, site_indices)
+end
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -93,6 +112,24 @@ struct ComputationalBasisMeasurementSetting <: LocalMeasurementSetting
         new(N, local_unitary, site_indices)
     end
 end
+"""
+    ComputationalBasisMeasurementSetting(ms::ComputationalBasisMeasurementSetting;
+                                        N=ms.N,
+                                        local_unitary=ms.local_unitary,
+                                        site_indices=ms.site_indices)
+
+Make a new `ComputationalBasisMeasurementSetting` by copying fields from `ms`,
+but overriding any that you pass by keyword.
+"""
+function ComputationalBasisMeasurementSetting(
+    ms::ComputationalBasisMeasurementSetting;
+    N            = ms.N,
+    local_unitary = ms.local_unitary,
+    site_indices = ms.site_indices,
+)
+    return ComputationalBasisMeasurementSetting(N, site_indices)
+end
+
 
 # ---------------------------------------------------------------------------
 # Shallow Unitary Measurement Setting
@@ -127,7 +164,25 @@ struct ShallowUnitaryMeasurementSetting <: AbstractMeasurementSetting
         return new(N, K, local_unitary, site_indices)
     end
 end
+"""
+    ShallowUnitaryMeasurementSetting(ms::ShallowUnitaryMeasurementSetting;
+                                    N=ms.N,
+                                    K=ms.K,
+                                    local_unitary=ms.local_unitary,
+                                    site_indices=ms.site_indices)
 
+Make a new `ShallowUnitaryMeasurementSetting` by copying fields from `ms`,
+but overriding any that you pass by keyword.
+"""
+function ShallowUnitaryMeasurementSetting(
+    ms::ShallowUnitaryMeasurementSetting;
+    N             = ms.N,
+    K             = ms.K,
+    local_unitary = ms.local_unitary,
+    site_indices  = ms.site_indices,
+)
+    return ShallowUnitaryMeasurementSetting(N, K, local_unitary, site_indices)
+end
 
 
 # ---------------------------------------------------------------------------
