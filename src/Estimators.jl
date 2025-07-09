@@ -254,3 +254,32 @@ function get_XEB(ψ::MPS, measurement_data::MeasurementData)
 
     return XEB
 end
+
+"""
+    get_calibration_vector(ψ0::MPS,measurement_group::MeasurementGroup)
+
+Return a calibration vector G for evaluating process shadows based on the calibration initial state ψ0=0000
+Reference Vitale et al, PRXQ 2024
+"""
+function get_calibration_vector(ψ0::MPS,measurement_group::MeasurementGroup)
+    N = length(ψ0)
+    NU = measurement_group.NU
+    # G_e stores the estimated G values (one for each subsystem or qubit).
+    G_e = zeros(Float64, N) 
+    @showprogress dt=1 for i in 1:N
+        reduced_measurement_group = reduce_to_subsystem(measurement_group, [i])
+        
+        for r in 1:NU
+                # Compute the measured Born probabilities for qubit i using the actual measurement data
+            data = reduced_measurement_group.measurements[r]
+            P_measured = MeasurementProbability(data).measurement_probability
+                # Compute the expected Born probabilities for qubit i from the ideal (noise-free) state ψ0.
+            P_expected = MeasurementProbability(reduce_to_subsystem(ψ0,collect(i:i)), data.measurement_setting).measurement_probability
+            cross_corr = (P_measured * P_expected)[]
+            self_corr = (P_expected * P_expected)[]
+
+            G_e[i] += 3 * (cross_corr-self_corr)/NU + 1/NU
+        end
+    end
+    return G_e
+end

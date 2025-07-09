@@ -127,6 +127,7 @@ get_fidelity,
 get_overlap,
 get_purity,
 get_XEB,
+get_calibration_vector,
 
 ##############################
 # Tensor Network Utilities
