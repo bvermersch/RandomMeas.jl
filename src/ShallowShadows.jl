@@ -7,19 +7,18 @@
 
 TBW
 """
-function get_shallow_depolarization_mps(group::MeasurementGroup{ShallowUnitaryMeasurementSetting})
-    N = group.N
-    ξ = group.measurements[1].measurement_setting.site_indices
+function get_shallow_depolarization_mps(settings::Vector{ShallowUnitaryMeasurementSetting})
+    NU = length(settings)
+    ξ = settings[1].site_indices
+    N = settings[1].N
 
     v = siteinds("Qubit", N; addtags="virtual")
-    #s = siteinds("Qubit", N;addtags="input")
 
-    NU = group.NU
     depolarization_vectors = Vector{MPS}()
     ψ0 = MPS(ξ,["Dn" for n in 1:N]  ) 
 
     @showprogress dt=1 for r in 1:NU
-        local_unitary = group.measurements[r].measurement_setting.local_unitary
+        local_unitary = settings[r].local_unitary
         ψu = apply(local_unitary,ψ0)
         Pu = get_Born_MPS(ψu)
 
