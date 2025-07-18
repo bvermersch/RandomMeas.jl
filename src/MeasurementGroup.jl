@@ -106,7 +106,6 @@ function MeasurementGroup(
 )::MeasurementGroup{LocalUnitaryMeasurementSetting}
     ξ = get_siteinds(ψ)
     measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
-    ξ = get_siteinds(ψ)
     N = length(ξ)
     if progress_bar==true
         @showprogress dt=1 for r in 1:NU
@@ -281,7 +280,7 @@ function import_MeasurementGroup(filepath::String; predefined_settings=nothing, 
         for s in predefined_settings
             @assert typeof(s) == T "Predefined settings must all have the same type; found $(typeof(s)) vs $(T)."
         end
-    elseif haskey(data, "local_unitaries")
+    elseif haskey(data, "measurement_settings")
         # Assume settings from file are of LocalUnitaryMeasurementSetting type.
         T = LocalUnitaryMeasurementSetting
     else
@@ -296,12 +295,12 @@ function import_MeasurementGroup(filepath::String; predefined_settings=nothing, 
         if predefined_settings !== nothing
             # Use the corresponding predefined setting.
             ms = predefined_settings[i]
-        elseif haskey(data, "local_unitaries")
+        elseif haskey(data, "measurement_settings") 
             if site_indices === nothing
                 site_indices = siteinds("Qubit", N)
             end
             # Reconstruct from exported settings: assume settings_array is a 4D array (NU, N, 2, 2)
-            local_unitaries = [ITensor(data["local_unitaries"][i, j, :, :], site_indices[j]', site_indices[j]) for j in 1:N]
+            local_unitaries = [ITensor(data["measurement_settings"][i, j, :, :], site_indices[j]', site_indices[j]) for j in 1:N]
             ms = LocalUnitaryMeasurementSetting(N, local_unitaries, site_indices)
         else
             ms = nothing
@@ -309,7 +308,7 @@ function import_MeasurementGroup(filepath::String; predefined_settings=nothing, 
         measurements[i] = MeasurementData(m_results; measurement_setting=ms)
     end
 
-    println("We are constructing a MeasurementGroup object with measurement settings of type $T.")
+    #println("We are constructing a MeasurementGroup object with measurement settings of type $T.")
 
     return MeasurementGroup(measurements)
 end

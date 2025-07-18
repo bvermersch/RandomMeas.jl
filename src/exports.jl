@@ -140,10 +140,16 @@ flatten,
 get_average_mps,
 
 
-##############################å
+##############################
 # Circuits and Noise
 ##############################
 apply_depo_channel,
 random_circuit,
 random_Pauli_layer,
-random_magnetic_field_layer
+random_magnetic_field_layer,
+
+
+##############################
+# utilities
+##############################
+version
