@@ -13,9 +13,9 @@ using Test
     # Generate random local unitary measurement setting
     @testset "ShallowMeasurementSetting" begin
         measurement_setting = ShallowUnitaryMeasurementSetting(N,depth;site_indices=site_indices)
-        measurement_data_mps = MeasurementData(ψ,NM,measurement_setting;mode="MPS/MPO")
-        measurement_data_mpo = MeasurementData(outer(ψ',ψ),NM,measurement_setting;mode="MPS/MPO")
-        measurement_data_dense = MeasurementData(ψ,NM,measurement_setting;mode="dense")
+        measurement_data_mps = MeasurementData(ψ,NM,measurement_setting;mode=TensorNetwork)
+measurement_data_mpo = MeasurementData(outer(ψ',ψ),NM,measurement_setting;mode=TensorNetwork)
+measurement_data_dense = MeasurementData(ψ,NM,measurement_setting;mode=Dense)
     end
 
     @testset "Shallow MeasurementGroup & Shadows" begin
@@ -25,9 +25,9 @@ using Test
         nsweeps = 4
 
         println("measurement group")
-        measurement_group_mps = MeasurementGroup(ψ,NU,NM,depth;mode="MPS/MPO")
-        measurement_group_mpo = MeasurementGroup(outer(ψ',ψ),NU,NM,depth;mode="MPS/MPO")
-        measurement_group_dense = MeasurementGroup(ψ,NU,NM,depth;mode="dense")
+        measurement_group_mps = MeasurementGroup(ψ,NU,NM,depth;mode=TensorNetwork)
+measurement_group_mpo = MeasurementGroup(outer(ψ',ψ),NU,NM,depth;mode=TensorNetwork)
+measurement_group_dense = MeasurementGroup(ψ,NU,NM,depth;mode=Dense)
 
         println("mps depolarization")
         shallow_depolarization_mps = get_shallow_depolarization_mps(measurement_group_mps)

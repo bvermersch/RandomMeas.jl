@@ -5,4 +5,7 @@
 /docs/build/
 *.backup
 /examples/.ipynb_checkpoints
+/examples/BrydgesScience2019_vonNeumann.ipynb
+/examples/BrydgesScience2019_vonNeumann_plotting.ipynb
+/examples/BrydgesScience2019_NumSim.ipynb
 *.npy

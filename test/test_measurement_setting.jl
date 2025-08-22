@@ -10,25 +10,25 @@ using Test
         setting = LocalUnitaryMeasurementSetting(N)
         @test setting.N == N
         @test length(setting.site_indices) == N
-        @test length(setting.local_unitary) == N
+        @test length(setting.basis_transformation) == N
         for j in 1:N
-            @test isa(setting.local_unitary[j], ITensor)
+            @test isa(setting.basis_transformation[j], ITensor)
             # Ensure each ITensor has two indices (the bra and ket for that site)
-            inds_j = inds(setting.local_unitary[j])
+            inds_j = inds(setting.basis_transformation[j])
             @test length(inds_j) == 2
         end
     end
 
     # Test 2: Creating settings with different ensembles ("Haar", "Pauli", "Identity")
     @testset "Test 2: Different Ensembles" begin
-        ensembles = ["Haar", "Pauli", "Identity"]
+        ensembles = [Haar, Pauli, Identity]
         for ensemble in ensembles
             setting = LocalUnitaryMeasurementSetting(N; ensemble=ensemble)
             @test setting.N == N
             @test length(setting.site_indices) == N
-            @test length(setting.local_unitary) == N
+            @test length(setting.basis_transformation) == N
             for j in 1:N
-                @test isa(setting.local_unitary[j], ITensor)
+                @test isa(setting.basis_transformation[j], ITensor)
             end
         end
     end
@@ -40,7 +40,7 @@ using Test
         # Remove one site index (simulate invalid input)
         bad_site_indices = valid_setting.site_indices[1:end-1]
         @test_throws AssertionError begin
-            LocalUnitaryMeasurementSetting(N, valid_setting.local_unitary, bad_site_indices)
+            LocalUnitaryMeasurementSetting(N, valid_setting.basis_transformation, bad_site_indices)
         end
     end
 
@@ -52,7 +52,7 @@ using Test
         reduced_setting = reduce_to_subsystem(setting, subsystem)
         @test reduced_setting.N == length(subsystem)
         @test length(reduced_setting.site_indices) == length(subsystem)
-        @test length(reduced_setting.local_unitary) == length(subsystem)
+        @test length(reduced_setting.basis_transformation) == length(subsystem)
     end
 
     # Test 5: Constructing a Setting from a Unitary Array
@@ -66,12 +66,12 @@ using Test
         setting_from_array = LocalUnitaryMeasurementSetting(unitary_array; site_indices=nothing)
         @test setting_from_array.N == N
         @test length(setting_from_array.site_indices) == N
-        @test length(setting_from_array.local_unitary) == N
+        @test length(setting_from_array.basis_transformation) == N
         # Optionally check that each ITensor matches the identity matrix (within numerical precision)
         for n in 1:N
             # Convert the ITensor to an Array; note that the indices might appear in a different order,
             # so we use isapprox with a tolerance.
-            A = Array(setting_from_array.local_unitary[n], setting_from_array.site_indices[n]', setting_from_array.site_indices[n])
+            A = Array(setting_from_array.basis_transformation[n], setting_from_array.site_indices[n]', setting_from_array.site_indices[n])
             @test isapprox(A, [1 0; 0 1], atol=1e-10)
         end
     end
@@ -83,50 +83,50 @@ using Test
         # Generate valid site indices using the helper function siteinds (make sure siteinds is defined and imported)
         valid_site_indices = siteinds("Qubit", N)
 
-        # Create a valid local_unitary vector using get_rotation (this should produce ITensors with the correct indices)
-        valid_local_unitary = [get_rotation(valid_site_indices[i], "Haar") for i in 1:N]
+        # Create a valid basis_transformation vector using get_rotation (this should produce ITensors with the correct indices)
+        valid_basis_transformation = [get_rotation(valid_site_indices[i], Haar) for i in 1:N]
 
         # -- Valid Case --
         @testset "Valid ITensors" begin
             # This should pass without errors.
-            setting = LocalUnitaryMeasurementSetting(N, valid_local_unitary, valid_site_indices)
+            setting = LocalUnitaryMeasurementSetting(N, valid_basis_transformation, valid_site_indices)
             @test setting.N == N
-            @test length(setting.local_unitary) == N
+            @test length(setting.basis_transformation) == N
         end
 
         # -- Test 1: ITensor with the wrong number of indices --
         @testset "Invalid number of indices" begin
-            # Create an ITensor with only one index
-            bad_itensor = ITensor(valid_site_indices[1])
-            bad_local_unitary = copy(valid_local_unitary)
-            bad_local_unitary[1] = bad_itensor
-            @test_throws AssertionError begin
-                LocalUnitaryMeasurementSetting(N, bad_local_unitary, valid_site_indices)
-            end
+                    # Create an ITensor with only one index
+        bad_itensor = ITensor(valid_site_indices[1])
+        bad_basis_transformation = copy(valid_basis_transformation)
+        bad_basis_transformation[1] = bad_itensor
+        @test_throws AssertionError begin
+            LocalUnitaryMeasurementSetting(N, bad_basis_transformation, valid_site_indices)
+        end
         end
 
         # -- Test 2: ITensor that does not contain the required unprimed and primed indices --
         @testset "Invalid indices in ITensor" begin
-            # Create a dummy index that is different from valid_site_indices[1]
-            wrong_index = Index(2, "Wrong")
-            # Construct an ITensor with wrong_index and its primed version
-            it_wrong = ITensor(wrong_index, prime(wrong_index))
-            bad_local_unitary = copy(valid_local_unitary)
-            bad_local_unitary[1] = it_wrong
-            @test_throws AssertionError begin
-                LocalUnitaryMeasurementSetting(N, bad_local_unitary, valid_site_indices)
-            end
+                    # Create a dummy index that is different from valid_site_indices[1]
+        wrong_index = Index(2, "Wrong")
+        # Construct an ITensor with wrong_index and its primed version
+        it_wrong = ITensor(wrong_index, prime(wrong_index))
+        bad_basis_transformation = copy(valid_basis_transformation)
+        bad_basis_transformation[1] = it_wrong
+        @test_throws AssertionError begin
+            LocalUnitaryMeasurementSetting(N, bad_basis_transformation, valid_site_indices)
+        end
         end
 
         # -- Test 3: ITensor with indices in reversed order (should be acceptable) --
         @testset "Reversed order indices" begin
-            # Manually construct an ITensor with reversed indices order:
-            # It must contain both valid_site_indices[1] and prime(valid_site_indices[1]), regardless of order.
-            it_reversed = ITensor(prime(valid_site_indices[1]), valid_site_indices[1])
-            good_local_unitary = copy(valid_local_unitary)
-            good_local_unitary[1] = it_reversed
-            # This construction should pass.
-            setting = LocalUnitaryMeasurementSetting(N, good_local_unitary, valid_site_indices)
+                    # Manually construct an ITensor with reversed indices order:
+        # It must contain both valid_site_indices[1] and prime(valid_site_indices[1]), regardless of order.
+        it_reversed = ITensor(prime(valid_site_indices[1]), valid_site_indices[1])
+        good_basis_transformation = copy(valid_basis_transformation)
+        good_basis_transformation[1] = it_reversed
+        # This construction should pass.
+        setting = LocalUnitaryMeasurementSetting(N, good_basis_transformation, valid_site_indices)
             @test setting.N == N
         end
     end
@@ -144,13 +144,13 @@ using Test
         # Check that the number of sites is correct and the vectors have length N
         @test comp_setting.N == N
         @test length(comp_setting.site_indices) == N
-        @test length(comp_setting.local_unitary) == N
+        @test length(comp_setting.basis_transformation) == N
 
     end
 
     @testset "Test 7: Import/Export Unitary" begin
         # Create a local unitary measurement setting
-        setting = LocalUnitaryMeasurementSetting(N; ensemble="Haar")
+        setting = LocalUnitaryMeasurementSetting(N; ensemble=Haar)
 
         # Create a temporary file for export.
         tmp_dir = mktempdir()
@@ -165,14 +165,14 @@ using Test
         # Check that the imported setting has the same dimensions.
         @test imported_setting.N == setting.N
         @test length(imported_setting.site_indices) == N
-        @test length(imported_setting.local_unitary) == N
+        @test length(imported_setting.basis_transformation) == N
 
         # For each site, check that the exported and then imported ITensor (converted to an Array)
         # matches the expected identity matrix.
         for i in 1:N
             # Convert both the original and imported ITensors to arrays using the same indices.
-            original_array = Array(setting.local_unitary[i], setting.site_indices[i]', setting.site_indices[i])
-            imported_array = Array(imported_setting.local_unitary[i], imported_setting.site_indices[i]', imported_setting.site_indices[i])
+            original_array = Array(setting.basis_transformation[i], setting.site_indices[i]', setting.site_indices[i])
+            imported_array = Array(imported_setting.basis_transformation[i], imported_setting.site_indices[i]', imported_setting.site_indices[i])
             @test isapprox(original_array, imported_array, atol=1e-10)
         end
 

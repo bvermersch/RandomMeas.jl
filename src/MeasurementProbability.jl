@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -25,7 +25,7 @@ A `MeasurementProbability` object with:
 ```julia
 # Generate random measurement data (NM = 100, N = 5)
 measurement_results = rand(1:2, 100, 5)
-setting = LocalUnitaryMeasurementSetting(5, ensemble="Haar")
+setting = LocalUnitaryMeasurementSetting(5, ensemble=Haar)
 data = MeasurementData(measurement_results, measurement_setting=setting)
 
 # Construct MeasurementProbability from MeasurementData
@@ -82,7 +82,7 @@ A `MeasurementProbability` object with:
 # Example
 ```julia
 ψ = random_mps(siteinds("Qubit", 5))
-settings = LocalUnitaryMeasurementSetting(5, ensemble="Haar")
+settings = LocalUnitaryMeasurementSetting(5, ensemble=Haar)
 prob_obj = MeasurementProbability(ψ, settings)
 println(prob_obj.measurement_probability[1])
 """
@@ -93,7 +93,7 @@ function MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{ShallowUnita
     @assert ξ==setting.site_indices "ψ and setting must have the same site indices"
 
     if typeof(ψ) == MPS
-        ψu = apply(setting.local_unitary, ψ)
+        ψu = apply(setting.basis_transformation, ψ)
         C = δ(ξ[1], ξ[1]',ξ[1]'')
         R = C * ψu[1] * conj(ψu[1]')
         R *= δ(ξ[1], ξ[1]'')
@@ -105,7 +105,7 @@ function MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{ShallowUnita
             P *= Rt
         end
     else
-        ρu = apply(setting.local_unitary,ψ; apply_dag=true)
+        ρu = apply(setting.basis_transformation,ψ; apply_dag=true)
         P = ρu[1] * δ(ξ[1],ξ[1]',ξ[1]'')
         P *= δ(ξ[1]'', ξ[1])
         for i in 2:N

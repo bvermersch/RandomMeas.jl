@@ -19,10 +19,10 @@ A `MeasurementGroup` object with:
 
 # Example
 ```julia
-setting1 = LocalUnitaryMeasurementSetting(4, ensemble="Haar")
+setting1 = LocalUnitaryMeasurementSetting(4, ensemble=Haar)
 results1 = rand(1:2, 10, 4)
 data1 = MeasurementData(results1; measurement_setting=setting1)
-setting2 = LocalUnitaryMeasurementSetting(4, ensemble="Haar")
+setting2 = LocalUnitaryMeasurementSetting(4, ensemble=Haar)
 results2 = rand(1:2, 10, 4)
 data2 = MeasurementData(results2; measurement_setting=setting2)
 group = MeasurementGroup([data1, data2])
@@ -62,7 +62,7 @@ function MeasurementGroup(
     ψ::Union{MPO, MPS},
     measurement_settings::Vector{T},
     NM::Int;
-    mode::String = "MPS/MPO",
+    mode::SimulationMode = TensorNetwork,
     progress_bar::Bool=false
 )::MeasurementGroup{T} where T <: AbstractMeasurementSetting
     NU = length(measurement_settings)
@@ -101,7 +101,7 @@ function MeasurementGroup(
     ψ::Union{MPO, MPS},
     NU::Int,
     NM::Int;
-    mode::String = "MPS/MPO",
+    mode::SimulationMode = TensorNetwork,
     progress_bar::Bool=false
 )::MeasurementGroup{LocalUnitaryMeasurementSetting}
     ξ = get_siteinds(ψ)
@@ -109,12 +109,12 @@ function MeasurementGroup(
     N = length(ξ)
     if progress_bar==true
         @showprogress dt=1 for r in 1:NU
-            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
+            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble=Haar)
             measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode=mode)
         end
     else
         for r in 1:NU
-            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
+            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble=Haar)
             measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode=mode)
         end
     end
@@ -145,7 +145,7 @@ function MeasurementGroup(
     NU::Int,
     NM::Int,
     depth::Int;
-    mode::String = "MPS/MPO",
+    mode::SimulationMode = TensorNetwork,
     progress_bar::Bool=false
 )::MeasurementGroup{ShallowUnitaryMeasurementSetting}
     ξ = get_siteinds(ψ)
@@ -235,7 +235,7 @@ function export_MeasurementGroup(group::MeasurementGroup{T}, filepath::String) w
         for i in 1:NU
             ms = group.measurements[i].measurement_setting
             for j in 1:N
-                settings_array[i, j, :, :] = Array(ms.local_unitary[j], ms.site_indices[j]', ms.site_indices[j])
+                settings_array[i, j, :, :] = Array(ms.basis_transformation[j], ms.site_indices[j]', ms.site_indices[j])
             end
         end
         export_dict["measurement_settings"] = settings_array
@@ -295,7 +295,7 @@ function import_MeasurementGroup(filepath::String; predefined_settings=nothing, 
         if predefined_settings !== nothing
             # Use the corresponding predefined setting.
             ms = predefined_settings[i]
-        elseif haskey(data, "measurement_settings") 
+        elseif haskey(data, "measurement_settings")
             if site_indices === nothing
                 site_indices = siteinds("Qubit", N)
             end

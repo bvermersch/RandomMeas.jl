@@ -53,6 +53,17 @@ using Reexport
 export
 
 ##############################
+# Type-Safe Enums
+##############################
+UnitaryEnsemble,
+Haar,
+Pauli,
+Identity,
+SimulationMode,
+Dense,
+TensorNetwork,
+
+##############################
 # Measurement Settings
 ##############################
 

@@ -67,6 +67,7 @@ include("utils.jl")
 # ---------------------------------------------------------------------------
 # Load Core Data Structures and Types.
 # ---------------------------------------------------------------------------
+include("Types.jl")
 include("MeasurementStructures.jl")
 include("ShadowStructures.jl")
 

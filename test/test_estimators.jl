@@ -13,9 +13,9 @@ NM = 100     # Number of measurements per unitary
 measurements1 = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
 measurements2 = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
 for r in 1:NU
-    measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
-    measurements1[r] = MeasurementData(ψ1,NM,measurement_setting;mode="dense")
-    measurements2[r] = MeasurementData(ψ2,NM,measurement_setting;mode="dense")
+    measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble=Haar)
+measurements1[r] = MeasurementData(ψ1,NM,measurement_setting;mode=Dense)
+measurements2[r] = MeasurementData(ψ2,NM,measurement_setting;mode=Dense)
 end
 measurement_group1= MeasurementGroup(measurements1)
 measurement_group2= MeasurementGroup(measurements2)
@@ -35,7 +35,7 @@ end
 
 @testset "XEB Test" begin
     measurement_setting = ComputationalBasisMeasurementSetting(N;site_indices=ξ)
-    measurements = MeasurementData(ψ1,NM,measurement_setting;mode="dense")
+    measurements = MeasurementData(ψ1,NM,measurement_setting;mode=Dense)
     XEB = get_XEB(ψ1,measurements)
     self_XEB = get_selfXEB(ψ1)
     @show XEB

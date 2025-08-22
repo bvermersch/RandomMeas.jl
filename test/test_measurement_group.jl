@@ -8,10 +8,10 @@ using Test
     NM = 10  # Number of measurements per setting
     ξ = siteinds("Qubit", N)  # Site indices
     measurement_results = rand(1:2, NM, N)
-    measurement_setting = LocalUnitaryMeasurementSetting(N;site_indices=ξ, ensemble="Haar")
+    measurement_setting = LocalUnitaryMeasurementSetting(N;site_indices=ξ, ensemble=Haar)
     data1 = MeasurementData(measurement_results; measurement_setting=measurement_setting)
     measurement_results = rand(1:2, NM, N)
-    measurement_setting = LocalUnitaryMeasurementSetting(N;site_indices=ξ, ensemble="Haar")
+    measurement_setting = LocalUnitaryMeasurementSetting(N;site_indices=ξ, ensemble=Haar)
     data2 = MeasurementData(measurement_results; measurement_setting=measurement_setting)
     measurements = [data1,data2]
 
@@ -31,7 +31,7 @@ using Test
      @testset "Creating MeasurementGroup from an MPS dense mode" begin
         NU = 10
         ψ = random_mps(ξ; linkdims=3);
-        group = MeasurementGroup(ψ,NU,NM;mode="dense")
+        group = MeasurementGroup(ψ,NU,NM;mode=Dense)
         @test group.N == N
         @test group.NU == NU
         @test group.NM == NM
@@ -41,7 +41,7 @@ using Test
          @testset "Creating MeasurementGroup from an MPS | MPS/MPO mode" begin
             NU = 10
             ψ = random_mps(ξ; linkdims=3);
-            group = MeasurementGroup(ψ,NU,NM;mode="MPS/MPO")
+            group = MeasurementGroup(ψ,NU,NM;mode=TensorNetwork)
             @test group.N == N
             @test group.NU == NU
             @test group.NM == NM
@@ -52,7 +52,7 @@ using Test
             NU = 10
             ψ = random_mps(ξ; linkdims=3);
             ρ  = outer(ψ',ψ)
-            group = MeasurementGroup(ρ,NU,NM;mode="dense")
+            group = MeasurementGroup(ρ,NU,NM;mode=Dense)
             @test group.N == N
             @test group.NU == NU
             @test group.NM == NM
@@ -63,7 +63,7 @@ using Test
         NU = 10
         ψ = random_mps(ξ; linkdims=3);
         ρ  = outer(ψ',ψ)
-        group = MeasurementGroup(ρ,NU,NM;mode="MPS/MPO")
+        group = MeasurementGroup(ρ,NU,NM;mode=TensorNetwork)
         @test group.N == N
         @test group.NU == NU
         @test group.NM == NM
@@ -97,7 +97,7 @@ end
         predefined_settings = Vector{LocalUnitaryMeasurementSetting}(undef, NU)
         for i in 1:NU
             results = rand(1:2, NM, N)  # Generate random measurement results (binary values: 1 or 2)
-            setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ, ensemble="Haar")
+            setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ, ensemble=Haar)
             measurements[i] = MeasurementData(results; measurement_setting=setting)
             predefined_settings[i] = setting
         end
@@ -125,8 +125,8 @@ end
             imported_setting = group_imported.measurements[1].measurement_setting
             original_setting = group_original.measurements[1].measurement_setting
             for j in 1:N
-                A_imported = Array(imported_setting.local_unitary[j], imported_setting.site_indices[j]', imported_setting.site_indices[j])
-                A_original = Array(original_setting.local_unitary[j], original_setting.site_indices[j]', original_setting.site_indices[j])
+                A_imported = Array(imported_setting.basis_transformation[j], imported_setting.site_indices[j]', imported_setting.site_indices[j])
+                A_original = Array(original_setting.basis_transformation[j], original_setting.site_indices[j]', original_setting.site_indices[j])
                 @test isapprox(A_imported, A_original, atol=1e-10)
             end
         else

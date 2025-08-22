@@ -20,7 +20,7 @@ function DenseShadow(Probability::MeasurementProbability{LocalUnitaryMeasurement
     N = Probability.N  # Number of qubits/sites
     setting  = Probability.measurement_setting
     ξ = setting.site_indices
-    u = setting.local_unitary
+    u = setting.basis_transformation
     P = Probability.measurement_probability
     rho = 2^N * deepcopy(P)  # Scale the probability tensor
 

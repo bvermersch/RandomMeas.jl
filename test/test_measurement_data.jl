@@ -11,7 +11,7 @@ using Test
     # Generate random binary measurement results
     measurement_results = rand(1:2, NM, N)
     # Mock measurement setting
-    measurement_setting = LocalUnitaryMeasurementSetting(N, ensemble="Haar")
+    measurement_setting = LocalUnitaryMeasurementSetting(N, ensemble=Haar)
 
     # Test 1: Creating MeasurementData with setting
     @testset "With Measurement Setting" begin
@@ -39,13 +39,13 @@ using Test
         ψ = random_mps(ξ)
 
         #dense mode
-        data = MeasurementData(ψ,NM,measurement_setting,mode="dense")
+        data = MeasurementData(ψ,NM,measurement_setting,mode=Dense)
         @test data.N == N
         @test data.NM == NM
         @test data.measurement_setting === measurement_setting
 
         #mps mode
-        data = MeasurementData(ψ,NM,measurement_setting;mode="MPS/MPO")
+        data = MeasurementData(ψ,NM,measurement_setting;mode=TensorNetwork)
         @test data.N == N
         @test data.NM == NM
         @test data.measurement_setting === measurement_setting
@@ -58,13 +58,13 @@ using Test
         ρ = outer(ψ',ψ)
 
         #dense mode
-        data = MeasurementData(ρ,NM,measurement_setting;mode="dense")
+        data = MeasurementData(ρ,NM,measurement_setting;mode=Dense)
         @test data.N == N
         @test data.NM == NM
         @test data.measurement_setting === measurement_setting
 
         #mps mode
-        data = MeasurementData(ρ,NM,measurement_setting;mode="MPS/MPO")
+        data = MeasurementData(ρ,NM,measurement_setting;mode=TensorNetwork)
         @test data.N == N
         @test data.NM == NM
         @test data.measurement_setting === measurement_setting
@@ -79,7 +79,7 @@ using Test
         measurement_results = rand(1:2, NM, N)
 
         # Create a measurement setting (using the Identity ensemble for clarity)
-        setting = LocalUnitaryMeasurementSetting(N; ensemble="Haar")
+        setting = LocalUnitaryMeasurementSetting(N; ensemble=Haar)
 
             data_with_setting = MeasurementData(measurement_results; measurement_setting=setting)
 

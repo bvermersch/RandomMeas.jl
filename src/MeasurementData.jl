@@ -20,7 +20,7 @@ A `MeasurementData` object with inferred dimensions and validated setting.
 # Examples
 ```julia
 # With measurement setting
-setting = LocalUnitaryMeasurementSetting(4, ensemble="Haar")
+setting = LocalUnitaryMeasurementSetting(4, ensemble=Haar)
 results = rand(1:2, 10, 4)
 data_with_setting = MeasurementData(results; measurement_setting=setting)
 
@@ -65,16 +65,16 @@ function MeasurementData(probability::MeasurementProbability{T},NM::Int) where T
 end
 
 """
-    MeasurementData(ψ::Union{MPO, MPS}, NM::Int; mode::String = "MPS/MPO", measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting} = nothing)
+    MeasurementData(ψ::Union{MPO, MPS}, NM::Int; mode::SimulationMode = TensorNetwork, measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting} = nothing)
 
 Returns a `MeasurementData` object by sampling `NM` projective measurements from the quantum state `ψ`.
 
 # Arguments
 - `ψ::Union{MPO, MPS}`: The quantum state represented as a Matrix Product Operator (MPO) or Matrix Product State (MPS).
 - `NM::Int`: The number of measurement shots to simulate for each setting.
-- `mode::String` (optional): Specifies the simulation method. Options:
-   - `"dense"`: Uses the dense representation.
-   - `"MPS/MPO"` (default): Uses tensor network methods for memory efficiency.
+- `mode::SimulationMode` (optional): Specifies the simulation method. Options:
+   - `Dense`: Uses the dense representation.
+   - `TensorNetwork` (default): Uses tensor network methods for memory efficiency.
 - `measurement_setting` (optional): A measurement setting object (if not provided, defaults to computational basis measurements).
 
 # Returns
@@ -84,7 +84,7 @@ function MeasurementData(
     ψ::Union{MPO, MPS},
     NM::Int,
     measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting};
-    mode::String = "MPS/MPO",
+    mode::SimulationMode = TensorNetwork,
 )
 
     N = measurement_setting.N
@@ -101,23 +101,23 @@ function MeasurementData(
         end
 
         # Rename every gate tensor in one shot
-        u_old = measurement_setting.local_unitary
+        u_old = measurement_setting.basis_transformation
         u_new = [ replaceinds(ui, pairs(repl)...) for ui in u_old ]
 
         # Rebuild the same concrete setting with updated indices
         T = typeof(measurement_setting)
         measurement_setting = T(
           measurement_setting;
-          local_unitary = u_new,
+          basis_transformation = u_new,
           site_indices  = ψ_indices,
         )
     end
 
-    u=measurement_setting.local_unitary
-    if mode=="dense"
+    u=measurement_setting.basis_transformation
+    if mode == Dense
         measurement_probability = MeasurementProbability(ψ,measurement_setting)
         return MeasurementData(measurement_probability,NM)
-    elseif mode == "MPS/MPO"
+    elseif mode == TensorNetwork
         data = zeros(Int,NM,N)
         ξ = measurement_setting.site_indices
 
@@ -142,9 +142,11 @@ function MeasurementData(
         end
         return MeasurementData(N,NM,data,measurement_setting)
     else
-        throw(ArgumentError("Invalid simulation mode: \"$mode\". Expected either \"dense\" or \"MPS/MPO\"."))
+        throw(ArgumentError("Invalid simulation mode: $mode. Expected either Dense or TensorNetwork."))
     end
 end
+
+
 
 
 """
@@ -294,7 +296,7 @@ function export_MeasurementData(data::MeasurementData{T}, filepath::String) wher
         N = data.measurement_setting.N
         local_unitaries = Array{ComplexF64}(undef, N, 2, 2)
         for n in 1:N
-            local_unitaries[n, :, :] = Array(data.measurement_setting.local_unitary[n],data.measurement_setting.site_indices[n]',data.measurement_setting.site_indices[n])
+            local_unitaries[n, :, :] = Array(data.measurement_setting.basis_transformation[n],data.measurement_setting.site_indices[n]',data.measurement_setting.site_indices[n])
         end
         export_dict["local_unitaries"] = local_unitaries
     end
