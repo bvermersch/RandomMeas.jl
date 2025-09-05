@@ -222,12 +222,15 @@ function import_MeasurementData(filepath::String; predefined_setting=nothing, si
     data = npzread(filepath)
 
     # Extract measurement results
-    measurement_results = data["measurement_results"]  # Shape: NM x N
+    raw_measurement_results = data["measurement_results"]  # Shape: NM x N
 
-    # Check if 0 is contained and print a message if true
-    if 0 in measurement_results
-        @warn "Julia works with indices starting at 1. Binary data should therefore use 1 and 2, not 0 and 1."
+    # Validate that imported data only contains 0 and 1
+    if !all(x -> x in [0, 1], raw_measurement_results)
+        throw(ArgumentError("Imported measurement results must only contain values 0 and 1"))
     end
+
+    # Convert from {0, 1} format to {1, 2} format for Julia
+    measurement_results = 2 .- raw_measurement_results
 
     # Determine measurement settings
     if predefined_setting !== nothing
@@ -288,8 +291,12 @@ function export_MeasurementData(data::MeasurementData{T}, filepath::String) wher
 
     export_dict = Dict{String, Any}()
 
-    # Export measurement results
-    export_dict["measurement_results"] = data.measurement_results
+    # Validate and export measurement results
+    # Ensure measurement results only contain values 1 and 2, then convert to 0 and 1
+    if !all(x -> x in [1, 2], data.measurement_results)
+        throw(ArgumentError("Measurement results must only contain values 1 and 2"))
+    end
+    export_dict["measurement_results"] = 2 .- data.measurement_results
 
     # If measurement settings are present, process and add them to the export dictionary
     if data.measurement_setting !== nothing
