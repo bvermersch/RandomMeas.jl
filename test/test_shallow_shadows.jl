@@ -25,9 +25,9 @@ measurement_data_dense = MeasurementData(ψ,NM,measurement_setting;mode=Dense)
         nsweeps = 4
 
         println("measurement group")
-        measurement_group_mps = MeasurementGroup(ψ,NU,NM,depth;mode=TensorNetwork)
-measurement_group_mpo = MeasurementGroup(outer(ψ',ψ),NU,NM,depth;mode=TensorNetwork)
-measurement_group_dense = MeasurementGroup(ψ,NU,NM,depth;mode=Dense)
+        measurement_group_mps = MeasurementGroup(ψ,NU,NM; setting_type=ShallowUnitaryMeasurementSetting, depth=depth, mode=TensorNetwork)
+        measurement_group_mpo = MeasurementGroup(outer(ψ',ψ),NU,NM; setting_type=ShallowUnitaryMeasurementSetting, depth=depth, mode=TensorNetwork)
+        measurement_group_dense = MeasurementGroup(ψ,NU,NM; setting_type=ShallowUnitaryMeasurementSetting, depth=depth, mode=Dense)
 
         println("mps depolarization")
         shallow_depolarization_mps = get_shallow_depolarization_mps(measurement_group_mps)
@@ -64,7 +64,7 @@ measurement_group_dense = MeasurementGroup(ψ,NU,NM,depth;mode=Dense)
         inverse_shallow_map = get_depolarization_map(inverse_depolarization_mps,ξ,η)
 
         #c#ombined_map = [depolarization_map[i]*inverse_depolarization_map[i] for i in 1:N]
-        #identity_map = 
+        #identity_map =
         #@show inds(flatten(shallow_map))
         #@show inds(flatten(inverse_shallow_map))
     end
