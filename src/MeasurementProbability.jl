@@ -11,15 +11,12 @@ Construct a `MeasurementProbability` object from a `MeasurementData` object.
 - `data::MeasurementData{T}`: A `MeasurementData` object containing binary measurement results and a measurement setting.
 
 # Returns
-A `MeasurementProbability` object with:
-- `measurement_probability`: A Born probability tensor computed from the measurement results.
-- `measurement_setting`: The same measurement setting as in the input `MeasurementData`.
+A `MeasurementProbability` object containing the computed Born probability tensor and measurement setting.
 
 # Details
-- The Born probability is computed by mapping each unique measurement outcome (as obtained via `eachrow(data.measurement_results)`)
-  to its count and then populating a dense tensor.
+- The Born probability is computed by mapping each unique measurement outcome to its count and populating a dense tensor.
 - The tensor is normalized by the total number of measurements (`NM`).
-- If no measurement setting is provided (`data.measurement_setting` is `nothing`), a default set of site indices is generated.
+- If no measurement setting is provided (`data.measurement_setting` is `nothing`), default site indices are generated.
 
 # Example
 ```julia
@@ -31,6 +28,7 @@ data = MeasurementData(measurement_results, measurement_setting=setting)
 # Construct MeasurementProbability from MeasurementData
 prob_obj = MeasurementProbability(data)
 println(prob_obj.measurement_probability[1])  # Print probability tensor for the first measurement
+```
 """
 
 function MeasurementProbability(data::MeasurementData{T}) where  T <: Union{Nothing, AbstractMeasurementSetting}
@@ -67,12 +65,10 @@ Construct a `MeasurementProbability` object from a quantum state (either an MPS 
 
 # Arguments
 - `ψ::Union{MPS, MPO}`: The quantum state (pure if MPS, mixed if MPO) from which the Born probability is computed.
-- `setting`: The measurement settings describing the local unitary operations (or shallow, or computational basis).
+- `setting::Union{ShallowUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, LocalUnitaryMeasurementSetting}`: The measurement settings describing the local unitary operations.
 
 # Returns
-A `MeasurementProbability` object with:
-- `measurement_probability`: A Born probability tensor computed by applying the measurement settings to `ψ`.
-- `measurement_setting`: The provided measurement setting.
+A `MeasurementProbability` object containing the computed Born probability tensor and measurement setting.
 
 # Details
 - For an MPS, the local unitaries from `setting` are applied to `ψ`, and the Born probability is computed using a series of contractions.
@@ -85,6 +81,7 @@ A `MeasurementProbability` object with:
 settings = LocalUnitaryMeasurementSetting(5, ensemble=Haar)
 prob_obj = MeasurementProbability(ψ, settings)
 println(prob_obj.measurement_probability[1])
+```
 """
 
 function MeasurementProbability(ψ::Union{MPS, MPO}, setting::Union{ShallowUnitaryMeasurementSetting,ComputationalBasisMeasurementSetting,LocalUnitaryMeasurementSetting})

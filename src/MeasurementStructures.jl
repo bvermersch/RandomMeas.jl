@@ -62,13 +62,19 @@ struct LocalUnitaryMeasurementSetting <: LocalMeasurementSetting
     end
 end
 """
-    LocalUnitaryMeasurementSetting(ms::LocalUnitaryMeasurementSetting;
-                                    N=ms.N,
-                                    basis_transformation=ms.basis_transformation,
-                                    site_indices=ms.site_indices)
+    LocalUnitaryMeasurementSetting(ms::LocalUnitaryMeasurementSetting; N=ms.N, basis_transformation=ms.basis_transformation, site_indices=ms.site_indices)
 
 Make a new `LocalUnitaryMeasurementSetting` by copying fields from `ms`,
 but overriding any that you pass by keyword.
+
+# Arguments
+- `ms::LocalUnitaryMeasurementSetting`: The original measurement setting to copy from.
+- `N` (optional): Override the number of sites. Default is `ms.N`.
+- `basis_transformation` (optional): Override the basis transformation. Default is `ms.basis_transformation`.
+- `site_indices` (optional): Override the site indices. Default is `ms.site_indices`.
+
+# Returns
+A new `LocalUnitaryMeasurementSetting` object with the specified overrides.
 """
 function LocalUnitaryMeasurementSetting(
     ms::LocalUnitaryMeasurementSetting;
@@ -86,7 +92,7 @@ end
 # Computational Basis Measurement Setting
 # ---------------------------------------------------------------------------
 """
-    ComputationalBasisMeasurementSetting
+    ComputationalBasisMeasurementSetting(N, basis_transformation, site_indices)
 
 A struct representing computational basis measurement settings for quantum systems.
 This setting uses the computational basis, so that each local unitary is by construction simply the identity operator.
@@ -113,13 +119,19 @@ struct ComputationalBasisMeasurementSetting <: LocalMeasurementSetting
     end
 end
 """
-    ComputationalBasisMeasurementSetting(ms::ComputationalBasisMeasurementSetting;
-                                        N=ms.N,
-                                        basis_transformation=ms.basis_transformation,
-                                        site_indices=ms.site_indices)
+    ComputationalBasisMeasurementSetting(ms::ComputationalBasisMeasurementSetting; N=ms.N, basis_transformation=ms.basis_transformation, site_indices=ms.site_indices)
 
 Make a new `ComputationalBasisMeasurementSetting` by copying fields from `ms`,
 but overriding any that you pass by keyword.
+
+# Arguments
+- `ms::ComputationalBasisMeasurementSetting`: The original measurement setting to copy from.
+- `N` (optional): Override the number of sites. Default is `ms.N`.
+- `basis_transformation` (optional): Override the basis transformation. Default is `ms.basis_transformation`.
+- `site_indices` (optional): Override the site indices. Default is `ms.site_indices`.
+
+# Returns
+A new `ComputationalBasisMeasurementSetting` object with the specified overrides.
 """
 function ComputationalBasisMeasurementSetting(
     ms::ComputationalBasisMeasurementSetting;
@@ -135,20 +147,19 @@ end
 # Shallow Unitary Measurement Setting
 # ---------------------------------------------------------------------------
 """
-    ShallowUnitaryMeasurementSetting
+    ShallowUnitaryMeasurementSetting(N, K, basis_transformation, site_indices)
 
-A struct representing measurement settings which is, for each qubit, specified through a single qubit rotation, rotating from the computational basis into the measurement basis.
+A struct representing shallowmeasurement settings which is specified by a list of one and two qubit gates.
 
 # Fields
 - `N::Int`: Number of sites (qubits).
-- 'K::Int`: Number of gates that creates the shallow_unitary
-- `basis_transformation::Vector{ITensor}`: A vector of Ngates representing the shallow unitary
+- `K::Int`: Number of gates that creates the shallow unitary.
+- `basis_transformation::Vector{ITensor}`: A vector of K ITensors representing the shallow unitary.
 - `site_indices::Vector{Index{Int64}}`: A vector of site indices of length N.
 
-# Constructor
-Creates a `ShallowUnitaryMeasurementSetting` object after validating that:
-- The length of `basis_transformation` equals `K`
-- The length of `site_indices` equals `N`.
+# Constraints
+- `length(basis_transformation) == K`.
+- `length(site_indices) == N`.
 """
 struct ShallowUnitaryMeasurementSetting <: AbstractMeasurementSetting
     N::Int                              # Number of sites
@@ -165,14 +176,20 @@ struct ShallowUnitaryMeasurementSetting <: AbstractMeasurementSetting
     end
 end
 """
-    ShallowUnitaryMeasurementSetting(ms::ShallowUnitaryMeasurementSetting;
-                                    N=ms.N,
-                                    K=ms.K,
-                                    basis_transformation=ms.basis_transformation,
-                                    site_indices=ms.site_indices)
+    ShallowUnitaryMeasurementSetting(ms::ShallowUnitaryMeasurementSetting; N=ms.N, K=ms.K, basis_transformation=ms.basis_transformation, site_indices=ms.site_indices)
 
 Make a new `ShallowUnitaryMeasurementSetting` by copying fields from `ms`,
 but overriding any that you pass by keyword.
+
+# Arguments
+- `ms::ShallowUnitaryMeasurementSetting`: The original measurement setting to copy from.
+- `N` (optional): Override the number of sites. Default is `ms.N`.
+- `K` (optional): Override the number of gates. Default is `ms.K`.
+- `basis_transformation` (optional): Override the basis transformation. Default is `ms.basis_transformation`.
+- `site_indices` (optional): Override the site indices. Default is `ms.site_indices`.
+
+# Returns
+A new `ShallowUnitaryMeasurementSetting` object with the specified overrides.
 """
 function ShallowUnitaryMeasurementSetting(
     ms::ShallowUnitaryMeasurementSetting;
@@ -189,7 +206,7 @@ end
 # Measurement Data
 # ---------------------------------------------------------------------------
 """
-    MeasurementData{T}
+    MeasurementData{T}(N, NM, measurement_results, measurement_setting)
 
 A container for measurement data and settings obtained in actual or simulated quantum experiments.
 
@@ -233,9 +250,9 @@ MeasurementData(N::Int, NM::Int, measurement_results::Array{Int,2}, measurement_
 # Measurement Probability
 # ---------------------------------------------------------------------------
 """
-    MeasurementProbability{T}
+    MeasurementProbability{T}(N, measurement_probability, measurement_setting, site_indices)
 
-	A container for measurement probabilities and settings obtained either estimated from measurement data or directly computed from quantum states.
+A container for measurement probabilities and settings obtained either estimated from measurement data or directly computed from quantum states.
 
 # Fields
 - `N::Int`: Number of sites (qubits).
@@ -274,7 +291,7 @@ MeasurementProbability(N::Int, measurement_probability::ITensor, measurement_set
 # Measurement Group
 # ---------------------------------------------------------------------------
 """
-    MeasurementGroup{T}
+    MeasurementGroup{T}(N, NU, NM, measurements)
 
 A container for a group of measurement data objects used in actual or simulated quantum experiments.
 

@@ -19,8 +19,8 @@ measurement_group = MeasurementGroup(measurements)
 
 
 @testset "Shadows Tests" begin
-    
-    
+
+
     batch_shadow = get_dense_shadows(measurement_group;number_of_ru_batches=1)
     expect_batch = get_expect_shadow(observable,batch_shadow)
 
@@ -35,9 +35,9 @@ measurement_group = MeasurementGroup(measurements)
     for r in 1:NU
         measurement_data = measurement_group.measurements[r]
         factorized_shadows = get_factorized_shadows(measurement_data)
-        expect_factorized += get_expect_shadow(observable,factorized_shadows)/NU 
+        expect_factorized += get_expect_shadow(observable,factorized_shadows)/NU
     end
-   
+
     # Display results
     @show exact_value
     @show expect_batch

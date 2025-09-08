@@ -7,14 +7,14 @@
 
 Create a `ComputationalBasisMeasurementSetting` for `N` sites. This setting corresponds to measurement in the computational basis.
 
-# Arguments:
+# Arguments
 - `N::Int`: Number of sites (qubits).
 - `site_indices::Union{Vector{Index{Int64}}, Nothing}` (optional): Site indices. If `nothing`, they are automatically generated.
 
-# Returns:
-- A `ComputationalBasisMeasurementSetting` object.
+# Returns
+A `ComputationalBasisMeasurementSetting` object.
 
-# Example:
+# Example
 ```julia
 setting = ComputationalBasisMeasurementSetting(4)
 ```
@@ -30,14 +30,14 @@ end
 
 Create a `LocalUnitaryMeasurementSetting` object from an `N × 2 × 2` array of unitary matrices.
 
-# Arguments:
+# Arguments
 - `basis_transformation_array::Array{ComplexF64, 3}`: An `N × 2 × 2` array of unitary matrices.
 - `site_indices::Union{Vector{Index{Int64}}, Nothing}` (optional): Site indices. If `nothing`, they are automatically generated.
 
-# Returns:
-- A `LocalUnitaryMeasurementSetting` object.
+# Returns
+A `LocalUnitaryMeasurementSetting` object.
 
-# Example:
+# Example
 ```julia
 unitary_array = rand(ComplexF64, 4, 2, 2)
 setting = LocalUnitaryMeasurementSetting(unitary_array)
@@ -63,15 +63,15 @@ end
 
 Create a `LocalUnitaryMeasurementSetting` object by randomly sampling local unitary operators.
 
-# Arguments:
+# Arguments
 - `N::Int`: Number of sites (qubits).
-- `site_indices::Union{Vector{Index}, Nothing}` (optional): Site indices. If `nothing`, they are automatically generated.
+- `site_indices::Union{Vector{Index{Int64}}, Nothing}` (optional): Site indices. If `nothing`, they are automatically generated.
 - `ensemble::UnitaryEnsemble`: Type of random unitary (`Haar`, `Pauli`, `Identity`).
 
-# Returns:
-- A `LocalUnitaryMeasurementSetting` object.
+# Returns
+A `LocalUnitaryMeasurementSetting` object.
 
-# Example:
+# Example
 ```julia
 setting = LocalUnitaryMeasurementSetting(4, ensemble=Haar)
 ```
@@ -98,15 +98,15 @@ end
 
 Create a `ShallowUnitaryMeasurementSetting` object by generating a random quantum circuit.
 
-# Arguments:
+# Arguments
 - `N::Int`: Number of sites (qubits).
 - `depth::Int`: Depth of the random circuit.
 - `site_indices::Union{Vector{Index{Int64}}, Nothing}` (optional): Site indices. If `nothing`, they are automatically generated.
 
-# Returns:
-- A `ShallowUnitaryMeasurementSetting` object.
+# Returns
+A `ShallowUnitaryMeasurementSetting` object.
 
-# Example:
+# Example
 ```julia
 setting = ShallowUnitaryMeasurementSetting(4, 3)
 ```
@@ -131,14 +131,14 @@ end
 
 Generate a single-qubit unitary sampled from a specified ensemble.
 
-# Arguments:
+# Arguments
 - `site_index::Index{Int64}`: Site index.
 - `ensemble::UnitaryEnsemble`: Type of unitary ensemble (`Haar`, `Pauli`, `Identity`).
 
-# Returns:
-- An `ITensor` representing the unitary transformation.
+# Returns
+An `ITensor` representing the unitary transformation.
 
-# Example:
+# Example
 ```julia
 U = get_rotation(site_index, Pauli)
 ```
@@ -181,14 +181,14 @@ end
 
 Reduce a `LocalMeasurementSetting` object to a specified subsystem.
 
-# Arguments:
+# Arguments
 - `settings::LocalMeasurementSetting`: The original measurement settings object.
 - `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
 
-# Returns:
-- A new `LocalMeasurementSetting` object corresponding to the specified subsystem.
+# Returns
+A new `LocalMeasurementSetting` object corresponding to the specified subsystem.
 
-# Example:
+# Example
 ```julia
 reduced_setting = reduce_to_subsystem(full_setting, [1, 3])
 ```
@@ -211,11 +211,12 @@ function reduce_to_subsystem(
 end
 
 
-# Export Method
 """
+    export_LocalUnitaryMeasurementSetting(ms, filepath)
+
 Export the unitary in a LocalUnitaryMeasurementSetting object to an .npz file with a single field: basis_transformation.
 
-# Arguments:
+# Arguments
 - `ms::LocalUnitaryMeasurementSetting`: The measurement settings to export.
 - `filepath::String`: Path to the output .npz file.
 """
@@ -231,16 +232,17 @@ function export_LocalUnitaryMeasurementSetting(ms::LocalUnitaryMeasurementSettin
     println("Exported to NPZ file: $filepath")
 end
 
-# Import Method
 """
+    import_LocalUnitaryMeasurementSetting(filepath; site_indices=nothing)
+
 Import unitary from an .npz file and create a LocalUnitaryMeasurementSetting object.
 
-# Arguments:
+# Arguments
 - `filepath::String`: Path to the input .npz file.
-- `site_indices::Union{Vector{Index{Int64}}, Nothing}`: Optional site indices. If not provided, they will be generated.
+- `site_indices::Union{Vector{Index{Int64}}, Nothing}` (optional): Site indices. If not provided, they will be generated.
 
-# Returns:
-- A LocalUnitaryMeasurementSettings object.
+# Returns
+A `LocalUnitaryMeasurementSetting` object.
 """
 function import_LocalUnitaryMeasurementSetting(filepath::String; site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing)::LocalUnitaryMeasurementSetting
     # Read the .npz file
