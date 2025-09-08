@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -62,10 +62,12 @@ module RandomMeas
 # Load External Dependencies and Global Utilities.
 # ---------------------------------------------------------------------------
 include("imports.jl")
+include("utils.jl")
 
 # ---------------------------------------------------------------------------
 # Load Core Data Structures and Types.
 # ---------------------------------------------------------------------------
+include("Types.jl")
 include("MeasurementStructures.jl")
 include("ShadowStructures.jl")
 

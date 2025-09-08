@@ -40,7 +40,7 @@ using Test
         measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
         for r in 1:NU
             measurement_results = rand(1:2, NM, N)
-            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=site_indices,ensemble="Haar")
+            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=site_indices,ensemble=Haar)
             measurements[r] = MeasurementData(measurement_results; measurement_setting=measurement_setting)
         end
         measurement_group = MeasurementGroup(measurements)

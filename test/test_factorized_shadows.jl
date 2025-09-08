@@ -6,7 +6,7 @@ N = 4  # Number of qubits/sites
 NM = 5  # Number of projective measurements
 
 # Generate measurement settings
-measurement_setting = LocalUnitaryMeasurementSetting(N, ensemble="Haar")
+measurement_setting = LocalUnitaryMeasurementSetting(N, ensemble=Haar)
 
 # Generate random measurement results
 measurement_results = rand(1:2, NM, N)  # Random binary results in the range [1, 2]
@@ -17,7 +17,7 @@ measurement_data = MeasurementData(measurement_results; measurement_setting=meas
 # Testing FactorizedShadow constructor
 @testset "FactorizedShadow Tests" begin
         for m in 1:NM
-            local_unitary = measurement_setting.local_unitary
+            local_unitary = measurement_setting.basis_transformation
             data = measurement_results[m, :]
 
             # Construct FactorizedShadow
@@ -44,7 +44,7 @@ end
 # Test with non-uniform G
 @testset "FactorizedShadow with G" begin
     G = [1.0, 0.9, 1.1, 1.2]  # Example of non-uniform G values
-    local_unitary = measurement_setting.local_unitary
+    local_unitary = measurement_setting.basis_transformation
         for m in 1:NM
             data = measurement_results[m, :]
 
@@ -58,10 +58,10 @@ end
 # Test edge cases
 @testset "FactorizedShadow Edge Cases" begin
     # Invalid G length
-    @test_throws AssertionError FactorizedShadow(measurement_results[1, :], measurement_setting.local_unitary; G=[1.0, 0.9])
+    @test_throws AssertionError FactorizedShadow(measurement_results[1, :], measurement_setting.basis_transformation; G=[1.0, 0.9])
 
     # Invalid measurement results length
-    @test_throws AssertionError FactorizedShadow([1, 2], measurement_setting.local_unitary)
+    @test_throws AssertionError FactorizedShadow([1, 2], measurement_setting.basis_transformation)
 end
 
 

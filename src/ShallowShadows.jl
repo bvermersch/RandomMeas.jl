@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -15,11 +15,11 @@ function get_shallow_depolarization_mps(settings::Vector{ShallowUnitaryMeasureme
     v = siteinds("Qubit", N; addtags="virtual")
 
     depolarization_vectors = Vector{MPS}()
-    ψ0 = MPS(ξ,["Dn" for n in 1:N]  ) 
+    ψ0 = MPS(ξ,["Dn" for n in 1:N]  )
 
     @showprogress dt=1 for r in 1:NU
-        local_unitary = settings[r].local_unitary
-        ψu = apply(local_unitary,ψ0)
+        basis_transformation = group.measurements[r].measurement_setting.basis_transformation
+        ψu = apply(basis_transformation,ψ0)
         Pu = get_Born_MPS(ψu)
 
         O = MPO(ξ)
@@ -29,7 +29,7 @@ function get_shallow_depolarization_mps(settings::Vector{ShallowUnitaryMeasureme
             O[i] = s0*s0'*onehot(v''[i]=>1)-s1*s1'*onehot(v''[i]=>1)
             O[i] += 2*s1*s1'*onehot(v''[i]=>2)
         end
-        Ou = apply(local_unitary,O;apply_dag=true)
+        Ou = apply(basis_transformation,O;apply_dag=true)
         POu = get_Born_MPS(Ou)
 
         for i in 1:N
@@ -97,7 +97,7 @@ function inner_vec(A::Vector{ITensor},B::Vector{ITensor})
     return X[]
 end
 
-function loss_inverse_depolarization_map(inverse_depolarization_mps_data::Vector{ITensor},depolarization_map::Vector{ITensor},v::Vector{Index{Int64}},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})    
+function loss_inverse_depolarization_map(inverse_depolarization_mps_data::Vector{ITensor},depolarization_map::Vector{ITensor},v::Vector{Index{Int64}},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
     N = length(inverse_depolarization_mps_data)
     η = siteinds("Qubit", N)  # Output Site indices
     inverse_depolarization_map = get_depolarization_map(inverse_depolarization_mps_data,v,ξ,η)
@@ -108,23 +108,23 @@ end
 
 # Constructor for ShallowSShadow from raw measurement results and unitaries
 """
-    ShallowShadow(measurement_results::Vector{Int}, local_unitary::Vector{ITensor};
-                     G::Vector{Float64} = fill(1.0, length(local_unitary)))
+    ShallowShadow(measurement_results::Vector{Int}, basis_transformation::Vector{ITensor};
+                     G::Vector{Float64} = fill(1.0, length(basis_transformation)))
 
 Construct a `ShallowSShadow` object from raw measurement results and unitary transformations.
 
 # Arguments
 - `measurement_results::Vector{Int}`: Vector of binary measurement results for each qubit/site.
-- `local_unitary::Vector{ITensor}`: Vector of local unitary transformations applied during the measurement.
+- `basis_transformation::Vector{ITensor}`: Vector of local unitary transformations applied during the measurement.
 
 # Returns
 A `ShallowShadow` object.
 """
-function ShallowShadow(measurement_results::Vector{Int}, local_unitary::Vector{ITensor}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+function ShallowShadow(measurement_results::Vector{Int}, basis_transformation::Vector{ITensor}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
     N = length(measurement_results) # Number of qubits/sites
-    K = length(local_unitary)
+    K = length(basis_transformation)
 
-    local_unitary_dag = reverse([swapprime(dag(local_unitary[k]),0,1) for k in 1:K])
+    basis_transformation_dag = reverse([swapprime(dag(basis_transformation[k]),0,1) for k in 1:K])
 
     # Construct the factorized shadow for each qubit/site
     shadow_data = Vector{ITensor}(undef, N)
@@ -132,9 +132,7 @@ function ShallowShadow(measurement_results::Vector{Int}, local_unitary::Vector{I
     states = [measurement_results[i]==2 ? "Dn" : "Up" for i in 1:N]
     ψ0  = MPS(ComplexF64,ξ,states);
 
-    ψ = apply(local_unitary_dag,ψ0)
-    #ψ1 = apply(local_unitary,ψ)
-    #replace_siteinds!(ψ,s)
+    ψ = apply(basis_transformation_dag,ψ0)
     ρ = outer(ψ',ψ)
     shadow_data = apply_map(inverse_shallow_map,ρ,s,ξ)
     return ShallowShadow(shadow_data, N, ξ)
@@ -159,11 +157,11 @@ function get_shallow_shadows(measurement_data::MeasurementData{ShallowUnitaryMea
 
     # Extract site indices from local unitaries
     @assert ξ == setting.site_indices
-    local_unitary = setting.local_unitary
+    basis_transformation = setting.basis_transformation
     measurement_results = measurement_data.measurement_results
     NM = measurement_data.NM
 
-    return [ShallowShadow(measurement_results[m,:], local_unitary, inverse_shallow_map,s,ξ) for m in 1:NM]
+    return [ShallowShadow(measurement_results[m,:], basis_transformation, inverse_shallow_map,s,ξ) for m in 1:NM]
 end
 
 """
@@ -202,11 +200,10 @@ function get_expect_shadow(O::MPO, measurement_data::MeasurementData{ShallowUnit
     N = measurement_data.N
     @assert N<17 "Expensive routine memorywise, reduce N or use different get_expect_shadow method"
     inverse_observable = apply_map(inverse_shallow_map,O,s,ξ)
-    local_unitary = measurement_data.measurement_setting.local_unitary
-    inverse_observable_u = apply(local_unitary,inverse_observable;apply_dag=true)
+    basis_transformation = measurement_data.measurement_setting.basis_transformation
+    inverse_observable_u = apply(basis_transformation,inverse_observable;apply_dag=true)
     inverse_observable_u_diagonal = flatten(get_Born_MPS(inverse_observable_u))
 
     probability = MeasurementProbability(measurement_data)
     return (inverse_observable_u_diagonal*probability.measurement_probability)[]
 end
-

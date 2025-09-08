@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -9,7 +9,7 @@ This file loads the external dependencies required by the RandomMeas package.
 It centralizes all external module imports.
 """
 
-
+using Pkg
 using ITensors, ITensorMPS
 using StatsBase
 using Combinatorics

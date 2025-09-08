@@ -2,25 +2,30 @@
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
-# Constructor with a precomputed probability tensor `P`
+# Constructor with a precomputed probability tensor
 """
-    DenseShadow(measurement_probability::MeasurementProbability; G::Vector{Float64} = fill(1.0, length(u)))
+    DenseShadow(Probability::MeasurementProbability; G::Vector{Float64} = fill(1.0, measurement_probability.N))
 
-Construct a `DenseShadow` object from a precomputed probability tensor.
+Construct a `DenseShadow` object from a precomputed measurement probability tensor.
+
+A dense shadow represents a classical snapshot of a quantum state using the full density matrix
+representation. This constructor builds the shadow from measurement probabilities obtained through
+randomized measurements or via classical simulation.
 
 # Arguments
-- `P::ITensor`: Probability tensor representing measurement results.
-- `u::Vector{ITensor}`: Vector of local unitary transformations.
-- `G::Vector{Float64}` (optional): Vector of G values to account for measurement errors (default: 1.0 for all sites).
+- `Probability::MeasurementProbability{LocalUnitaryMeasurementSetting}`: A measurement probability
+  object containing the probability tensor `P`, measurement setting with local unitaries `u`, and site indices `ξ`.
+- `G::Vector{Float64}` (optional): Vector of G values to account for measurement errors and noise (robust shadows).
+  Each element corresponds to a qubit/site. Default is 1.0 for all sites (no error mitigation).
 
 # Returns
-A `DenseShadow` object.
+A `DenseShadow` object containing the reconstructed shadow tensor, number of qubits, and site indices.
 """
 function DenseShadow(Probability::MeasurementProbability{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, Probability.N))
     N = Probability.N  # Number of qubits/sites
     setting  = Probability.measurement_setting
     ξ = setting.site_indices
-    u = setting.local_unitary
+    u = setting.basis_transformation
     P = Probability.measurement_probability
     rho = 2^N * deepcopy(P)  # Scale the probability tensor
 
@@ -41,16 +46,26 @@ end
 
 # Constructor with MeasurementData object
 """
-    DenseShadow(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, size(measurement_data.N, 2)))
+    DenseShadow(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, measurement_data.N))
 
-Construct a `DenseShadow` object from a MeasurementDataObject
+Construct a `DenseShadow` object from a `MeasurementData` object.
+
+This constructor creates a dense shadow directly from raw measurement data by first computing
+the measurement probabilities and then constructing the shadow.
 
 # Arguments
-- `measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}:
-- `G::Vector{Float64}` (optional): Vector of G values to account for measurement errors (default: 1.0 for all sites).
+- `measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}`: A measurement data object
+  containing the raw measurement results and measurement settings.
+- `G::Vector{Float64}` (optional): Vector of G values to account for measurement errors and noise.
+  Each element corresponds to a qubit/site. Default is 1.0 for all sites (no error mitigation).
 
 # Returns
-A `DenseShadow` object.
+A `DenseShadow` object containing the reconstructed shadow tensor, number of qubits, and site indices.
+
+# Notes
+- This function internally calls `MeasurementProbability(measurement_data)` to compute probabilities
+  before constructing the shadow.
+- The G values can be used to account for readout errors and other measurement imperfections.
 """
 function DenseShadow(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, measurement_data.N))
     Probability = MeasurementProbability(measurement_data)
@@ -61,18 +76,25 @@ end
 # Batch Dense Shadows
 """
     get_dense_shadows(measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting};
-                      G::Vector{Float64} = fill(1.0, N),
-                      number_of_ru_batches::Int = NU)
+                      G::Vector{Float64} = fill(1.0, measurement_group.N),
+                      number_of_ru_batches::Int = measurement_group.NU)
 
 Compute dense shadows for the provided measurement data in batches.
 
+This function efficiently processes large measurement datasets by dividing the random unitaries
+into batches and computing averaged shadows for each batch.
+
 # Arguments
-- `measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}`: Measurement data object.
-- `G::Vector{Float64}` (optional): Vector of G values for robustness (default: 1.0 for all sites).
-- `number_of_ru_batches::Int` (optional): Number of random unitary batches (default: `NU`).
+- `measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}`: A measurement group object
+  containing multiple measurement data sets with different random unitaries and possibly multiple measurement outcomes per unitary.
+- `G::Vector{Float64}` (optional): Vector of G values for error correction and robustness.
+  Each element corresponds to a qubit/site. Default is 1.0 for all sites (no error correction).
+- `number_of_ru_batches::Int` (optional): Number of random unitary batches to create.
+  Default is `measurement_group.NU` (one batch per random unitary).
 
 # Returns
-A Vector of `DenseShadow` objects.
+A `Vector{DenseShadow}` containing one dense batch shadow per batch.
+
 """
 function get_dense_shadows(
     measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting};
@@ -114,12 +136,17 @@ end
 
 Compute the expectation value of an MPO operator `O` using a dense shadow.
 
-# Arguments:
-- `O::MPO`: The MPO operator for which the expectation value is computed.
-- `shadow::DenseShadow`: A dense shadow object.
+This function estimates the expectation value ⟨O⟩ = Tr[O·ρ] of a matrix product operator (MPO) `O`
+with respect to the quantum state ρ represented by the dense shadow. The computation involves
+contracting the MPO with the shadow tensor over all site indices.
 
-# Returns:
-The expectation value as a `ComplexF64` (or `Float64` if purely real).
+# Arguments
+- `O::MPO`: The matrix product operator whose expectation value is to be computed. MPOs are
+  efficient representations of many-body observables in quantum systems.
+- `shadow::DenseShadow`: A dense shadow object containing the reconstructed quantum state tensor.
+
+# Returns
+The expectation value as a `ComplexF64`.
 """
 function get_expect_shadow(O::MPO, shadow::DenseShadow)
     N = shadow.N
@@ -137,14 +164,17 @@ end
 """
     multiply(shadow1::DenseShadow, shadow2::DenseShadow)
 
-Compute the trace product of two dense shadows.
+Compute the product of two dense shadows.
+
+This function computes the product of two dense shadows, which is fundamental for
+estimating higher-order moments and entanglement measures..
 
 # Arguments
-- `shadow1::DenseShadow`: The first dense shadow.
-- `shadow2::DenseShadow`: The second dense shadow.
+- `shadow1::DenseShadow`: The first dense shadow object.
+- `shadow2::DenseShadow`: The second dense shadow object.
 
 # Returns
-A new `DenseShadow` object that represents the trace product of the two input shadows.
+A new `DenseShadow` object that represents the product of the two input shadows.
 
 # Notes
 - The shadows must have the same site indices (`ξ`) and number of qubits (`N`).
@@ -165,6 +195,8 @@ end
     trace(shadow::DenseShadow)
 
 Compute the trace of a `DenseShadow` object.
+
+This function computes the trace Tr[ρ] of the quantum state represented by the dense shadow.
 
 # Arguments
 - `shadow::DenseShadow`: The `DenseShadow` object whose trace is to be computed.
@@ -196,11 +228,17 @@ end
 Compute the partial trace of a `DenseShadow` object over the complement of the specified subsystem.
 
 # Arguments
-- `shadow::DenseShadow`: The dense shadow to compute the partial trace for.
+- `shadow::DenseShadow`: The dense shadow of the full system's quantum state.
 - `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
+  The complement of this subsystem will be traced out.
 
 # Returns
-A new `DenseShadow` object reduced to the specified subsystem.
+A new `DenseShadow` object reduced to the specified subsystem, representing the reduced density matrix
+of the subsystem.
+
+# Notes
+- The function validates that all subsystem indices are within the valid range [1, N].
+- The subsystem indices must be unique (no duplicates allowed).
 """
 function partial_trace(shadow::DenseShadow, subsystem::Vector{Int})::DenseShadow
     # Validate the subsystem
@@ -228,16 +266,21 @@ end
 """
     partial_transpose(shadow::DenseShadow, subsystem::Vector{Int})::DenseShadow
 
-Compute the partial transpose of a DenseShadow over the specified subsystem by swapping, for each site,
-the unprimed index with its primed partner. This is done using the `swapind` function, which returns a view of
-the underlying ITensor.
+Compute the partial transpose of a DenseShadow over the specified subsystem.
+
+The implementation swaps, for each site in the subsystem, the unprimed index with its primed partner
+using the `swapind` function.
 
 # Arguments
-- `shadow::DenseShadow`: The dense classical shadow.
+- `shadow::DenseShadow`: The dense classical shadow representing the quantum state.
 - `subsystem::Vector{Int}`: A vector of 1-based site indices on which to perform the partial transpose.
 
 # Returns
-A new DenseShadow with the specified sites partially transposed.
+A new `DenseShadow` with the specified sites partially transposed.
+
+# Notes
+- The function validates that all subsystem indices are within the valid range [1, N].
+- The subsystem indices must be unique (no duplicates allowed).
 """
 function partial_transpose(shadow::DenseShadow, subsystem::Vector{Int})::DenseShadow
     @assert all(i -> i ≥ 1 && i ≤ shadow.N, subsystem) "Subsystem indices must be between 1 and N."

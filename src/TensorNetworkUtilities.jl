@@ -341,6 +341,26 @@ function get_trace_moment(ψ::Union{MPS, MPO}, k::Int, subsystem::Vector{Int}=co
 end
 
 
+
+function get_von_neumann_entropy(ψ::Union{MPS, MPO}, subsystem::Vector{Int}=collect(1:length(ψ)); base::Number=2)
+
+    # general case: construct reduced density MPO and convert to dense matrix
+    ρA = reduce_to_subsystem(ψ, subsystem)
+    # flatten MPO into full operator ITensor and then Matrix
+    T = flatten(ρA)
+    mat = Array(T, [prime(i) for i in inds(T)], inds(T))
+    vals = eigen(mat).values
+    S = 0.0
+    logfactor = 1 / log(base)
+    for λ in vals
+        if λ > 0
+            S -= λ * log(λ) * logfactor
+        end
+    end
+    return S
+end
+
+
 """
     get_trace_moments(ψ::Union{MPS, MPO}, k_vector::Vector{Int}, subsystem::Vector{Int}=collect(1:length(ψ)))
 

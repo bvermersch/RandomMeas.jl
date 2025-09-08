@@ -12,8 +12,8 @@ k_values = 1:4  # Trace moments to test
 ψ1 = random_mps(ξ)
 measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
 for r in 1:NU
-    measurement_setting_r = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
-    measurements[r] = MeasurementData(ψ1,NM,measurement_setting_r;mode="dense")
+    measurement_setting_r = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble=Haar)
+measurements[r] = MeasurementData(ψ1,NM,measurement_setting_r;mode=Dense)
 end
 measurement_group = MeasurementGroup(measurements)
 

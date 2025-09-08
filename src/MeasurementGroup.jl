@@ -19,10 +19,10 @@ A `MeasurementGroup` object with:
 
 # Example
 ```julia
-setting1 = LocalUnitaryMeasurementSetting(4, ensemble="Haar")
+setting1 = LocalUnitaryMeasurementSetting(4, ensemble=Haar)
 results1 = rand(1:2, 10, 4)
 data1 = MeasurementData(results1; measurement_setting=setting1)
-setting2 = LocalUnitaryMeasurementSetting(4, ensemble="Haar")
+setting2 = LocalUnitaryMeasurementSetting(4, ensemble=Haar)
 results2 = rand(1:2, 10, 4)
 data2 = MeasurementData(results2; measurement_setting=setting2)
 group = MeasurementGroup([data1, data2])
@@ -62,7 +62,7 @@ function MeasurementGroup(
     ψ::Union{MPO, MPS},
     measurement_settings::Vector{T},
     NM::Int;
-    mode::String = "MPS/MPO",
+    mode::SimulationMode = TensorNetwork,
     progress_bar::Bool=false
 )::MeasurementGroup{T} where T <: AbstractMeasurementSetting
     NU = length(measurement_settings)
@@ -80,91 +80,88 @@ function MeasurementGroup(
 end
 
 """
-    MeasurementGroup(ψ::Union{MPO, MPS}, NU::Int, NM::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
-::MeasurementGroup{LocalUnitaryMeasurementSetting}
+    MeasurementGroup(ψ::Union{MPO, MPS}, NU::Int, NM::Int; setting_type::Type=LocalUnitaryMeasurementSetting, depth::Union{Int, Nothing}=nothing, mode::SimulationMode=TensorNetwork, progress_bar::Bool=false)
 
-Construct a MeasurementGroup from a quantum state `ψ` by generating `NU` local measurement settings and simulating `NM`
+Construct a MeasurementGroup from a quantum state `ψ` by generating `NU` measurement settings and simulating `NM`
 projective measurements per setting.
 
 # Arguments
 - `ψ::Union{MPO, MPS}`: The quantum state.
 - `NU::Int`: Number of measurement data objects to generate.
 - `NM::Int`: Number of measurements per setting.
-- `mode::String`: Simulation mode; defaults to “MPS/MPO”.
-- `progress_bar::Bool`: Whether to show a progress bar.
+- `setting_type::Type{<:AbstractMeasurementSetting}` (optional): Type of measurement setting to use. Options:
+  - `LocalUnitaryMeasurementSetting` (default): Random local unitaries
+  - `ShallowUnitaryMeasurementSetting`: Shallow quantum circuits
+  - `ComputationalBasisMeasurementSetting`: Computational basis measurements
+- `depth::Union{Int, Nothing}` (optional): Circuit depth for shallow settings. Required when `setting_type=ShallowUnitaryMeasurementSetting`.
+- `mode::SimulationMode` (optional): Simulation mode. Default is `TensorNetwork`.
+- `progress_bar::Bool` (optional): Whether to show a progress bar. Default is `false`.
 
 # Returns
-A MeasurementGroup{LocalUnitaryMeasurementSetting} object.
+A `MeasurementGroup{T}` object where `T` is the specified `setting_type`.
 
+# Example
+```julia
+# Local unitary measurements (default)
+group1 = MeasurementGroup(ψ, 10, 100)
+
+# Shallow unitary measurements
+group2 = MeasurementGroup(ψ, 10, 100; setting_type=ShallowUnitaryMeasurementSetting, depth=3)
+
+# Computational basis measurements
+group3 = MeasurementGroup(ψ, 10, 100; setting_type=ComputationalBasisMeasurementSetting)
+```
+
+# Throws
+- `ArgumentError`: If `depth` is required but not provided for `ShallowUnitaryMeasurementSetting`.
 """
 function MeasurementGroup(
     ψ::Union{MPO, MPS},
     NU::Int,
     NM::Int;
-    mode::String = "MPS/MPO",
-    progress_bar::Bool=false
-)::MeasurementGroup{LocalUnitaryMeasurementSetting}
-    ξ = get_siteinds(ψ)
-    measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
+    setting_type::Type{<:AbstractMeasurementSetting} = LocalUnitaryMeasurementSetting,
+    depth::Union{Int, Nothing} = nothing,
+    mode::SimulationMode = TensorNetwork,
+    progress_bar::Bool = false
+)
     ξ = get_siteinds(ψ)
     N = length(ξ)
-    if progress_bar==true
+
+    # Validate depth parameter for ShallowUnitaryMeasurementSetting
+    if setting_type == ShallowUnitaryMeasurementSetting && depth === nothing
+        throw(ArgumentError("depth parameter is required for ShallowUnitaryMeasurementSetting"))
+    end
+
+    # Create measurements vector with appropriate type
+    measurements = Vector{MeasurementData{setting_type}}(undef, NU)
+
+    # Generate measurements based on setting type
+    if progress_bar
         @showprogress dt=1 for r in 1:NU
-            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
-            measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode=mode)
+            measurement_setting = create_measurement_setting(setting_type, N, ξ, depth)
+            measurements[r] = MeasurementData(ψ, NM, measurement_setting; mode=mode)
         end
     else
         for r in 1:NU
-            measurement_setting = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
-            measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode=mode)
+            measurement_setting = create_measurement_setting(setting_type, N, ξ, depth)
+            measurements[r] = MeasurementData(ψ, NM, measurement_setting; mode=mode)
         end
     end
+
     return MeasurementGroup(measurements)
 end
 
-"""
-    MeasurementGroup(ψ::Union{MPO, MPS}, NU::Int, NM::Int, depth::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
-::MeasurementGroup{ShallowUnitaryMeasurementSetting}
-
-Construct a MeasurementGroup from a quantum state `ψ` by generating `NU` shallow measurement settings and simulating
-`NM` measurements per unitary.
-
-# Arguments
-- `ψ::Union{MPO, MPS}`: The quantum state.
-- `NU::Int`: Number of measurement data objects to generate.
-- `NM::Int`: Number of measurements per setting.
-- `depth::Int`: Circuit depth for shallow settings.
-- `mode::String`: Simulation mode; defaults to “MPS/MPO”.
-- `progress_bar`::Bool: Whether to show a progress bar.
-# Returns
-
-A MeasurementGroup{ShallowUnitaryMeasurementSetting} object.
-
-"""
-function MeasurementGroup(
-    ψ::Union{MPO, MPS},
-    NU::Int,
-    NM::Int,
-    depth::Int;
-    mode::String = "MPS/MPO",
-    progress_bar::Bool=false
-)::MeasurementGroup{ShallowUnitaryMeasurementSetting}
-    ξ = get_siteinds(ψ)
-    measurements = Vector{MeasurementData{ShallowUnitaryMeasurementSetting}}(undef,NU)
-    ξ = get_siteinds(ψ)
-    N = length(ξ)
-    if progress_bar==true
-        @showprogress dt=1 for r in 1:NU
-            measurement_setting = ShallowUnitaryMeasurementSetting(N,depth; site_indices=ξ)
-            measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode=mode)
-        end
+# Helper function to create measurement settings based on type
+function create_measurement_setting(setting_type::Type{<:AbstractMeasurementSetting}, N::Int, ξ::Vector, depth::Union{Int, Nothing})
+    if setting_type == LocalUnitaryMeasurementSetting
+        return LocalUnitaryMeasurementSetting(N; site_indices=ξ, ensemble=Haar)
+    elseif setting_type == ShallowUnitaryMeasurementSetting
+        return ShallowUnitaryMeasurementSetting(N, depth; site_indices=ξ)
+    elseif setting_type == ComputationalBasisMeasurementSetting
+        return ComputationalBasisMeasurementSetting(N, ξ)
     else
-        for r in 1:NU
-            measurement_setting = ShallowUnitaryMeasurementSetting(N,depth; site_indices=ξ)
-            measurements[r] = MeasurementData(ψ,NM,measurement_setting;mode=mode)
-        end
+        throw(ArgumentError("Unsupported setting_type: $setting_type"))
     end
-    return MeasurementGroup(measurements)
 end
 
 """
@@ -236,7 +233,7 @@ function export_MeasurementGroup(group::MeasurementGroup{T}, filepath::String) w
         for i in 1:NU
             ms = group.measurements[i].measurement_setting
             for j in 1:N
-                settings_array[i, j, :, :] = Array(ms.local_unitary[j], ms.site_indices[j]', ms.site_indices[j])
+                settings_array[i, j, :, :] = Array(ms.basis_transformation[j], ms.site_indices[j]', ms.site_indices[j])
             end
         end
         export_dict["measurement_settings"] = settings_array
@@ -281,7 +278,7 @@ function import_MeasurementGroup(filepath::String; predefined_settings=nothing, 
         for s in predefined_settings
             @assert typeof(s) == T "Predefined settings must all have the same type; found $(typeof(s)) vs $(T)."
         end
-    elseif haskey(data, "local_unitaries")
+    elseif haskey(data, "measurement_settings")
         # Assume settings from file are of LocalUnitaryMeasurementSetting type.
         T = LocalUnitaryMeasurementSetting
     else
@@ -296,12 +293,12 @@ function import_MeasurementGroup(filepath::String; predefined_settings=nothing, 
         if predefined_settings !== nothing
             # Use the corresponding predefined setting.
             ms = predefined_settings[i]
-        elseif haskey(data, "local_unitaries")
+        elseif haskey(data, "measurement_settings")
             if site_indices === nothing
                 site_indices = siteinds("Qubit", N)
             end
             # Reconstruct from exported settings: assume settings_array is a 4D array (NU, N, 2, 2)
-            local_unitaries = [ITensor(data["local_unitaries"][i, j, :, :], site_indices[j]', site_indices[j]) for j in 1:N]
+            local_unitaries = [ITensor(data["measurement_settings"][i, j, :, :], site_indices[j]', site_indices[j]) for j in 1:N]
             ms = LocalUnitaryMeasurementSetting(N, local_unitaries, site_indices)
         else
             ms = nothing
@@ -309,7 +306,7 @@ function import_MeasurementGroup(filepath::String; predefined_settings=nothing, 
         measurements[i] = MeasurementData(m_results; measurement_setting=ms)
     end
 
-    println("We are constructing a MeasurementGroup object with measurement settings of type $T.")
+    #println("We are constructing a MeasurementGroup object with measurement settings of type $T.")
 
     return MeasurementGroup(measurements)
 end
