@@ -18,7 +18,7 @@ function get_shallow_depolarization_mps(settings::Vector{ShallowUnitaryMeasureme
     ψ0 = MPS(ξ,["Dn" for n in 1:N]  )
 
     @showprogress dt=1 for r in 1:NU
-        basis_transformation = group.measurements[r].measurement_setting.basis_transformation
+        basis_transformation = settings[r].basis_transformation
         ψu = apply(basis_transformation,ψ0)
         Pu = get_Born_MPS(ψu)
 
@@ -160,6 +160,8 @@ function get_shallow_shadows(measurement_data::MeasurementData{ShallowUnitaryMea
     basis_transformation = setting.basis_transformation
     measurement_results = measurement_data.measurement_results
     NM = measurement_data.NM
+
+   
 
     return [ShallowShadow(measurement_results[m,:], basis_transformation, inverse_shallow_map,s,ξ) for m in 1:NM]
 end
