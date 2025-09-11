@@ -265,10 +265,13 @@ function import_MeasurementGroup(filepath::String; predefined_settings=nothing, 
     measurement_results = data["measurement_results"]  # Expected shape: (NU, NM, N)
     NU, _, N = size(measurement_results)
 
-    # Check if 0 is contained and print a message if true
-    if 0 in measurement_results
-        @warn "Julia works with indices starting at 1. Binary data should therefore use 1 and 2, not 0 and 1."
+    # Validate that imported data only contains 0 and 1
+    if !all(x -> x in [0, 1], measurement_results)
+        throw(ArgumentError("Imported measurement results must only contain values 0 and 1"))
     end
+
+    # Convert from {0, 1} format to {1, 2} format for Julia
+    measurement_results = 2 .- measurement_results
 
     # If a vector of predefined settings is provided, check its length and ensure consistency.
     local T
