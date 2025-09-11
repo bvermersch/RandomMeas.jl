@@ -9,7 +9,6 @@ This module loads the external dependencies required by the RandomMeas package.
 It centralizes all external module imports.
 """
 
-using Pkg
 using ITensors, ITensorMPS
 using StatsBase
 using Combinatorics
