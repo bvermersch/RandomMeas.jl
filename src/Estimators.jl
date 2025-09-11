@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
+# Copyright (c) 2025 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -262,7 +262,7 @@ end
     get_calibration_vector(ψ0::MPS, measurement_group::MeasurementGroup)
 
 Return a calibration vector G for evaluating process shadows based on the calibration initial state ψ0=0000
-Reference Vitale et al, PRXQ 2024
+Reference Vitale et al, PRXQ 2025
 """
 function get_calibration_vector(ψ0::MPS,measurement_group::MeasurementGroup)
     N = length(ψ0)
