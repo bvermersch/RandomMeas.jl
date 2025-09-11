@@ -3,9 +3,15 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 
 """
-    get_shallow_depolarization_mps(group::MeasurementGroup{ShallowUnitaryMeasurementSetting})
+    get_shallow_depolarization_mps(settings::Vector{ShallowUnitaryMeasurementSetting})
 
-TBW
+Compute shallow depolarization MPS vectors from a collection of shallow unitary measurement settings.
+
+# Arguments
+- `settings::Vector{ShallowUnitaryMeasurementSetting}`: A vector of shallow unitary measurement settings.
+
+# Returns
+A `Vector{MPS}` containing depolarization vectors for each setting.
 """
 function get_shallow_depolarization_mps(settings::Vector{ShallowUnitaryMeasurementSetting})
     NU = length(settings)
@@ -42,11 +48,19 @@ function get_shallow_depolarization_mps(settings::Vector{ShallowUnitaryMeasureme
 end
 
 """
-    get_depolarization_map(depolarization_mps::MPS,s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+    get_depolarization_map(depolarization_mps_data::Vector{ITensor},v::Vector{Index{Int64}},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
 
-returns a shallow map \\mathcal{M} parametrization by a depolarization_mps c(\\nu)
- where the state is depolarized over partition \\A_{
-u} with probability c(\\nu)=1
+Returns a shallow map \\mathcal{M} parametrized by a depolarization_mps c(\\nu)
+where the state is depolarized over partition \\A_{\nu} with probability c(\\nu)=1
+
+# Arguments
+- `depolarization_mps_data::Vector{ITensor}`: Vector of ITensors representing the depolarization MPS data.
+- `v::Vector{Index{Int64}}`: Virtual indices.
+- `s::Vector{Index{Int64}}`: Source indices.
+- `ξ::Vector{Index{Int64}}`: Target indices.
+
+# Returns
+A `Vector{ITensor}` representing the depolarization map.
 """
 function get_depolarization_map(depolarization_mps_data::Vector{ITensor},v::Vector{Index{Int64}},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
     N = length(depolarization_mps_data)
@@ -58,18 +72,34 @@ end
 """
     get_depolarization_map(depolarization_mps::MPS,s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
 
-returns a shallow map \\mathcal{M} parametrization by a depolarization_mps c(\\nu)
- where the state is depolarized over partition \\A_{
-u} with probability c(\\nu)=1
+Returns a shallow map \\mathcal{M} parametrized by a depolarization_mps c(\\nu)
+where the state is depolarized over partition \\A_{\nu} with probability c(\\nu)=1
+
+# Arguments
+- `depolarization_mps::MPS`: The depolarization MPS.
+- `s::Vector{Index{Int64}}`: Source indices.
+- `ξ::Vector{Index{Int64}}`: Target indices.
+
+# Returns
+A `Vector{ITensor}` representing the depolarization map.
 """
 function get_depolarization_map(depolarization_mps::MPS,s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
     return get_depolarization_map(depolarization_mps.data,siteinds(depolarization_mps),s,ξ)
 end
 
 """
-    apply_map(map::MPO,state::MPO,s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
+    apply_map(map::Vector{ITensor},state::MPO,s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
 
 Apply a map map((s,s')→(ξ,ξ')) on a state of indices (ξ,ξ')
+
+# Arguments
+- `map::Vector{ITensor}`: The map to apply.
+- `state::MPO`: The state to apply the map to.
+- `s::Vector{Index{Int64}}`: Source indices.
+- `ξ::Vector{Index{Int64}}`: Target indices.
+
+# Returns
+A new `MPO` representing the result of applying the map.
 """
 function apply_map(map::Vector{ITensor},state::MPO,s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
     N = length(map)
@@ -108,14 +138,16 @@ end
 
 # Constructor for ShallowSShadow from raw measurement results and unitaries
 """
-    ShallowShadow(measurement_results::Vector{Int}, basis_transformation::Vector{ITensor};
-                     G::Vector{Float64} = fill(1.0, length(basis_transformation)))
+    ShallowShadow(measurement_results::Vector{Int}, basis_transformation::Vector{ITensor}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
 
-Construct a `ShallowSShadow` object from raw measurement results and unitary transformations.
+Construct a `ShallowShadow` object from raw measurement results and unitary transformations.
 
 # Arguments
 - `measurement_results::Vector{Int}`: Vector of binary measurement results for each qubit/site.
 - `basis_transformation::Vector{ITensor}`: Vector of local unitary transformations applied during the measurement.
+- `inverse_shallow_map::Vector{ITensor}`: The inverse shallow map.
+- `s::Vector{Index{Int64}}`: Source indices.
+- `ξ::Vector{Index{Int64}}`: Target indices.
 
 # Returns
 A `ShallowShadow` object.
@@ -141,13 +173,16 @@ end
 """
     get_shallow_shadows(measurement_data::MeasurementData{ShallowUnitaryMeasurementSetting}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
 
-Construct a `ShallowSShadow` object from MeasurementData
+Construct a `Vector{ShallowShadow}` from MeasurementData
 
 # Arguments
-
+- `measurement_data::MeasurementData{ShallowUnitaryMeasurementSetting}`: The measurement data object.
+- `inverse_shallow_map::Vector{ITensor}`: The inverse shallow map.
+- `s::Vector{Index{Int64}}`: Source indices.
+- `ξ::Vector{Index{Int64}}`: Target indices.
 
 # Returns
-A `ShallowShadow` object.
+A `Vector{ShallowShadow}` containing one shallow shadow for each measurement shot.
 """
 function get_shallow_shadows(measurement_data::MeasurementData{ShallowUnitaryMeasurementSetting}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
     # Number of qubits/sites
@@ -161,7 +196,7 @@ function get_shallow_shadows(measurement_data::MeasurementData{ShallowUnitaryMea
     measurement_results = measurement_data.measurement_results
     NM = measurement_data.NM
 
-   
+
 
     return [ShallowShadow(measurement_results[m,:], basis_transformation, inverse_shallow_map,s,ξ) for m in 1:NM]
 end
@@ -171,11 +206,11 @@ end
 
 Compute the expectation value of an MPO operator `O` using a shallow shadow.
 
-# Arguments:
+# Arguments
 - `O::MPO`: The MPO operator for which the expectation value is computed.
-- `shadow::ShallowShadow`: A factorized shadow object.
+- `shadow::ShallowShadow`: A shallow shadow object.
 
-# Returns:
+# Returns
 The expectation value as a `ComplexF64` (or `Float64` if purely real).
 """
 function get_expect_shadow(O::MPO, shadow::ShallowShadow)
@@ -193,9 +228,9 @@ end
 """
     get_expect_shadow(O::MPO, measurement_data::MeasurementData{ShallowUnitaryMeasurementSetting}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})
 
-Compute the expectation value of an MPO operator `O` from a shallow MeasurementData and and inverse shallow_map
+Compute the expectation value of an MPO operator `O` from a shallow MeasurementData and inverse shallow_map
 
-# Returns:
+# Returns
 The expectation value as a `ComplexF64` (or `Float64` if purely real).
 """
 function get_expect_shadow(O::MPO, measurement_data::MeasurementData{ShallowUnitaryMeasurementSetting}, inverse_shallow_map::Vector{ITensor},s::Vector{Index{Int64}},ξ::Vector{Index{Int64}})

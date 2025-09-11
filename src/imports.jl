@@ -3,9 +3,9 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 
 """
-    Imports.jl
+RandomMeas.jl - External Dependencies
 
-This file loads the external dependencies required by the RandomMeas package.
+This module loads the external dependencies required by the RandomMeas package.
 It centralizes all external module imports.
 """
 

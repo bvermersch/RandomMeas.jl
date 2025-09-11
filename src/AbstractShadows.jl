@@ -62,7 +62,7 @@ end
 
 Compute the expectation value of an MPO operator `O` using a single shadow object.
 
-# Arguments:
+# Arguments
 - `O::MPO`: The MPO operator for which the expectation value is computed.
 - `shadow::AbstractShadow`: A shadow object, either dense, factorized, or shallow.
 
@@ -88,7 +88,7 @@ end
 
 
 """
-    get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing, compute_sem::Bool=false, compute_renyi::Bool=false)
+    get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing, compute_sem::Bool = false, compute_renyi::Bool = false)
 
 Compute a single trace moment from an array of `AbstractShadow` objects.
 
@@ -121,7 +121,7 @@ estimate, bias, sem = get_trace_moment(shadows, 2; compute_sem=true)
 renyi_entropy = get_trace_moment(shadows, 2; compute_renyi=true)
 ```
 """
-function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing,compute_sem::Bool = false,compute_renyi::Bool = false)
+function get_trace_moment(shadows::Array{<:AbstractShadow, 2}, kth_moment::Int; O::Union{Nothing, MPO}=nothing, compute_sem::Bool = false, compute_renyi::Bool = false)
 
     if compute_sem
         s, bias, cov = get_trace_moments(shadows, [kth_moment]; O=O, compute_cov = compute_sem, compute_renyi = compute_renyi)
@@ -318,7 +318,7 @@ estimate, bias, sem = get_trace_moment(shadows_vector, 2; compute_sem=true)
 renyi_entropy = get_trace_moment(shadows_vector, 2; compute_renyi=true)
 ```
 """
-function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing, compute_sem::Bool = false,compute_renyi::Bool = false)
+function get_trace_moment(shadows::Vector{<:AbstractShadow}, kth_moment::Int; O::Union{Nothing, MPO}=nothing, compute_sem::Bool = false, compute_renyi::Bool = false)
      return get_trace_moment(reshape(shadows, :, 1), kth_moment; O=O, compute_sem = compute_sem, compute_renyi = compute_renyi)
 end
 
@@ -353,7 +353,7 @@ moments, bias, cov = get_trace_moments(shadows_vector, [1, 2, 3]; compute_cov=tr
 renyi_entropies = get_trace_moments(shadows_vector, [1, 2, 3]; compute_renyi=true)
 ```
 """
-function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing, compute_cov::Bool = false ,compute_renyi::Bool = false)
+function get_trace_moments(shadows::Vector{<:AbstractShadow}, kth_moments::Vector{Int}; O::Union{Nothing, MPO}=nothing, compute_cov::Bool = false, compute_renyi::Bool = false)
     return get_trace_moments(reshape(shadows, :, 1), kth_moments; O=O, compute_cov = compute_cov, compute_renyi = compute_renyi)
 end
 
@@ -402,7 +402,7 @@ end
 
 Multiply two shadow objects of the same concrete type.
 
-# Arguments:
+# Arguments
 - `shadow1::AbstractShadow`: The first shadow object.
 - `shadow2::AbstractShadow`: The second shadow object.
 
@@ -431,7 +431,7 @@ end
 
 Compute the trace of a shadow object.
 
-# Arguments:
+# Arguments
 - `shadow::AbstractShadow`: A shadow object.
 
 # Returns
@@ -456,7 +456,7 @@ end
 
 Compute the trace for each shadow in a collection of shadow objects.
 
-# Arguments:
+# Arguments
 - `shadows::AbstractArray{<:AbstractShadow}`: A collection (vector, matrix, etc.) of shadow objects.
 
 # Returns
@@ -493,7 +493,7 @@ of the subsystem.
 reduced_shadow = partial_trace(shadow, [1, 3])
 ```
 """
-function partial_trace(shadow::AbstractShadow, subsystem::Vector{Int};assume_unit_trace::Bool=false)
+function partial_trace(shadow::AbstractShadow, subsystem::Vector{Int}; assume_unit_trace::Bool=false)
     if shadow isa DenseShadow
         return partial_trace(shadow::DenseShadow, subsystem)
     elseif shadow isa FactorizedShadow
@@ -505,18 +505,20 @@ end
 
 
 """
-    partial_trace(shadows::AbstractArray{<:AbstractShadow}, subsystem::Vector{Int})
+    partial_trace(shadows::AbstractArray{<:AbstractShadow}, subsystem::Vector{Int}; assume_unit_trace::Bool=false)
 
 Compute the partial trace for each shadow in a collection of shadows.
 
 # Arguments
 - `shadows::AbstractArray{<:AbstractShadow}`: A collection of shadow objects (vector or 2D array).
 - `subsystem::Vector{Int}`: A vector of site indices (1-based) specifying the subsystem to retain.
+- `assume_unit_trace::Bool` (optional): If `true`, assumes the shadow has unit trace (default: `false`).
+    This can speed up the calculation for factorized shadows (as the trace of "traced out" qubits is not computed).
 
 # Returns
 An array of shadows reduced to the specified subsystem, with the same dimensions as the input array.
 """
-function partial_trace(shadows::AbstractArray{<:AbstractShadow}, subsystem::Vector{Int};assume_unit_trace::Bool=false)
+function partial_trace(shadows::AbstractArray{<:AbstractShadow}, subsystem::Vector{Int}; assume_unit_trace::Bool=false)
     # Allocate a new array with the same dimensions as the input
     reduced_shadows = similar(shadows)
 

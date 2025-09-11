@@ -110,13 +110,14 @@ end
 # end
 
 """
-    reduce_to_subsystem(ρ::MPO, subsystem::Vector{Int64})
+    reduce_to_subsystem(ρ::MPO, subsystem::Vector{Int64}, renormalize=false)
 
 Compute the reduced density matrix (as an MPO) for a specified subsystem.
 
 # Arguments
 - `ρ::MPO`: A Matrix Product Operator representing the full density matrix.
 - `subsystem::Vector{Int64}`: A vector of site indices (1-based) specifying the subsystem to retain.
+- `renormalize` (optional): Whether to renormalize the result (default: `false`).
 
 # Returns
 An MPO representing the reduced density matrix over the sites specified in `subsystem`.
@@ -499,7 +500,7 @@ An MPS representing the approximate average state with bond dimension χ.
 avg_state = get_average_mps(ψ_list, 20, 10)
 ```
 """
-function get_average_mps(ψ_list::Vector{MPS},χ::Int64,nsweeps::Int64)
+function get_average_mps(ψ_list::Vector{MPS}, χ::Int64, nsweeps::Int64)
     NU = length(ψ_list)
     N = length(ψ_list[1])
 

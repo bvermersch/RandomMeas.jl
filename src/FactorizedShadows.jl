@@ -12,7 +12,7 @@ Construct a `FactorizedShadow` object from raw measurement results and unitary t
 # Arguments
 - `measurement_results::Vector{Int}`: Vector of binary measurement results for each qubit/site.
 - `basis_transformation::Vector{ITensor}`: Vector of local unitary transformations applied during the measurement.
-- G::Vector{Float64}` (optional): Vector of `G` values for measurement error correction (default: 1.0 for all sites).
+- `G::Vector{Float64}` (optional): Vector of `G` values for measurement error mitigation (default: 1.0 for all sites).
 
 # Returns
 A `FactorizedShadow` object.
@@ -31,7 +31,7 @@ function FactorizedShadow(measurement_results::Vector{Int}, basis_transformation
     # Construct the factorized shadow for each qubit/site
     shadow_data = Vector{ITensor}(undef, N)
     for i in 1:N
-        # Coefficients for error correction
+        # Coefficients for error mitigation
         α = 3.0 / (2.0 * G[i] - 1.0)
         β = (G[i] - 2.0) / (2.0 * G[i] - 1.0)
 
@@ -57,7 +57,7 @@ Compute factorized shadows for all measurement results in the provided `Measurem
 - `G::Vector{Float64}` (optional): Vector of `G` values for measurement error correction (default: 1.0 for all sites).
 
 # Returns
-A Vector of NM `FactorizedShadow` objects with dimensions.
+A `Vector{FactorizedShadow}` of length `NM` containing one factorized shadow for each measurement shot.
 """
 function get_factorized_shadows(measurement_data::MeasurementData{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, measurement_data.N))
     # Extract dimensions from measurement data
@@ -86,7 +86,7 @@ Compute factorized shadows for all measurement results in the provided `Measurem
 - `G::Vector{Float64}` (optional): Vector of `G` values for measurement error correction (default: 1.0 for all sites).
 
 # Returns
-A Array of NU*NM `FactorizedShadow` objects with dimensions.
+An `Array{FactorizedShadow, 2}` of size `(NU, NM)` containing factorized shadows for each random unitary and measurement shot.
 """
 function get_factorized_shadows(measurement_group::MeasurementGroup{LocalUnitaryMeasurementSetting}; G::Vector{Float64} = fill(1.0, measurement_group.N))
     # Extract dimensions from measurement data
@@ -107,11 +107,11 @@ end
 
 Compute the expectation value of an MPO operator `O` using a factorized shadow.
 
-# Arguments:
+# Arguments
 - `O::MPO`: The MPO operator for which the expectation value is computed.
 - `shadow::FactorizedShadow`: A factorized shadow object.
 
-# Returns:
+# Returns
 The expectation value as a `ComplexF64` (or `Float64` if purely real).
 """
 function get_expect_shadow(O::MPO, shadow::FactorizedShadow)

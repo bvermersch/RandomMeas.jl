@@ -3,11 +3,13 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 
 """
+RandomMeas.jl - Type Definitions
+
 Enums for type-safe parameter specification throughout RandomMeas.jl
 """
 
 """
-    UnitaryEnsemble
+UnitaryEnsemble - Unitary Ensemble Type
 
 Enum for specifying the type of unitary ensemble.
 
@@ -23,7 +25,7 @@ Enum for specifying the type of unitary ensemble.
 end
 
 """
-    SimulationMode
+SimulationMode - Simulation Method Type
 
 Enum for specifying the simulation method.
 

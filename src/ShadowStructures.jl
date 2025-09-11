@@ -6,7 +6,7 @@
 # Abstract Shadow Type
 # ---------------------------------------------------------------------------
 """
-    AbstractShadow
+AbstractShadow - Abstract Classical Shadow Type
 
 An abstract type representing a general classical shadow.
 Concrete subtypes should implement specific shadow methodologies,
@@ -19,7 +19,7 @@ abstract type AbstractShadow end
 # Factorized Classical Shadow
 # ---------------------------------------------------------------------------
 """
-    FactorizedShadow
+FactorizedShadow - Factorized Classical Shadow
 
 A struct representing a factorized classical shadow which can be represented as a tensor product of single qubit shadows.
 
@@ -58,7 +58,7 @@ end
 # Dense Classical Shadow
 # ---------------------------------------------------------------------------
 """
-    DenseShadow
+DenseShadow - Dense Classical Shadow
 
 A struct representing a dense classical shadow (a 2^N x 2^N matrix), stored as a single ITensor with 2N indices.
 
@@ -100,12 +100,12 @@ end
 # Shallow Classical Shadow
 # ---------------------------------------------------------------------------
 """
-    ShallowShadow
+ShallowShadow - Shallow Classical Shadow
 
 A struct representing a shallow classical shadow, stored as a MPO ITensor object.
 
 # Fields
-- `shadow_data::MPOr`: An MPO representing the shallow shadow.
+- `shadow_data::MPO`: An MPO representing the shallow shadow.
 - `N::Int`: Number of sites (qubits).
 - `site_indices::Vector{Index{Int64}}`: A vector of site indices (length N).
 

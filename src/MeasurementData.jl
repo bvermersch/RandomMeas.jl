@@ -3,13 +3,13 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 
 """
-    MeasurementData(measurement_results::Array{Int, 2}; measurement_setting::Union{T, Nothing} = nothing)
+    MeasurementData(measurement_results::Array{Int, 2}; measurement_setting::Union{T, Nothing} = nothing) where T <: Union{Nothing, AbstractMeasurementSetting}
 
 Creates a `MeasurementData` object by inferring the dimensions of the measurement results and validating the provided setting.
 
 # Arguments
 - `measurement_results::Array{Int, 2}`: A 2D array of binary measurement results with shape `(NM, N)`.
-- `measurement_setting::Union{T <: AbstractMeasurementSetting, Nothing}` (optional): Measurement setting or `nothing` if not provided.
+- `measurement_setting::Union{T, Nothing}` (optional): Measurement setting or `nothing` if not provided, where `T <: AbstractMeasurementSetting`.
 
 # Returns
 A `MeasurementData` object with inferred dimensions and validated setting.
@@ -39,12 +39,12 @@ function MeasurementData(
 end
 
 """
-    MeasurementData(measurement_probability::MeasurementProbability{T}, NM::Int) where T <: Union{Nothing, AbstractMeasurementSetting}
+    MeasurementData(probability::MeasurementProbability{T}, NM::Int) where T <: Union{Nothing, AbstractMeasurementSetting}
 
 Returns a `MeasurementData` object by sampling `NM` projective measurements based on the provided measurement probability.
 
 # Arguments
-- `measurement_probability::MeasurementProbability`: A container with the measurement probability (an ITensor) and associated settings.
+- `probability::MeasurementProbability{T}`: A container with the measurement probability (an ITensor) and associated settings, where `T <: Union{Nothing, AbstractMeasurementSetting}`.
 - `NM::Int`: The number of projective measurements to sample.
 
 # Returns
@@ -65,7 +65,7 @@ function MeasurementData(probability::MeasurementProbability{T},NM::Int) where T
 end
 
 """
-    MeasurementData(ψ::Union{MPO, MPS}, NM::Int; mode::SimulationMode = TensorNetwork, measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting} = nothing)
+    MeasurementData(ψ::Union{MPO, MPS}, NM::Int, measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting}; mode::SimulationMode = TensorNetwork)
 
 Returns a `MeasurementData` object by sampling `NM` projective measurements from the quantum state `ψ`.
 
@@ -75,7 +75,7 @@ Returns a `MeasurementData` object by sampling `NM` projective measurements from
 - `mode::SimulationMode` (optional): Specifies the simulation method. Options:
    - `Dense`: Uses the dense representation.
    - `TensorNetwork` (default): Uses tensor network methods for memory efficiency.
-- `measurement_setting` (optional): A measurement setting object (if not provided, defaults to computational basis measurements).
+- `measurement_setting`: A measurement setting object.
 
 # Returns
 A `MeasurementData` object with the corresponding measurement results and setting.
@@ -189,7 +189,7 @@ end
 
 ### **Import Functions**
 """
-    import_measurement_data(filepath::String; predefined_setting=nothing, site_indices=nothing)
+    import_MeasurementData(filepath::String; predefined_setting=nothing, site_indices=nothing)
 
 Imports measurement results and optional measurement settings from an archive file.
 
@@ -258,7 +258,7 @@ function import_MeasurementData(filepath::String; predefined_setting=nothing, si
 end
 
 """
-    export_measurement_data(data::MeasurementData, filepath::String)
+    export_MeasurementData(data::MeasurementData{T}, filepath::String) where {T<:Union{Nothing, LocalUnitaryMeasurementSetting,ComputationalBasisMeasurementSetting}}
 
 Exports measurement data to a `.npz` file.
 
