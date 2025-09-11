@@ -30,7 +30,8 @@ measurement_data_dense = MeasurementData(ψ,NM,measurement_setting;mode=Dense)
         measurement_group_dense = MeasurementGroup(ψ,NU,NM; setting_type=ShallowUnitaryMeasurementSetting, depth=depth, mode=Dense)
 
         println("mps depolarization")
-        shallow_depolarization_mps = get_shallow_depolarization_mps(measurement_group_mps)
+        settings = [ShallowUnitaryMeasurementSetting(N,depth;site_indices=site_indices) for _ in 1:NU]
+        shallow_depolarization_mps = get_shallow_depolarization_mps(settings)
         average_shallow_depolarization_mps = get_average_mps(shallow_depolarization_mps,χ,nsweeps)
         s = siteinds("Qubit", N)  # Input Site indices
         ξ = siteinds("Qubit", N)  # Output Site indices
@@ -49,23 +50,18 @@ measurement_data_dense = MeasurementData(ψ,NM,measurement_setting;mode=Dense)
         v = siteinds("Qubit", N)  # Virtual Site indices
 
         inverse_depolarization_mps_data_init = random_mps(Float64,v;linkdims=χ).data
-        #loss = loss_inverse_depolarization_map(inverse_depolarization_mps,shallow_map,s,ξ)
         loss(x) = loss_inverse_depolarization_map(x,shallow_map,v,s,ξ)
         println("initial loss ",loss(inverse_depolarization_mps_data_init))
 
         optimizer = LBFGS(; maxiter=100, verbosity=1, gradtol = 1e-6)
         loss_and_grad(x) = loss(x),loss'(x)
         inverse_depolarization_mps_data, fs, gs, niter, normgradhistory = optimize(loss_and_grad, inverse_depolarization_mps_data_init, optimizer)
-        #@show inverse_depolarization_mps_data
         inverse_depolarization_mps = MPS(inverse_depolarization_mps_data)
 
 
         η = siteinds("Qubit", N)  # Virtual Site indices
         inverse_shallow_map = get_depolarization_map(inverse_depolarization_mps,ξ,η)
 
-        #c#ombined_map = [depolarization_map[i]*inverse_depolarization_map[i] for i in 1:N]
-        #identity_map =
-        #@show inds(flatten(shallow_map))
-        #@show inds(flatten(inverse_shallow_map))
+
     end
 end
