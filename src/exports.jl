@@ -1,3 +1,7 @@
+# Copyright (c) 2025 Benoît Vermersch and Andreas Elben
+# SPDX-License-Identifier: Apache-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 """
 RandomMeas.jl - Public API Exports
 
