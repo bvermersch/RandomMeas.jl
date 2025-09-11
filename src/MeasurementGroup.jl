@@ -217,7 +217,7 @@ function export_MeasurementGroup(group::MeasurementGroup{T}, filepath::String) w
     # Stack measurement results into a 3D array: (NU, NM, N)
     results_array = zeros(Int, NU, NM, N)
     for i in 1:NU
-        results_array[i, :, :] = group.measurements[i].measurement_results
+        results_array[i, :, :] = 2 .- group.measurements[i].measurement_results
     end
 
     export_dict = Dict{String,Any}()
