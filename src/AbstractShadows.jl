@@ -92,7 +92,7 @@ end
 
 Compute a single trace moment from an array of `AbstractShadow` objects.
 
-This function estimates the k-th trace moment T_k = Tr[ρ^k] (or Tr[O·ρ^k] if an observable O is provided)
+This function estimates the k-th trace moment T_k = Tr[ρ^k], or Tr[O·ρ^k] if an observable O is provided, 
 from classical shadow data. Trace moments are fundamental quantities in quantum state characterization
 and are used to compute various entanglement measures and state properties.
 
