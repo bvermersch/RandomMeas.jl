@@ -3,11 +3,11 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 
 
-"""
-RandomMeas.jl - Utility Functions
+    # """
+    # RandomMeas.jl - Utility Functions
 
-This module provides utility functions for package management and directory operations.
-"""
+    # This module provides utility functions for package management and directory operations.
+    # """
 
 """
     src_dir()

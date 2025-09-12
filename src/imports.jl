@@ -17,3 +17,4 @@ using OptimKit
 using LinearAlgebra
 using ProgressMeter
 using NPZ
+using Pkg

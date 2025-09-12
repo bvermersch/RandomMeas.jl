@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
-"""
-RandomMeas.jl - Type Definitions
+# """
+# RandomMeas.jl - Type Definitions
 
-Enums for type-safe parameter specification throughout RandomMeas.jl
-"""
+# Enums for type-safe parameter specification throughout RandomMeas.jl
+# """
 
 """
-UnitaryEnsemble - Unitary Ensemble Type
+    UnitaryEnsemble - Unitary Ensemble Type
 
 Enum for specifying the type of unitary ensemble.
 
@@ -25,7 +25,7 @@ Enum for specifying the type of unitary ensemble.
 end
 
 """
-SimulationMode - Simulation Method Type
+    SimulationMode - Simulation Method Type
 
 Enum for specifying the simulation method.
 
