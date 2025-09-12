@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
+# Copyright (c) 2025 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -110,13 +110,14 @@ end
 # end
 
 """
-    reduce_to_subsystem(ρ::MPO, subsystem::Vector{Int64})
+    reduce_to_subsystem(ρ::MPO, subsystem::Vector{Int64}, renormalize=false)
 
 Compute the reduced density matrix (as an MPO) for a specified subsystem.
 
 # Arguments
 - `ρ::MPO`: A Matrix Product Operator representing the full density matrix.
 - `subsystem::Vector{Int64}`: A vector of site indices (1-based) specifying the subsystem to retain.
+- `renormalize` (optional): Whether to renormalize the result (default: `false`).
 
 # Returns
 An MPO representing the reduced density matrix over the sites specified in `subsystem`.
@@ -341,6 +342,26 @@ function get_trace_moment(ψ::Union{MPS, MPO}, k::Int, subsystem::Vector{Int}=co
 end
 
 
+
+function get_von_neumann_entropy(ψ::Union{MPS, MPO}, subsystem::Vector{Int}=collect(1:length(ψ)); base::Number=2)
+
+    # general case: construct reduced density MPO and convert to dense matrix
+    ρA = reduce_to_subsystem(ψ, subsystem)
+    # flatten MPO into full operator ITensor and then Matrix
+    T = flatten(ρA)
+    mat = Array(T, [prime(i) for i in inds(T)], inds(T))
+    vals = eigen(mat).values
+    S = 0.0
+    logfactor = 1 / log(base)
+    for λ in vals
+        if λ > 0
+            S -= λ * log(λ) * logfactor
+        end
+    end
+    return S
+end
+
+
 """
     get_trace_moments(ψ::Union{MPS, MPO}, k_vector::Vector{Int}, subsystem::Vector{Int}=collect(1:length(ψ)))
 
@@ -479,7 +500,7 @@ An MPS representing the approximate average state with bond dimension χ.
 avg_state = get_average_mps(ψ_list, 20, 10)
 ```
 """
-function get_average_mps(ψ_list::Vector{MPS},χ::Int64,nsweeps::Int64)
+function get_average_mps(ψ_list::Vector{MPS}, χ::Int64, nsweeps::Int64)
     NU = length(ψ_list)
     N = length(ψ_list[1])
 

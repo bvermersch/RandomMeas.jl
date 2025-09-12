@@ -1,7 +1,11 @@
-"""
-    Exports.jl
+# Copyright (c) 2025 Benoît Vermersch and Andreas Elben
+# SPDX-License-Identifier: Apache-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 
-This file re-exports the public symbols of the RandomMeas package, serving as the main public API. It leverages Reexport.jl to expose selected types and functions from both internal modules and external dependencies.
+"""
+RandomMeas.jl - Public API Exports
+
+This module re-exports the public symbols of the RandomMeas package, serving as the main public API. It leverages Reexport.jl to expose selected types and functions from both internal modules and external dependencies.
 
 # Overview
 
@@ -24,7 +28,7 @@ The exported symbols are organized into the following groups:
   Provides routines for creating and converting between different shadow representations.
   - *Functions:* `get_dense_shadows`, `get_factorized_shadows`, `convert_to_dense_shadow`
 
-  - **Shallow Shadows:**
+- **Shallow Shadows:**
   Implements methods specific to constructing and using shallow shadows, a resource-efficient alternative to full classical shadows suitable for near-term devices.
   - *Types:* `ShallowShadow`
   - *Functions:* `get_shallow_depolarization_mps`, `get_depolarization_map`, `loss_inverse_depolarization_map`, `apply_map`, `get_shallow_shadows`
@@ -36,7 +40,7 @@ The exported symbols are organized into the following groups:
 
 - **Estimators:**
   Contains statistical tools for estimating key quantum information metrics such as fidelity, purity, and overlaps.
-  - *Functions:* `get_h_tensor`, `get_fidelity`, `get_overlap`, `get_purity`, `get_XEB`
+  - *Functions:* `get_h_tensor`, `get_fidelity`, `get_overlap`, `get_purity`, `get_XEB`, `get_calibration_vector`
 
 - **Circuits and Noise:**
   Provides tools for generating random circuits and simulating noise, including depolarization and random Pauli or magnetic field layers.
@@ -51,6 +55,17 @@ using Reexport
 @reexport using ITensors,ITensorMPS,ProgressMeter,OptimKit
 
 export
+
+##############################
+# Type-Safe Enums
+##############################
+UnitaryEnsemble,
+Haar,
+Pauli,
+Identity,
+SimulationMode,
+Dense,
+TensorNetwork,
 
 ##############################
 # Measurement Settings
@@ -127,6 +142,7 @@ get_fidelity,
 get_overlap,
 get_purity,
 get_XEB,
+get_calibration_vector,
 
 ##############################
 # Tensor Network Utilities
@@ -140,10 +156,16 @@ flatten,
 get_average_mps,
 
 
-##############################å
+##############################
 # Circuits and Noise
 ##############################
 apply_depo_channel,
 random_circuit,
 random_Pauli_layer,
-random_magnetic_field_layer
+random_magnetic_field_layer,
+
+
+##############################
+# utilities
+##############################
+version

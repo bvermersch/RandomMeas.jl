@@ -6,6 +6,8 @@ CurrentModule = RandomMeas
 
 Documentation for [RandomMeas.jl](https://github.com/bvermersch/RandomMeas.jl): The randomized measurement toolbox in Julia
 
+
+
 ```@contents
 Depth = 2:3
 ```
@@ -62,6 +64,13 @@ Pages = ["Circuits.jl"]
 ```@autodocs
 Modules = [RandomMeas]
 Pages = ["TensorNetworkUtilities.jl"]
+```
+
+## Types and other functions
+
+```@autodocs
+Modules = [RandomMeas]
+Pages = ["Types.jl","utils.jl"]
 ```
 
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
+# Copyright (c) 2025 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
@@ -9,7 +9,7 @@
         subsystem::Vector{Int} = collect(1:group_1.N)
     )
 
-Compute the fidelity of two quantum states Tr(ρ1 ρ2)/SROOT(Tr(ρ1^2),Tr(ρ2^2)) from measurement data by averaging the overlap of measurement results.
+Compute the fidelity of two quantum states Tr(ρ1 ρ2)/sqrt(Tr(ρ1^2) * Tr(ρ2^2)) from measurement data by averaging the overlap of measurement results.
 
 # Arguments
 - `group_1::MeasurementGroup`: Measurement data for the first state.
@@ -32,7 +32,7 @@ end
 
 
 """
-    get_purity(group::Measurementgroup, subsystem::Vector{Int} = collect(1:group.N))
+    get_purity(group::MeasurementGroup, subsystem::Vector{Int} = collect(1:group.N))
 
 Compute the purity of a quantum state from measurement data by averaging the overlap of measurement results.
 
@@ -96,7 +96,8 @@ end
 """
     get_overlap(
         data_1::MeasurementData,
-        data_2::MeasurementData
+        data_2::MeasurementData;
+        apply_bias_correction::Bool = false
     )
 
 Compute the overlap between two quantum states for a single measurement setting.
@@ -104,6 +105,7 @@ Compute the overlap between two quantum states for a single measurement setting.
 # Arguments
 - `data_1::MeasurementData`: Measurement Data for the first state, with dimensions `(NM, N)`.
 - `data_2::MeasurementData`: Measurement Data for the second state, with dimensions `(NM, N)`.
+- `apply_bias_correction::Bool` (optional): Whether to apply bias correction for the overlap. Defaults to `false`.
 
 # Returns
 - The computed overlap for the single measurement setting.
@@ -137,7 +139,7 @@ end
 """
     get_overlap(prob1::MeasurementProbability, prob2::MeasurementProbability) -> Float64
 
-Compute the weighted overlap  `\\2^N sum_s (-2)^{-D[s,s']}P(s)P(s')]` by sequentially applying the Hamming tensor to each qubit index and contracting with the second probability tensor.
+Compute the weighted overlap  `2^N sum_s (-2)^{-D[s,s']}P(s)P(s')` by sequentially applying the Hamming tensor to each qubit index and contracting with the second probability tensor.
 
 # Arguments
 
@@ -146,7 +148,7 @@ Compute the weighted overlap  `\\2^N sum_s (-2)^{-D[s,s']}P(s)P(s')]` by sequent
 
 # Returns
 
-- `weighted_overlap::Float64`: The computed trace `Tr(rho1 rho2)` scaled appropriately..
+- `weighted_overlap::Float64`: The computed trace `Tr(rho1 rho2)` scaled appropriately.
 
 # Example
 
@@ -183,7 +185,7 @@ end
 
 
 """
-    get_h_tensor(s::Index, s_prime::Index) -> ITensor
+    get_h_tensor(s::Index, s_prime::Index, G::Float64 = 1.0) -> ITensor
 
 Construct the Hamming tensor for given indices.
 
@@ -191,6 +193,7 @@ Construct the Hamming tensor for given indices.
 
 - `s::Index`: Unprimed site index.
 - `s_prime::Index`: Primed site index.
+- `G::Float64` (optional): G value for error correction and robustness. Defaults to `1.0`.
 
 # Returns
 
@@ -226,11 +229,11 @@ end
 
 Return the linear cross-entropy for the measurement results in `measurement_data`, with respect to a theory state `ψ`.
 
-# Arguments:
+# Arguments
 - `ψ::MPS`: The theoretical state to compare against.
 - `measurement_data::MeasurementData`: The measurement data object containing results and settings.
 
-# Returns:
+# Returns
 The linear cross-entropy as a `Float64`.
 """
 function get_XEB(ψ::MPS, measurement_data::MeasurementData)
@@ -253,4 +256,33 @@ function get_XEB(ψ::MPS, measurement_data::MeasurementData)
     end
 
     return XEB
+end
+
+"""
+    get_calibration_vector(ψ0::MPS, measurement_group::MeasurementGroup)
+
+Return a calibration vector G for evaluating process shadows based on the calibration initial state ψ0=0000
+Reference Vitale et al, PRXQ 2025
+"""
+function get_calibration_vector(ψ0::MPS,measurement_group::MeasurementGroup)
+    N = length(ψ0)
+    NU = measurement_group.NU
+    # G_e stores the estimated G values (one for each subsystem or qubit).
+    G_e = zeros(Float64, N)
+    @showprogress dt=1 for i in 1:N
+        reduced_measurement_group = reduce_to_subsystem(measurement_group, [i])
+
+        for r in 1:NU
+                # Compute the measured Born probabilities for qubit i using the actual measurement data
+            data = reduced_measurement_group.measurements[r]
+            P_measured = MeasurementProbability(data).measurement_probability
+                # Compute the expected Born probabilities for qubit i from the ideal (noise-free) state ψ0.
+            P_expected = MeasurementProbability(reduce_to_subsystem(ψ0,collect(i:i)), data.measurement_setting).measurement_probability
+            cross_corr = (P_measured * P_expected)[]
+            self_corr = (P_expected * P_expected)[]
+
+            G_e[i] += 3 * (cross_corr-self_corr)/NU + 1/NU
+        end
+    end
+    return G_e
 end

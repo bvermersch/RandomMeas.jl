@@ -1,9 +1,9 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben 
+# Copyright (c) 2025 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
 """
-    RandomMeas
+RandomMeas.jl - Measurement-Based Quantum Information Processing
 
 RandomMeas is a Julia package for measurement-based quantum information processing.
 It provides a framework to construct measurement settings, acquire measurement data,
@@ -16,7 +16,7 @@ quantum many-body states and processes.
    Loads external dependencies and global utilities from `imports.jl`.
 
 2. **Core Structures:**
-   Defines fundamental types and data structures (in `MeasurementsStructures.jl` and `ShadowStructures.jl`).
+   Defines fundamental types and data structures (in `MeasurementStructures.jl` and `ShadowStructures.jl`).
 
 3. **Measurement Modules:**
    - `MeasurementSetting.jl`
@@ -36,7 +36,7 @@ quantum many-body states and processes.
    - `Estimators.jl`
    - `TensorNetworkUtilities.jl`
    - `Circuits.jl`
-   Provide estimation functions (not involving classical shadows), utilities for tensor network states, circuit tools, and protocols for shallow shadows.
+   Provides estimation functions (not involving classical shadows), utilities for tensor network states, circuit tools, and protocols for shallow shadows.
 
 6. **Exports:**
    Re-exports public symbols via `exports.jl`, forming the package’s public API.
@@ -62,10 +62,12 @@ module RandomMeas
 # Load External Dependencies and Global Utilities.
 # ---------------------------------------------------------------------------
 include("imports.jl")
+include("utils.jl")
 
 # ---------------------------------------------------------------------------
 # Load Core Data Structures and Types.
 # ---------------------------------------------------------------------------
+include("Types.jl")
 include("MeasurementStructures.jl")
 include("ShadowStructures.jl")
 
@@ -90,7 +92,7 @@ include("DenseShadows.jl")
 include("ShallowShadows.jl")
 # ---------------------------------------------------------------------------
 # Load Estimator Modules.
-# This file implement various estimators which do not utilize classical shadows.
+# This file implements various estimators which do not utilize classical shadows.
 # (e.g. Purity estimation Brydges et al., Cross-Entropy benchmarking... )
 # ---------------------------------------------------------------------------
 

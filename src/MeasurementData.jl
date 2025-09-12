@@ -1,15 +1,15 @@
-# Copyright (c) 2024 Benoît Vermersch and Andreas Elben
+# Copyright (c) 2025 Benoît Vermersch and Andreas Elben
 # SPDX-License-Identifier: Apache-2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 
 """
-    MeasurementData(measurement_results::Array{Int, 2}; measurement_setting::Union{T, Nothing} = nothing)
+    MeasurementData(measurement_results::Array{Int, 2}; measurement_setting::Union{T, Nothing} = nothing) where T <: Union{Nothing, AbstractMeasurementSetting}
 
 Creates a `MeasurementData` object by inferring the dimensions of the measurement results and validating the provided setting.
 
 # Arguments
 - `measurement_results::Array{Int, 2}`: A 2D array of binary measurement results with shape `(NM, N)`.
-- `measurement_setting::Union{T <: AbstractMeasurementSetting, Nothing}` (optional): Measurement setting or `nothing` if not provided.
+- `measurement_setting::Union{T, Nothing}` (optional): Measurement setting or `nothing` if not provided, where `T <: AbstractMeasurementSetting`.
 
 # Returns
 A `MeasurementData` object with inferred dimensions and validated setting.
@@ -20,7 +20,7 @@ A `MeasurementData` object with inferred dimensions and validated setting.
 # Examples
 ```julia
 # With measurement setting
-setting = LocalUnitaryMeasurementSetting(4, ensemble="Haar")
+setting = LocalUnitaryMeasurementSetting(4, ensemble=Haar)
 results = rand(1:2, 10, 4)
 data_with_setting = MeasurementData(results; measurement_setting=setting)
 
@@ -39,12 +39,12 @@ function MeasurementData(
 end
 
 """
-    MeasurementData(measurement_probability::MeasurementProbability{T}, NM::Int) where T <: Union{Nothing, AbstractMeasurementSetting}
+    MeasurementData(probability::MeasurementProbability{T}, NM::Int) where T <: Union{Nothing, AbstractMeasurementSetting}
 
 Returns a `MeasurementData` object by sampling `NM` projective measurements based on the provided measurement probability.
 
 # Arguments
-- `measurement_probability::MeasurementProbability`: A container with the measurement probability (an ITensor) and associated settings.
+- `probability::MeasurementProbability{T}`: A container with the measurement probability (an ITensor) and associated settings, where `T <: Union{Nothing, AbstractMeasurementSetting}`.
 - `NM::Int`: The number of projective measurements to sample.
 
 # Returns
@@ -65,17 +65,17 @@ function MeasurementData(probability::MeasurementProbability{T},NM::Int) where T
 end
 
 """
-    MeasurementData(ψ::Union{MPO, MPS}, NM::Int; mode::String = "MPS/MPO", measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting} = nothing)
+    MeasurementData(ψ::Union{MPO, MPS}, NM::Int, measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting}; mode::SimulationMode = TensorNetwork)
 
 Returns a `MeasurementData` object by sampling `NM` projective measurements from the quantum state `ψ`.
 
 # Arguments
 - `ψ::Union{MPO, MPS}`: The quantum state represented as a Matrix Product Operator (MPO) or Matrix Product State (MPS).
 - `NM::Int`: The number of measurement shots to simulate for each setting.
-- `mode::String` (optional): Specifies the simulation method. Options:
-   - `"dense"`: Uses the dense representation.
-   - `"MPS/MPO"` (default): Uses tensor network methods for memory efficiency.
-- `measurement_setting` (optional): A measurement setting object (if not provided, defaults to computational basis measurements).
+- `mode::SimulationMode` (optional): Specifies the simulation method. Options:
+   - `Dense`: Uses the dense representation.
+   - `TensorNetwork` (default): Uses tensor network methods for memory efficiency.
+- `measurement_setting`: A measurement setting object.
 
 # Returns
 A `MeasurementData` object with the corresponding measurement results and setting.
@@ -84,7 +84,7 @@ function MeasurementData(
     ψ::Union{MPO, MPS},
     NM::Int,
     measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting};
-    mode::String = "MPS/MPO",
+    mode::SimulationMode = TensorNetwork,
 )
 
     N = measurement_setting.N
@@ -101,23 +101,23 @@ function MeasurementData(
         end
 
         # Rename every gate tensor in one shot
-        u_old = measurement_setting.local_unitary
+        u_old = measurement_setting.basis_transformation
         u_new = [ replaceinds(ui, pairs(repl)...) for ui in u_old ]
 
         # Rebuild the same concrete setting with updated indices
         T = typeof(measurement_setting)
         measurement_setting = T(
           measurement_setting;
-          local_unitary = u_new,
+          basis_transformation = u_new,
           site_indices  = ψ_indices,
         )
     end
 
-    u=measurement_setting.local_unitary
-    if mode=="dense"
+    u=measurement_setting.basis_transformation
+    if mode == Dense
         measurement_probability = MeasurementProbability(ψ,measurement_setting)
         return MeasurementData(measurement_probability,NM)
-    elseif mode == "MPS/MPO"
+    elseif mode == TensorNetwork
         data = zeros(Int,NM,N)
         ξ = measurement_setting.site_indices
 
@@ -142,9 +142,11 @@ function MeasurementData(
         end
         return MeasurementData(N,NM,data,measurement_setting)
     else
-        throw(ArgumentError("Invalid simulation mode: \"$mode\". Expected either \"dense\" or \"MPS/MPO\"."))
+        throw(ArgumentError("Invalid simulation mode: $mode. Expected either Dense or TensorNetwork."))
     end
 end
+
+
 
 
 """
@@ -187,7 +189,7 @@ end
 
 ### **Import Functions**
 """
-    import_measurement_data(filepath::String; predefined_setting=nothing, site_indices=nothing)
+    import_MeasurementData(filepath::String; predefined_setting=nothing, site_indices=nothing)
 
 Imports measurement results and optional measurement settings from an archive file.
 
@@ -220,12 +222,15 @@ function import_MeasurementData(filepath::String; predefined_setting=nothing, si
     data = npzread(filepath)
 
     # Extract measurement results
-    measurement_results = data["measurement_results"]  # Shape: NM x N
+    raw_measurement_results = data["measurement_results"]  # Shape: NM x N
 
-    # Check if 0 is contained and print a message if true
-    if 0 in measurement_results
-        @warn "Julia works with indices starting at 1. Binary data should therefore use 1 and 2, not 0 and 1."
+    # Validate that imported data only contains 0 and 1
+    if !all(x -> x in [0, 1], raw_measurement_results)
+        throw(ArgumentError("Imported measurement results must only contain values 0 and 1"))
     end
+
+    # Convert from {0, 1} format to {1, 2} format for Julia
+    measurement_results = 2 .- raw_measurement_results
 
     # Determine measurement settings
     if predefined_setting !== nothing
@@ -253,7 +258,7 @@ function import_MeasurementData(filepath::String; predefined_setting=nothing, si
 end
 
 """
-    export_measurement_data(data::MeasurementData, filepath::String)
+    export_MeasurementData(data::MeasurementData{T}, filepath::String) where {T<:Union{Nothing, LocalUnitaryMeasurementSetting,ComputationalBasisMeasurementSetting}}
 
 Exports measurement data to a `.npz` file.
 
@@ -286,15 +291,19 @@ function export_MeasurementData(data::MeasurementData{T}, filepath::String) wher
 
     export_dict = Dict{String, Any}()
 
-    # Export measurement results
-    export_dict["measurement_results"] = data.measurement_results
+    # Validate and export measurement results
+    # Ensure measurement results only contain values 1 and 2, then convert to 0 and 1
+    if !all(x -> x in [1, 2], data.measurement_results)
+        throw(ArgumentError("Measurement results must only contain values 1 and 2"))
+    end
+    export_dict["measurement_results"] = 2 .- data.measurement_results
 
     # If measurement settings are present, process and add them to the export dictionary
     if data.measurement_setting !== nothing
         N = data.measurement_setting.N
         local_unitaries = Array{ComplexF64}(undef, N, 2, 2)
         for n in 1:N
-            local_unitaries[n, :, :] = Array(data.measurement_setting.local_unitary[n],data.measurement_setting.site_indices[n]',data.measurement_setting.site_indices[n])
+            local_unitaries[n, :, :] = Array(data.measurement_setting.basis_transformation[n],data.measurement_setting.site_indices[n]',data.measurement_setting.site_indices[n])
         end
         export_dict["local_unitaries"] = local_unitaries
     end

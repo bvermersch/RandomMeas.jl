@@ -12,15 +12,15 @@ observable = outer(ψ2', ψ2)
 exact_value = inner(ψ1',observable,ψ1)
 measurements = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef,NU)
 for r in 1:NU
-    measurement_setting_ = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble="Haar")
-    measurements[r] = MeasurementData(ψ1,NM,measurement_setting_;mode="dense")
+    measurement_setting_ = LocalUnitaryMeasurementSetting(N; site_indices=ξ,ensemble=Haar)
+measurements[r] = MeasurementData(ψ1,NM,measurement_setting_;mode=Dense)
 end
 measurement_group = MeasurementGroup(measurements)
 
 
 @testset "Shadows Tests" begin
-    
-    
+
+
     batch_shadow = get_dense_shadows(measurement_group;number_of_ru_batches=1)
     expect_batch = get_expect_shadow(observable,batch_shadow)
 
@@ -35,9 +35,9 @@ measurement_group = MeasurementGroup(measurements)
     for r in 1:NU
         measurement_data = measurement_group.measurements[r]
         factorized_shadows = get_factorized_shadows(measurement_data)
-        expect_factorized += get_expect_shadow(observable,factorized_shadows)/NU 
+        expect_factorized += get_expect_shadow(observable,factorized_shadows)/NU
     end
-   
+
     # Display results
     @show exact_value
     @show expect_batch
