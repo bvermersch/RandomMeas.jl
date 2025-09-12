@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3]
+
+### Added
+- Jackknife covariance estimation for trace moments
+- Types for parametrizing measurements settings or sampling strategies.
+
+### Changed
+- Notebooks have been rewritten to match our coming arxiv publication
+
 ## [0.2]
 
 ### Added
