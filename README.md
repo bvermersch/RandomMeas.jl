@@ -56,6 +56,22 @@ println("Estimated purities ",p_exact);
 
 4) Jupyter notebooks to present various recent case studies.
 
+## Citation
+
+If you use RandomMeas, please cite our [publication](https://arxiv.org/abs/2509.12749):
+
+```bib
+@misc{elben2025randommeasjl,
+      title={RandomMeas.jl: A Julia Package for Randomized Measurements in Quantum Devices}, 
+      author={Andreas Elben and Beno\^it Vermersch},
+      year={2025},
+      eprint={2509.12749},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph},
+      url={https://arxiv.org/abs/2509.12749}, 
+}
+```
+
 ## Examples with Jupyter notebooks
 
 ### Classical shadows
@@ -97,6 +113,7 @@ println("Estimated purities ",p_exact);
 15) [Executing randomized measurements on IBM's quantum computers](examples/RandomizedMeasurementsQiskit.ipynb)
 
 16) [Postprocessing randomized measurements from IBM's quantum computers](examples/RandomizedMeasurementsQiskitPostprocessing.ipynb)
+
 
 ## Acknowledgments
 
