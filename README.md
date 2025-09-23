@@ -3,6 +3,8 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bvermersch.github.io/RandomMeas.jl/dev/)
 [![Build Status](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![arXiv](https://img.shields.io/badge/arXiv-2509.12749-b31b1b.svg)](https://arxiv.org/abs/2509.12749)
+
 
 This package provides efficient routines for sampling, simulating, and post-processing randomized measurements, including classical shadows, to extract properties of many-body quantum states and processes.
 RandomMeas relies heavily on [ITensors.jl](https://itensor.github.io/ITensors.jl/dev/).
@@ -56,6 +58,22 @@ println("Estimated purities ",p_exact);
 
 4) Jupyter notebooks to present various recent case studies.
 
+## Citation
+
+If you use RandomMeas, please cite our [publication](https://arxiv.org/abs/2509.12749):
+
+```bib
+@misc{elben2025randommeasjl,
+      title={RandomMeas.jl: A Julia Package for Randomized Measurements in Quantum Devices}, 
+      author={Andreas Elben and Beno\^it Vermersch},
+      year={2025},
+      eprint={2509.12749},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph},
+      url={https://arxiv.org/abs/2509.12749}, 
+}
+```
+
 ## Examples with Jupyter notebooks
 
 ### Classical shadows
@@ -97,6 +115,7 @@ println("Estimated purities ",p_exact);
 15) [Executing randomized measurements on IBM's quantum computers](examples/RandomizedMeasurementsQiskit.ipynb)
 
 16) [Postprocessing randomized measurements from IBM's quantum computers](examples/RandomizedMeasurementsQiskitPostprocessing.ipynb)
+
 
 ## Acknowledgments
 
