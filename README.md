@@ -3,6 +3,8 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bvermersch.github.io/RandomMeas.jl/dev/)
 [![Build Status](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bvermersch/RandomMeas.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![arXiv](https://img.shields.io/badge/arXiv-2509.12749-b31b1b.svg)](https://arxiv.org/abs/2509.12749)
+
 
 This package provides efficient routines for sampling, simulating, and post-processing randomized measurements, including classical shadows, to extract properties of many-body quantum states and processes.
 RandomMeas relies heavily on [ITensors.jl](https://itensor.github.io/ITensors.jl/dev/).
