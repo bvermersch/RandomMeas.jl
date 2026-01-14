@@ -41,6 +41,54 @@ function MeasurementGroup(
 end
 
 """
+    MeasurementGroup(measurements::Array{Int,3},
+                     basis_transformation::Array{ComplexF64,4},
+                     site_indices::Union{Vector{Index{Int64}}, Nothing}=nothing)
+
+Construct a `MeasurementGroup` from raw measurement outcomes and local unitary basis
+transformations.
+
+# Arguments
+- `measurements::Array{Int,3}`: A 3‑dimensional array of measurement outcomes with
+  dimensions `(NU, NM, N)` where:
+  - `NU` = number of measurement runs,
+  - `NM` = number of measurement samples per run,
+  - `N`  = number of qubits/sites.
+- `basis_transformation::Array{ComplexF64,4}`: A 4‑dimensional array of local unitary
+  transformations with dimensions `(NU, N, d, d)` where each slice
+  `basis_transformation[r,:,:,:]` defines the measurement basis for run `r`.
+- `site_indices::Union{Vector{Index{Int64}}, Nothing}`: Optional vector of site indices.
+  If `nothing`, defaults to `siteinds("Qubit", N)`.
+
+# Behavior
+- Asserts that the number of runs (`NU`) and sites (`N`) match between `measurements`
+  and `basis_transformation`.
+- For each run `r`, constructs a `LocalUnitaryMeasurementSetting` using the
+  corresponding basis transformation and site indices.
+- Wraps the raw measurement outcomes into a `MeasurementData` object tagged with its
+  measurement setting.
+- Returns a `MeasurementGroup` containing all runs.
+"""
+function MeasurementGroup(measurements::Array{Int,3}, basis_transformation::Array{ComplexF64, 4},site_indices::Union{Vector{Index{Int64}}, Nothing} = nothing)
+    NU,NM,N = size(measurements)
+    @assert NU==size(basis_transformation,1) "Mismatch between measurements and basis_transformation array"
+    @assert N==size(basis_transformation,2) "Mismatch between measurements and basis_transformation array"
+    data = Vector{MeasurementData{LocalUnitaryMeasurementSetting}}(undef, NU)
+    site_indices = site_indices === nothing ? siteinds("Qubit", N) : site_indices
+
+    for r in 1:NU
+        # Build the measurement setting for run r
+        measurement_setting = LocalUnitaryMeasurementSetting(basis_transformation[r,:,:,:],
+                                                             site_indices=site_indices)
+        # Wrap the raw data into a MeasurementData object
+        data[r] = MeasurementData(measurements[r,:,:]; measurement_setting=measurement_setting)
+    end
+
+    return MeasurementGroup(data)
+end
+
+
+"""
     MeasurementGroup(ψ::Union{MPO, MPS}, measurement_settings::Vector{AbstractMeasurementSetting}, NM::Int; mode::String = “MPS/MPO”, progress_bar::Bool=false)
     ::MeasurementGroup{T} where T <: AbstractMeasurementSetting
 

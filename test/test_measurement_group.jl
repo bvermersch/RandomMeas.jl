@@ -81,6 +81,35 @@ end
         #@test reduced_group.measurements[1] == reduce_to_subsystem(data1,collect(1:2))
     end
 
+    # Test 7
+    @testset "MeasurementGroup constructor with bitstrings in [1,2]" begin
+    # Parameters
+    N  = 2   # number of qubits/sites
+    NU = 3   # number of runs
+    NM = 4   # number of samples per run
+
+    # Fake measurement outcomes in [1,2]
+    measurements = rand(1:2, NU, NM, N)
+
+    # Fake local unitary basis transformations
+    basis_transformation = rand(ComplexF64, NU, N, 2, 2)
+
+    # Site indices
+    ξ = siteinds("Qubit", N)
+
+    # Construct group
+    group = MeasurementGroup(measurements, basis_transformation, ξ)
+
+    # Tests
+    @test length(group.measurements) == NU
+    @test typeof(group.measurements[1]) <: MeasurementData
+    @test typeof(group.measurements[1].measurement_setting) <: LocalUnitaryMeasurementSetting
+
+    # Check dimensions consistency
+    @test size(measurements,1) == size(basis_transformation,1)
+    @test size(measurements,3) == size(basis_transformation,2)
+    end
+
     @testset "MeasurementGroup Import/Export Tests" begin
         # Setup parameters
         N = 4       # Number of sites (qubits)

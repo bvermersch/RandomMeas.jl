@@ -1,7 +1,7 @@
 name = "RandomMeas"
 uuid = "a9f96d1f-ed6a-4404-822f-5927c777f274"
-authors = ["Benoit Vermersch & Andreas Elben"]
 version = "0.3.0"
+authors = ["Benoit Vermersch & Andreas Elben"]
 
 [deps]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
@@ -16,6 +16,7 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+ZMQ = "c2297ded-f4af-51ae-bb23-16f91089e4e1"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
@@ -30,6 +31,7 @@ Plots = "1"
 ProgressMeter = "1"
 Reexport = "1"
 StatsBase = "0.33, 0.34"
+ZMQ = "1.5.1"
 Zygote = "0.6, 0.7"
 julia = "1.10,1.11"
 
