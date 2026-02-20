@@ -27,6 +27,31 @@ using Test
         @test group.measurements[1] == data1
     end
 
+    @testset "Index Alignment Guard + Helper" begin
+        ξa = siteinds("Qubit", N)
+        ξb = siteinds("Qubit", N)
+        results_a = rand(1:2, NM, N)
+        results_b = rand(1:2, NM, N)
+        setting_a = LocalUnitaryMeasurementSetting(N; site_indices=ξa, ensemble=Haar)
+        setting_b = LocalUnitaryMeasurementSetting(N; site_indices=ξb, ensemble=Haar)
+        data_a = MeasurementData(results_a; measurement_setting=setting_a)
+        data_b = MeasurementData(results_b; measurement_setting=setting_b)
+
+        @test_throws ArgumentError MeasurementGroup([data_a, data_b])
+
+        aligned_measurements = align_site_indices([data_a, data_b])
+        @test aligned_measurements[1].measurement_setting.site_indices == aligned_measurements[2].measurement_setting.site_indices
+
+        group_aligned = MeasurementGroup(aligned_measurements)
+        @test group_aligned.N == N
+        @test group_aligned.NU == 2
+        @test group_aligned.NM == NM
+
+        ξc = siteinds("Qubit", N)
+        group_reindexed = align_site_indices(group_aligned; site_indices=ξc)
+        @test all(m -> m.measurement_setting.site_indices == ξc, group_reindexed.measurements)
+    end
+
      # Test 2: Creating MeasurementGroup from an MPS dense mode
      @testset "Creating MeasurementGroup from an MPS dense mode" begin
         NU = 10

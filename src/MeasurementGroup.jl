@@ -31,13 +31,94 @@ group = MeasurementGroup([data1, data2])
 function MeasurementGroup(
     measurements::Vector{MeasurementData{T}}
 ) where T<:Union{AbstractMeasurementSetting, Nothing}
-    # Infer dimensions from measurements
+    isempty(measurements) && throw(ArgumentError("Cannot construct MeasurementGroup from an empty measurements vector."))
+
+    # Infer dimensions from first measurement and validate consistency.
     NU = length(measurements)
     N = measurements[1].N
     NM = measurements[1].NM
+    for (i, data) in enumerate(measurements)
+        data.N == N || throw(ArgumentError("All MeasurementData entries must have identical N. Expected N=$N from measurements[1], got N=$(data.N) at measurements[$i]."))
+        data.NM == NM || throw(ArgumentError("All MeasurementData entries must have identical NM. Expected NM=$NM from measurements[1], got NM=$(data.NM) at measurements[$i]."))
+    end
+
+    # For settings-carrying groups, require identical site indices across runs.
+    # This avoids downstream failures when multiplying shadows from different runs.
+    if T <: AbstractMeasurementSetting
+        reference_indices = measurements[1].measurement_setting.site_indices
+        for i in 2:NU
+            ms = measurements[i].measurement_setting
+            if ms.site_indices != reference_indices
+                throw(ArgumentError(
+                    "Measurement settings in a MeasurementGroup must share identical site_indices. " *
+                    "Found mismatch at measurements[$i]. " *
+                    "Call `align_site_indices(measurements)` before constructing the group."
+                ))
+            end
+        end
+    end
 
     # Delegate to the struct constructor
     return MeasurementGroup(N, NU, NM, measurements)
+end
+
+"""
+    align_site_indices(measurements::Vector{MeasurementData{T}}; site_indices=nothing) where T<:AbstractMeasurementSetting
+
+Return a new vector of `MeasurementData` where all measurement settings use the same site indices.
+
+# Arguments
+- `measurements`: Vector of `MeasurementData` with non-`nothing` measurement settings.
+- `site_indices` (optional): Target site indices. If omitted, uses `measurements[1].measurement_setting.site_indices`.
+
+# Returns
+A new vector of `MeasurementData{T}` with aligned measurement-setting indices.
+"""
+function align_site_indices(
+    measurements::Vector{MeasurementData{T}};
+    site_indices::Union{Nothing,Vector{Index{Int64}}} = nothing,
+)::Vector{MeasurementData{T}} where T<:AbstractMeasurementSetting
+    isempty(measurements) && throw(ArgumentError("Cannot align site indices for an empty measurements vector."))
+
+    N = measurements[1].N
+    NM = measurements[1].NM
+    for (i, data) in enumerate(measurements)
+        data.N == N || throw(ArgumentError("All MeasurementData entries must have identical N for alignment. Expected N=$N, got N=$(data.N) at measurements[$i]."))
+        data.NM == NM || throw(ArgumentError("All MeasurementData entries must have identical NM for alignment. Expected NM=$NM, got NM=$(data.NM) at measurements[$i]."))
+    end
+
+    target_indices = site_indices === nothing ? measurements[1].measurement_setting.site_indices : site_indices
+    length(target_indices) == N || throw(ArgumentError("Length of target site_indices ($(length(target_indices))) must match N=$N."))
+
+    aligned = Vector{MeasurementData{T}}(undef, length(measurements))
+    for i in eachindex(measurements)
+        data = measurements[i]
+        ms = data.measurement_setting
+        aligned_setting = try
+            _align_site_indices(ms, target_indices)
+        catch err
+            if err isa MethodError
+                throw(ArgumentError("No index-alignment method is implemented for measurement setting type $(typeof(ms))."))
+            end
+            rethrow()
+        end
+
+        aligned[i] = MeasurementData(data.N, data.NM, data.measurement_results, aligned_setting)
+    end
+
+    return aligned
+end
+
+"""
+    align_site_indices(group::MeasurementGroup{T}; site_indices=nothing) where T<:AbstractMeasurementSetting
+
+Return a new `MeasurementGroup` with all measurement settings aligned to common site indices.
+"""
+function align_site_indices(
+    group::MeasurementGroup{T};
+    site_indices::Union{Nothing,Vector{Index{Int64}}} = nothing,
+)::MeasurementGroup{T} where T<:AbstractMeasurementSetting
+    return MeasurementGroup(align_site_indices(group.measurements; site_indices = site_indices))
 end
 
 """

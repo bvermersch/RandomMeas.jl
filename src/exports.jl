@@ -79,6 +79,7 @@ ShallowUnitaryMeasurementSetting,
 
 get_rotation,
 reduce_to_subsystem,
+align_site_indices,
 export_LocalUnitaryMeasurementSetting,
 import_LocalUnitaryMeasurementSetting,
 import_MeasurementData,
