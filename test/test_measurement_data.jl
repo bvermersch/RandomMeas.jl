@@ -70,6 +70,51 @@ using Test
         @test data.measurement_setting === measurement_setting
     end
 
+    @testset "Align mismatched site indices" begin
+        N = 6
+        NM = 3
+        ψ_indices = siteinds("Qubit", N)
+        ψ = random_mps(ψ_indices)
+
+        stale_indices = siteinds("Qubit", N)
+        while stale_indices == ψ_indices
+            stale_indices = siteinds("Qubit", N)
+        end
+
+        local_setting = LocalUnitaryMeasurementSetting(N; site_indices=stale_indices, ensemble=Haar)
+        local_data = MeasurementData(ψ, NM, local_setting; mode=TensorNetwork)
+        @test local_data.measurement_setting.site_indices == ψ_indices
+        for i in 1:N
+            inds_i = inds(local_data.measurement_setting.basis_transformation[i])
+            @test ψ_indices[i] in inds_i
+            @test prime(ψ_indices[i]) in inds_i
+        end
+
+        comp_setting = ComputationalBasisMeasurementSetting(N; site_indices=stale_indices)
+        comp_data = MeasurementData(ψ, NM, comp_setting; mode=TensorNetwork)
+        @test comp_data.measurement_setting.site_indices == ψ_indices
+        for i in 1:N
+            inds_i = inds(comp_data.measurement_setting.basis_transformation[i])
+            @test ψ_indices[i] in inds_i
+            @test prime(ψ_indices[i]) in inds_i
+        end
+
+        shallow_setting = ShallowUnitaryMeasurementSetting(N, 2; site_indices=stale_indices)
+        shallow_data = MeasurementData(ψ, NM, shallow_setting; mode=TensorNetwork)
+        @test shallow_data.measurement_setting.site_indices == ψ_indices
+        ψ_indices_prime = prime.(ψ_indices)
+        for gate in shallow_data.measurement_setting.basis_transformation
+            gate_inds = inds(gate)
+            for idx in gate_inds
+                @test (idx in ψ_indices) || (idx in ψ_indices_prime)
+            end
+            for idx in stale_indices
+                @test !(idx in gate_inds)
+                @test !(prime(idx) in gate_inds)
+            end
+        end
+    end
+
     @testset "MeasurementData Import/Export Tests" begin
         # Setup parameters
         N = 4       # Number of sites (qubits)
