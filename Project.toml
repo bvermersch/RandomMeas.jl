@@ -1,6 +1,6 @@
 name = "RandomMeas"
 uuid = "a9f96d1f-ed6a-4404-822f-5927c777f274"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Benoit Vermersch & Andreas Elben"]
 
 [deps]
