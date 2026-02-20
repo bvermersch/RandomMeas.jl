@@ -64,6 +64,74 @@ function MeasurementData(probability::MeasurementProbability{T},NM::Int) where T
     return MeasurementData(N,NM,measurement_results,measurement_setting)
 end
 
+function _align_site_indices(
+    measurement_setting::LocalUnitaryMeasurementSetting,
+    ψ_indices::Vector{Index{Int64}},
+)
+    site_indices = measurement_setting.site_indices
+    site_indices == ψ_indices && return measurement_setting
+
+    u_old = measurement_setting.basis_transformation
+    u_new = Vector{ITensor}(undef, measurement_setting.N)
+    @inbounds for i in eachindex(site_indices, ψ_indices, u_old)
+        old = site_indices[i]
+        new = ψ_indices[i]
+        u_new[i] = replaceinds(u_old[i], old => new, prime(old) => prime(new))
+    end
+
+    return LocalUnitaryMeasurementSetting(
+        measurement_setting;
+        basis_transformation = u_new,
+        site_indices = ψ_indices,
+    )
+end
+
+function _align_site_indices(
+    measurement_setting::ComputationalBasisMeasurementSetting,
+    ψ_indices::Vector{Index{Int64}},
+)
+    measurement_setting.site_indices == ψ_indices && return measurement_setting
+    return ComputationalBasisMeasurementSetting(measurement_setting; site_indices = ψ_indices)
+end
+
+function _align_site_indices(
+    measurement_setting::ShallowUnitaryMeasurementSetting,
+    ψ_indices::Vector{Index{Int64}},
+)
+    site_indices = measurement_setting.site_indices
+    site_indices == ψ_indices && return measurement_setting
+
+    repl = Dict{Index, Index}()
+    sizehint!(repl, 2 * length(site_indices))
+    @inbounds for i in eachindex(site_indices, ψ_indices)
+        old = site_indices[i]
+        new = ψ_indices[i]
+        repl[old] = new
+        repl[prime(old)] = prime(new)
+    end
+
+    u_old = measurement_setting.basis_transformation
+    u_new = Vector{ITensor}(undef, length(u_old))
+    @inbounds for k in eachindex(u_old)
+        ui = u_old[k]
+        ui_inds = inds(ui)
+        pairs_k = Pair{Index, Index}[]
+        sizehint!(pairs_k, length(ui_inds))
+        for idx in ui_inds
+            if haskey(repl, idx)
+                push!(pairs_k, idx => repl[idx])
+            end
+        end
+        u_new[k] = isempty(pairs_k) ? ui : replaceinds(ui, pairs_k...)
+    end
+
+    return ShallowUnitaryMeasurementSetting(
+        measurement_setting;
+        basis_transformation = u_new,
+        site_indices = ψ_indices,
+    )
+end
+
 """
     MeasurementData(ψ::Union{MPO, MPS}, NM::Int, measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting, ShallowUnitaryMeasurementSetting}; mode::SimulationMode = TensorNetwork)
 
@@ -90,28 +158,8 @@ function MeasurementData(
     N = measurement_setting.N
     @assert length(ψ) == N "The number of sites of the MPS/MPO ψ and the MeasurementSettings Object do not match."
 
-    ψ_indices = vcat(siteinds(ψ, plev=0)...)
-    site_indices = measurement_setting.site_indices
-    if site_indices != ψ_indices
-        # Build a map old→new (and old′→new′)
-        repl = Dict{Index,Index}()
-        for (old, new) in zip(site_indices, ψ_indices)
-            repl[ old        ] = new
-            repl[ prime(old) ] = prime(new)
-        end
-
-        # Rename every gate tensor in one shot
-        u_old = measurement_setting.basis_transformation
-        u_new = [ replaceinds(ui, pairs(repl)...) for ui in u_old ]
-
-        # Rebuild the same concrete setting with updated indices
-        T = typeof(measurement_setting)
-        measurement_setting = T(
-          measurement_setting;
-          basis_transformation = u_new,
-          site_indices  = ψ_indices,
-        )
-    end
+    ψ_indices = get_siteinds(ψ)
+    measurement_setting = _align_site_indices(measurement_setting, ψ_indices)
 
     u=measurement_setting.basis_transformation
     if mode == Dense

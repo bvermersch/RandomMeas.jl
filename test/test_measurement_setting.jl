@@ -1,5 +1,7 @@
 using RandomMeas
 using Test
+using Random
+using LinearAlgebra
 
 @testset "MeasurementSetting Tests" begin
     # Define the number of sites (qubits)
@@ -178,6 +180,93 @@ using Test
 
         # Clean up the temporary file.
         rm(tmp_dir, recursive=true)
+    end
+
+    @testset "Test 8: OpenQASM Export" begin
+        Nq = 3
+        ξq = siteinds("Qubit", Nq)
+
+        # Local unitary setting with identity gates.
+        unitary_array = zeros(ComplexF64, Nq, 2, 2)
+        for n in 1:Nq
+            unitary_array[n, :, :] = [1 0; 0 1]
+        end
+        local_setting = LocalUnitaryMeasurementSetting(unitary_array; site_indices=ξq)
+
+        qasm_local = to_OpenQASM(local_setting)
+        @test occursin("OPENQASM 2.0;", qasm_local)
+        @test occursin("include \"qelib1.inc\";", qasm_local)
+        @test occursin("qreg q[$Nq];", qasm_local)
+        @test occursin("creg c[$Nq];", qasm_local)
+        @test count(line -> occursin("u3(", line), split(qasm_local, '\n')) == Nq
+        @test count(line -> occursin("measure q[", line), split(qasm_local, '\n')) == Nq
+
+        # Computational basis emits no unitary gates.
+        comp_setting = ComputationalBasisMeasurementSetting(Nq; site_indices=ξq)
+        qasm_comp = to_OpenQASM(comp_setting)
+        @test occursin("OPENQASM 2.0;", qasm_comp)
+        @test count(line -> occursin("u3(", line), split(qasm_comp, '\n')) == 0
+        @test count(line -> occursin("measure q[", line), split(qasm_comp, '\n')) == Nq
+
+        # Optional omission of measurements.
+        qasm_no_meas = to_OpenQASM(local_setting; include_measurements=false)
+        @test !occursin("measure q[", qasm_no_meas)
+        @test !occursin("creg c[", qasm_no_meas)
+
+        # File export
+        tmp_dir = mktempdir()
+        tmp_file = joinpath(tmp_dir, "setting.qasm")
+        export_OpenQASM(local_setting, tmp_file)
+        @test isfile(tmp_file)
+        @test read(tmp_file, String) == qasm_local
+        rm(tmp_dir, recursive=true)
+    end
+
+    @testset "Test 9: u3 Angle Reconstruction" begin
+        # OpenQASM u3 gate matrix convention.
+        u3_matrix(θ, ϕ, λ) = ComplexF64[
+            cos(θ / 2) -exp(1im * λ) * sin(θ / 2);
+            exp(1im * ϕ) * sin(θ / 2) exp(1im * (ϕ + λ)) * cos(θ / 2)
+        ]
+
+        # Compare up to an overall global phase.
+        function phase_invariant_error(U::AbstractMatrix{<:Complex}, V::AbstractMatrix{<:Complex})
+            α = angle(sum(conj.(V) .* U))
+            return norm(U - exp(1im * α) * V)
+        end
+
+        fixed_cases = [
+            ("I", ComplexF64[1 0; 0 1]),
+            ("X", ComplexF64[0 1; 1 0]),
+            ("Y", ComplexF64[0 -im; im 0]),
+            ("Z", ComplexF64[1 0; 0 -1]),
+            ("H", (1 / sqrt(2)) * ComplexF64[1 1; 1 -1]),
+            ("S", ComplexF64[1 0; 0 im]),
+            ("T", ComplexF64[1 0; 0 exp(1im * π / 4)]),
+        ]
+
+        for (_, U) in fixed_cases
+            θ, ϕ, λ = RandomMeas._u3_angles_from_unitary(U)
+            U_reconstructed = u3_matrix(θ, ϕ, λ)
+            @test phase_invariant_error(U, U_reconstructed) ≤ 1e-12
+        end
+
+        # Haar-random single-qubit unitaries using the standard QR construction.
+        Random.seed!(7)
+        n_haar_samples = 500
+        for _ in 1:n_haar_samples
+            A = randn(ComplexF64, 2, 2)
+            F = qr(A)
+            Q = Matrix(F.Q)
+            R = Matrix(F.R)
+            d = diag(R)
+            phases = map(x -> iszero(x) ? (1.0 + 0im) : x / abs(x), d)
+            U = Q * Diagonal(phases)
+
+            θ, ϕ, λ = RandomMeas._u3_angles_from_unitary(U)
+            U_reconstructed = u3_matrix(θ, ϕ, λ)
+            @test phase_invariant_error(U, U_reconstructed) ≤ 1e-12
+        end
     end
 
 end

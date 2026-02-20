@@ -253,3 +253,158 @@ function import_LocalUnitaryMeasurementSetting(filepath::String; site_indices::U
 
     return LocalUnitaryMeasurementSetting(data["basis_transformation"]; site_indices=site_indices)
 end
+
+function _wrap_angle_pm_pi(x::Float64)::Float64
+    y = mod(x + π, 2π) - π
+    return abs(y) < 1e-14 ? 0.0 : y
+end
+
+function _qasm_angle_string(x::Float64)::String
+    return repr(round(_wrap_angle_pm_pi(x), sigdigits=16))
+end
+
+function _u3_angles_from_unitary(U::AbstractMatrix{<:Complex})
+    size(U) == (2, 2) || throw(ArgumentError("Expected a 2x2 matrix for OpenQASM export, got size $(size(U))."))
+    isapprox(U' * U, Matrix{ComplexF64}(I, 2, 2); atol=1e-8, rtol=1e-8) ||
+        throw(ArgumentError("Basis transformation is not unitary within tolerance; cannot export to OpenQASM u3 gate."))
+
+    detU = det(U)
+    abs(detU) > 1e-12 || throw(ArgumentError("Matrix determinant is too small; cannot extract u3 angles."))
+
+    # Remove a global phase so det(V)=1; OpenQASM gates are defined up to global phase.
+    γ = angle(detU) / 2
+    V = U * exp(-1im * γ)
+
+    c = clamp(abs(V[1, 1]), 0.0, 1.0)
+    s = clamp(abs(V[2, 1]), 0.0, 1.0)
+    θ = 2 * atan(s, c)
+
+    local ϕ::Float64
+    local λ::Float64
+    if s <= 1e-12
+        # Near θ=0, only (ϕ+λ) is identifiable.
+        ϕ = 0.0
+        λ = angle(V[2, 2]) - angle(V[1, 1])
+    elseif c <= 1e-12
+        # Near θ=π, use off-diagonal phases.
+        ϕ = angle(V[2, 1])
+        λ = angle(-V[1, 2])
+    else
+        ϕ = angle(V[2, 1]) - angle(V[1, 1])
+        λ = angle(-V[1, 2]) - angle(V[1, 1])
+    end
+
+    θ = clamp(θ, 0.0, π)
+    return θ, _wrap_angle_pm_pi(ϕ), _wrap_angle_pm_pi(λ)
+end
+
+function _openqasm_header(
+    N::Int;
+    include_measurements::Bool = true,
+    qreg_name::String = "q",
+    creg_name::String = "c",
+)
+    lines = String[
+        "OPENQASM 2.0;",
+        "include \"qelib1.inc\";",
+        "qreg $(qreg_name)[$N];",
+    ]
+    if include_measurements
+        push!(lines, "creg $(creg_name)[$N];")
+    end
+    return lines
+end
+
+"""
+    to_OpenQASM(measurement_setting::LocalUnitaryMeasurementSetting; include_measurements::Bool=true, qreg_name::String="q", creg_name::String="c")
+    to_OpenQASM(measurement_setting::ComputationalBasisMeasurementSetting; include_measurements::Bool=true, qreg_name::String="q", creg_name::String="c")
+
+Convert a local measurement setting into an OpenQASM 2.0 program string.
+
+# Notes
+- For `LocalUnitaryMeasurementSetting`, each single-qubit unitary is exported as a `u3(θ,ϕ,λ)` gate.
+- For `ComputationalBasisMeasurementSetting`, no rotation gates are emitted.
+- Measurement instructions are included by default.
+"""
+function to_OpenQASM(
+    measurement_setting::LocalUnitaryMeasurementSetting;
+    include_measurements::Bool = true,
+    qreg_name::String = "q",
+    creg_name::String = "c",
+)::String
+    N = measurement_setting.N
+    lines = _openqasm_header(
+        N;
+        include_measurements = include_measurements,
+        qreg_name = qreg_name,
+        creg_name = creg_name,
+    )
+
+    for i in 1:N
+        U = Array(
+            measurement_setting.basis_transformation[i],
+            measurement_setting.site_indices[i]',
+            measurement_setting.site_indices[i],
+        )
+        θ, ϕ, λ = _u3_angles_from_unitary(U)
+        push!(lines, "u3($(_qasm_angle_string(θ)),$(_qasm_angle_string(ϕ)),$(_qasm_angle_string(λ))) $(qreg_name)[$(i-1)];")
+    end
+
+    if include_measurements
+        for i in 1:N
+            push!(lines, "measure $(qreg_name)[$(i-1)] -> $(creg_name)[$(i-1)];")
+        end
+    end
+
+    return join(lines, "\n") * "\n"
+end
+
+function to_OpenQASM(
+    measurement_setting::ComputationalBasisMeasurementSetting;
+    include_measurements::Bool = true,
+    qreg_name::String = "q",
+    creg_name::String = "c",
+)::String
+    N = measurement_setting.N
+    lines = _openqasm_header(
+        N;
+        include_measurements = include_measurements,
+        qreg_name = qreg_name,
+        creg_name = creg_name,
+    )
+
+    if include_measurements
+        for i in 1:N
+            push!(lines, "measure $(qreg_name)[$(i-1)] -> $(creg_name)[$(i-1)];")
+        end
+    end
+
+    return join(lines, "\n") * "\n"
+end
+
+"""
+    export_OpenQASM(measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting}, filepath::String; kwargs...)
+
+Export a local measurement setting to an OpenQASM 2.0 file.
+
+# Returns
+The output `filepath`.
+"""
+function export_OpenQASM(
+    measurement_setting::Union{LocalUnitaryMeasurementSetting, ComputationalBasisMeasurementSetting},
+    filepath::String;
+    include_measurements::Bool = true,
+    qreg_name::String = "q",
+    creg_name::String = "c",
+)::String
+    qasm = to_OpenQASM(
+        measurement_setting;
+        include_measurements = include_measurements,
+        qreg_name = qreg_name,
+        creg_name = creg_name,
+    )
+    open(filepath, "w") do io
+        write(io, qasm)
+    end
+    return filepath
+end

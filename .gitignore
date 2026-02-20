@@ -8,5 +8,8 @@
 /examples/BrydgesScience2019_vonNeumann.ipynb
 /examples/BrydgesScience2019_vonNeumann_plotting.ipynb
 /examples/BrydgesScience2019_NumSim.ipynb
+/examples/single_pauli_alloc_vs_k.png
+/examples/single_pauli_memory_vs_k.png
+/examples/single_pauli_time_vs_k.png
 *.npy
 .venv
